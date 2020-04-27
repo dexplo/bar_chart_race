@@ -2,7 +2,7 @@
 
 Make animated bar chart races with matplotlib.
 
-![][0]
+![gif](videos/covid19_horiz_desc.gif)
 
 ## Usage
 
@@ -31,5 +31,3 @@ Only one main function exists, **`bar_chart_race`** that saves the animation to 
 >>> df = bcr.load_dataset('covid19')
 >>> brc.bar_chart_race(df, 'filename.mp4', steps_per_period=10, title='COVID-19 Deaths by Country')
 ```
-
-[0]: videos/covid19_horiz_desc.gif
