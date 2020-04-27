@@ -6,7 +6,7 @@ Make animated bar chart races with matplotlib.
 
 ## Installation
 
-Install with `pip install bar-chart-race`
+Install with `pip install bar_chart_race`
 
 ## Usage
 
