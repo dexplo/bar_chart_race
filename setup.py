@@ -10,10 +10,10 @@ long_description = re.sub(pat, repl, long_description)
 
 setuptools.setup(
     name="bar_chart_race",
-    version="0.0.4",
+    version="0.0.5",
     author="Ted Petrou",
     author_email="petrou.theodore@gmail.com",
-    description="Creates animated bar chart races using matplotlib",
+    description="Create animated bar chart races using matplotlib",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/dexplo/bar_chart_race",
