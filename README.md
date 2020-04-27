@@ -53,3 +53,20 @@ In [1]: bcr_html = bcr.bar_chart_race(df=df, filename=None)
 In [2]: from IPython.display import HTML
 In [3]: HTML(bcr_html)
 ```
+
+### Use vertical bars and limit to top `n_bars`
+
+Make bars vertical by setting `orientation` to `'h'`. Use `n_bars` if you want to limit the number of bars. The bars will transition on and off the graph.
+
+```python
+>>> df = bcr.load_dataset('urban_pop')
+>>> bcr.bar_chart_race(
+    df=df,
+    filename='videos/urban_vert_asc.gif',
+    orientation='v',
+    sort='asc',
+    n_bars=8,
+    title='Urban Population')
+```
+
+![gif](videos/urban_vert_asc.gif)
