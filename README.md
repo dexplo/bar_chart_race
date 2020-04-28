@@ -22,7 +22,7 @@ The data below is an example of properly formatted data. It shows total deaths f
 
 ### Main function - `bar_chart_race`
 
-Only one main function exists, **`bar_chart_race`** that saves the animation to disk. Here, we recreate the above video. All parameters are shown with their default value except for `title`.
+There is one main function, **`bar_chart_race`**, which we use to recreate the above video. All parameters are shown with their default value except for `filename` and `title`.
 
 ```python
 >>> import bar_chart_race as bcr
@@ -56,7 +56,7 @@ In [3]: HTML(bcr_html)
 
 ### Use vertical bars and limit to top `n_bars`
 
-Make bars vertical by setting `orientation` to `'h'`. Use `n_bars` if you want to limit the number of bars. The bars will transition on and off the graph.
+Make bars vertical by setting `orientation` to `'v'`. Use `n_bars` if you want to limit the number of bars. The bars will transition on and off the graph.
 
 ```python
 >>> df = bcr.load_dataset('urban_pop')
