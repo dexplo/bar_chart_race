@@ -12,7 +12,7 @@ DARK24 = ['#2E91E5', '#E15F99', '#1CA71C', '#FB0D0D', '#DA16FF', '#222A2A',
 class _BarChartRace:
     
     def __init__(self, df, filename, orientation, sort, n_bars, label_bars, use_index, 
-                 steps_per_period, period_length, cmap, title, bar_label_size, tick_label_size, 
+                 steps_per_period, period_length, figsize, cmap, title, bar_label_size, tick_label_size, 
                  period_label_size, fig, kwargs):
         self.df = df
         self.filename = filename
@@ -25,7 +25,7 @@ class _BarChartRace:
         self.period_length = period_length
         self.orig_index = self.df.index.astype('str')
         self.title = title
-        self.figsize = (7, 3.5)
+        self.figsize = figsize
         self.dpi = 144
         self.tick_label_size = tick_label_size
         self.bar_label_size = bar_label_size
@@ -247,7 +247,7 @@ class _BarChartRace:
 
 
 def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None, label_bars=True, 
-                   use_index=True, steps_per_period=10, period_length=500, cmap='dark24', 
+                   use_index=True, steps_per_period=10, period_length=500, figsize=(6.5, 3.5), cmap='dark24', 
                    title=None, bar_label_size=7, tick_label_size=7, period_label_size=16, 
                    fig=None, **kwargs):
     '''
@@ -293,6 +293,9 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
     period_length : int, default 500
         Number of milliseconds to animate each period (row). Default is 500ms (half of a second)
 
+    figsize : two-item tuple of numbers, default (6.5, 3.5)
+        matplotlib figure size in inches. Will be overridden if own figure supplied to `fig`
+
     cmap : str, matplotlib colormap instance, or list of colors, default 'dark24'
         Colors to be used for the bars. Colors will repeat if there are more bars
         than colors.
@@ -322,7 +325,7 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
 
     Notes
     -----
-    Default figure size is 7 by 3.5 with 144 DPI
+    Default DPI of 144
 
     It is possible for some bars to be out of order momentarily during a transition since
     both height and location change linearly.
@@ -349,7 +352,7 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         fig=None)
     '''
     bcr = _BarChartRace(df, filename, orientation, sort, n_bars, label_bars, use_index, steps_per_period, 
-                        period_length, cmap, title, bar_label_size, tick_label_size, 
+                        period_length, figsize, cmap, title, bar_label_size, tick_label_size, 
                         period_label_size, fig, kwargs)
     return bcr.make_animation()
 

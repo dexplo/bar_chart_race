@@ -36,6 +36,7 @@ There is one main function, **`bar_chart_race`**, which we use to recreate the a
     use_index=True,
     steps_per_period=10,
     period_length=500,
+    figsize=(6.5, 3.5),
     cmap='dark24',
     title='COVID-19 Deaths by Country',
     bar_label_size=7,
@@ -44,7 +45,7 @@ There is one main function, **`bar_chart_race`**, which we use to recreate the a
     fig=None)
 ```
 
-### Save animation to disk or return HTML
+#### Save animation to disk or return HTML
 
 Leave the `filename` parameter as `None` to return the animation as HTML. You can subsequently embed the animation into a Jupyter Notebook with the following.
 
@@ -54,7 +55,7 @@ In [2]: from IPython.display import HTML
 In [3]: HTML(bcr_html)
 ```
 
-### Use vertical bars and limit to top `n_bars`
+#### Use vertical bars and limit to top `n_bars`
 
 Make bars vertical by setting `orientation` to `'v'`. Use `n_bars` if you want to limit the number of bars. The bars will transition on and off the graph.
 
