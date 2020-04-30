@@ -74,4 +74,10 @@ Make bars vertical by setting `orientation` to `'v'`. Use `n_bars` if you want t
 
 ## Requirements
 
-This package utilises the [matplotlib.animation function](https://matplotlib.org/3.2.1/api/animation_api.html), thus requiring a writer library. Ensure to have [ffmpeg](https://ffmpeg.org/) or other supported tooling installed prior to using this package!
+This package utilises the [matplotlib.animation function](https://matplotlib.org/3.2.1/api/animation_api.html), thus requiring a writer library. 
+
+Ensure to have one of the supported tooling software installed prior to use!
+ - [ffmpeg](https://ffmpeg.org/)
+ - [ImageMagick](https://imagemagick.org/index.php)
+ - [Pillow](https://pillow.readthedocs.io/en/stable/)
+ - See more at <https://matplotlib.org/3.2.1/api/animation_api.html#writer-classes>
