@@ -71,3 +71,7 @@ Make bars vertical by setting `orientation` to `'v'`. Use `n_bars` if you want t
 ```
 
 ![gif](videos/urban_vert_asc.gif)
+
+## Requirements
+
+This package utilises the [matplotlib.animation function](https://matplotlib.org/3.2.1/api/animation_api.html), thus requiring a writer library. Ensure to have [ffmpeg](https://ffmpeg.org/) or other supported tooling installed prior to using this package!
