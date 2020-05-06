@@ -3,41 +3,48 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from matplotlib import ticker, colors
-
-DARK24 = ['#2E91E5', '#E15F99', '#1CA71C', '#FB0D0D', '#DA16FF', '#222A2A', 
-          '#B68100', '#750D86', '#EB663B', '#511CFB', '#00A08B', '#FB00D1', 
-          '#FC0080', '#B2828D', '#6C7C32', '#778AAE', '#862A16', '#A777F1', 
-          '#620042', '#1616A7', '#DA60CA', '#6C4516', '#0D2A63', '#AF0038']
+from ._colormaps import DARK24
 
 class _BarChartRace:
     
-    def __init__(self, df, filename, orientation, sort, n_bars, label_bars, use_index, 
-                 steps_per_period, period_length, figsize, cmap, title, bar_label_size, tick_label_size, 
-                 period_label_size, fig, kwargs):
-        self.df = df
+    def __init__(self, df, filename, orientation, sort, n_bars, fixed_order, fixed_max,
+                 steps_per_period, interpolate_period, label_bars, bar_size, 
+                 period_label, period_fmt, period_summary_func, perpendicular_bar_func, 
+                 period_length, figsize, cmap, title, title_size, bar_label_size, tick_label_size, 
+                 shared_fontdict, scale, writer, fig, bar_kwargs):
         self.filename = filename
         self.orientation = orientation
         self.sort = sort
         self.n_bars = n_bars or df.shape[1]
-        self.label_bars = label_bars
-        self.use_index = use_index
+        self.fixed_order = fixed_order
+        self.fixed_max = fixed_max
         self.steps_per_period = steps_per_period
+        self.interpolate_period = interpolate_period
+        self.label_bars = label_bars
+        self.bar_size = bar_size
+        self.period_label = self.get_period_label(period_label)
+        self.period_fmt = period_fmt
+        self.period_summary_func = period_summary_func
+        self.perpendicular_bar_func = perpendicular_bar_func
         self.period_length = period_length
-        self.orig_index = self.df.index.astype('str')
-        self.title = title
         self.figsize = figsize
         self.dpi = 144
-        self.tick_label_size = tick_label_size
+        self.title = title
+        self.title_size = title_size
         self.bar_label_size = bar_label_size
-        self.period_label_size = period_label_size
+        self.tick_label_size = tick_label_size
+        self.orig_rcParams = self.set_shared_fontdict(shared_fontdict)
+        self.scale = scale
+        self.write = writer
         self.fps = 1000 / self.period_length * steps_per_period
         self.fig = fig
-        self.kwargs = kwargs
+        
         self.validate_params()
+        self.bar_kwargs = self.get_bar_kwargs(bar_kwargs)
         self.html = self.filename is None
-        self.bar_colors = self.get_colors(cmap)
-        self.x_label, self.y_label = self.get_label_position()
-        self.df_values, self.df_rank = self.prepare_data()
+        self.df_values, self.df_ranks = self.prepare_data(df)
+        self.bar_colors = self.get_bar_colors(cmap)
+        self.str_index = self.df_values.index.astype('str')
         if self.fig is not None:
             self.fig, self.ax = fig, fig.axes[0]
             self.figsize = fig.get_size_inches()
@@ -61,7 +68,88 @@ class _BarChartRace:
         if self.fig is not None and not isinstance(self.fig, plt.Figure):
             raise TypeError('`fig` must be a matplotlib Figure instance')
 
-    def get_colors(self, cmap):
+    def get_bar_kwargs(self, bar_kwargs):
+        bar_kwargs = bar_kwargs or {}
+        if 'width' in bar_kwargs or 'height' in bar_kwargs:
+            raise ValueError("Do not set the width or height with `bar_kwargs`. Instead, use `bar_size`.")
+        if self.orientation == 'h':
+            bar_kwargs['height'] = self.bar_size
+        else:
+            bar_kwargs['width'] = self.bar_size
+        return bar_kwargs
+
+    def get_period_label(self, period_label):
+        if not period_label:
+            return False
+        elif period_label is True:
+            period_label = {'size': 12}
+            if self.orientation == 'h':
+                period_label['x'] = .95
+                period_label['y'] = .15 if self.sort == 'desc' else .85
+                period_label['ha'] = 'right'
+                period_label['va'] = 'center'
+            else:
+                period_label['x'] = .95 if self.sort == 'desc' else .05
+                period_label['y'] = .85
+                period_label['ha'] = 'right' if self.sort == 'desc' else 'left'
+                period_label['va'] = 'center'
+        else:
+            if 'x' not in period_label or 'y' not in period_label:
+                raise ValueError('`period_label` dictionary must have keys for "x" and "y"')
+        return period_label
+
+    def set_shared_fontdict(self, shared_fontdict):
+        orig_rcParams = plt.rcParams.copy()
+        if shared_fontdict is None:
+            return {}
+        for k, v in shared_fontdict.items():
+            if k not in ['fontsize', 'size']:
+                if k in ['cursive', 'family', 'fantasy', 'monospace', 'sans-serif', 'serif']:
+                        if isinstance(v, str):
+                            v = [v]
+                if k == 'color':
+                    plt.rcParams['text.color'] = v
+                    plt.rcParams['xtick.color'] = v
+                    plt.rcParams['ytick.color'] = v
+                    continue
+                try:
+                    plt.rcParams[f'font.{k}'] = v
+                except KeyError:
+                    raise KeyError(f"{k} is not a valid key in `sharedfont_dict`"\
+                                    "It must be one of "\
+                                    "'cursive', 'family', 'fantasy', 'monospace',"\
+                                    "sans-serif', 'serif',"\
+                                    "'stretch', 'style', 'variant', 'weight'")
+        return orig_rcParams
+
+    def prepare_data(self, df):
+        if self.fixed_order is True:
+            last_values = df.iloc[-1].sort_values(ascending=False)
+            cols = last_values.iloc[:self.n_bars].index
+            df = df[cols]
+        elif isinstance(self.fixed_order, list):
+            cols = self.fixed_order
+            df = df[cols]
+            
+        compute_ranks = self.fixed_order is False
+        dfs = prepare_wide_data(df, self.orientation, self.sort, self.n_bars,
+                                self.interpolate_period, self.steps_per_period,
+                                compute_ranks)
+        if self.fixed_order:
+            df_values = dfs
+            n = df_values.shape[1] + 1
+            m = df_values.shape[0]
+            rank_row = np.arange(1, n)
+            if (self.sort == 'desc' and self.orientation == 'h') or \
+                (self.sort == 'asc' and self.orientation == 'v'):
+                rank_row = rank_row[::-1]
+            
+            ranks_arr = np.repeat(rank_row.reshape(1, -1), m, axis=0)
+            df_ranks = pd.DataFrame(data=ranks_arr, columns=cols)
+            dfs = df_values, df_ranks
+        return dfs
+            
+    def get_bar_colors(self, cmap):
         if isinstance(cmap, str):
             if cmap == 'dark24':
                 cmap = DARK24
@@ -80,45 +168,33 @@ class _BarChartRace:
 
         # bar_colors is now a list
         n = len(bar_colors)
-        if self.df.shape[1] > n:
-            bar_colors = bar_colors * (self.df.shape[1] // n + 1)
-        return np.array(bar_colors[:self.df.shape[1]])
-
-    def get_label_position(self):
-        if self.orientation == 'h':
-            x_label = .6
-            y_label = .25 if self.sort == 'desc' else .8
-        else:
-            x_label = .7 if self.sort == 'desc' else .1
-            y_label = .8
-        return x_label, y_label
-        
-    def prepare_data(self):
-        df_values = self.df.reset_index(drop=True)
-        df_values.index = df_values.index * self.steps_per_period
-        df_rank = df_values.rank(axis=1, method='first', ascending=False).clip(upper=self.n_bars + 1)
-        if (self.sort == 'desc' and self.orientation == 'h') or (self.sort == 'asc' and self.orientation == 'v'):
-            df_rank = self.n_bars + 1 - df_rank
-        new_index = range(df_values.index.max() + 1)
-        df_values = df_values.reindex(new_index).interpolate()
-        df_rank = df_rank.reindex(new_index).interpolate()
-        return df_values, df_rank
+        if self.df_values.shape[1] > n:
+            bar_colors = bar_colors * (self.df_values.shape[1] // n + 1)
+        return np.array(bar_colors[:self.df_values.shape[1]])
         
     def create_figure(self):
         fig = plt.Figure(figsize=self.figsize, dpi=self.dpi)
         limit = (.2, self.n_bars + .8)
         rect = self.calculate_new_figsize(fig)
         ax = fig.add_axes(rect)
+        min_val = 1 if self.scale == 'log' else 0
         if self.orientation == 'h':
             ax.set_ylim(limit)
+            if self.fixed_max:
+                ax.set_xlim(min_val, self.df_values.max().max() * 1.05 * 1.11)
             ax.grid(True, axis='x', color='white')
+            ax.set_xscale(self.scale)
             ax.xaxis.set_major_formatter(ticker.StrMethodFormatter('{x:,.0f}'))
         else:
             ax.set_xlim(limit)
+            if self.fixed_max:
+                ax.set_ylim(min_val, self.df_values.max().max() * 1.05 * 1.16)
             ax.grid(True, axis='y', color='white')
             ax.set_xticklabels(ax.get_xticklabels(), ha='right', rotation=30)
+            ax.set_yscale(self.scale)
             ax.yaxis.set_major_formatter(ticker.StrMethodFormatter('{x:,.0f}'))
 
+        ax.minorticks_off()
         ax.set_axisbelow(True)
         ax.tick_params(length=0, labelsize=self.tick_label_size, pad=2)
         ax.set_facecolor('.9')
@@ -131,23 +207,24 @@ class _BarChartRace:
         import io
         fig = plt.Figure(tight_layout=True, figsize=self.figsize)
         ax = fig.add_subplot()
-        fake_cols = [chr(i + 70) for i in range(self.df.shape[1])]
+        fake_cols = [chr(i + 70) for i in range(self.df_values.shape[1])]
         max_val = self.df_values.max().max()
+        # min_val = 1 if self.scale == 'log' else 0
         if self.orientation == 'h':
-            ax.barh(fake_cols, [1] * self.df.shape[1])
+            ax.barh(fake_cols, [1] * self.df_values.shape[1])
             ax.tick_params(labelrotation=0, axis='y', labelsize=self.tick_label_size)
             ax.set_title(self.title)
             fig.canvas.print_figure(io.BytesIO())
             orig_pos = ax.get_position()
-            ax.set_yticklabels(self.df.columns)
+            ax.set_yticklabels(self.df_values.columns)
             ax.set_xticklabels([max_val] * len(ax.get_xticks()))
         else:
-            ax.bar(fake_cols, [1] * self.df.shape[1])
+            ax.bar(fake_cols, [1] * self.df_values.shape[1])
             ax.tick_params(labelrotation=30, axis='x', labelsize=self.tick_label_size)
             ax.set_title(self.title)
             fig.canvas.print_figure(io.BytesIO())
             orig_pos = ax.get_position()
-            ax.set_xticklabels(self.df.columns, ha='right')
+            ax.set_xticklabels(self.df_values.columns, ha='right')
             ax.set_yticklabels([max_val] * len(ax.get_yticks()))
         
         fig.canvas.print_figure(io.BytesIO(), format='png')
@@ -176,30 +253,49 @@ class _BarChartRace:
         return [left, bottom, width, height]
             
     def plot_bars(self, i):
-        bar_location = self.df_rank.iloc[i].values
+        bar_location = self.df_ranks.iloc[i].values
         top_filt = (bar_location > 0) & (bar_location < self.n_bars + 1)
         bar_location = bar_location[top_filt]
         bar_length = self.df_values.iloc[i].values[top_filt]
-        cols = self.df.columns[top_filt]
+        cols = self.df_values.columns[top_filt]
         colors = self.bar_colors[top_filt]
         if self.orientation == 'h':
-            self.ax.barh(bar_location, bar_length, ec='white', tick_label=cols, color=colors, **self.kwargs)
-            self.ax.set_xlim(self.ax.get_xlim()[0], bar_length.max() * 1.1)
+            self.ax.barh(bar_location, bar_length, ec='white', tick_label=cols, 
+                         color=colors, **self.bar_kwargs)
+            if not self.fixed_max:
+                self.ax.set_xlim(self.ax.get_xlim()[0], bar_length.max() * 1.1)
         else:
-            self.ax.bar(bar_location, bar_length, ec='white', tick_label=cols, color=colors, **self.kwargs)
-            self.ax.set_ylim(self.ax.get_ylim()[0], bar_length.max() * 1.16)
+            self.ax.bar(bar_location, bar_length, ec='white', tick_label=cols, 
+                        color=colors, **self.bar_kwargs)
+            if not self.fixed_max:
+                self.ax.set_ylim(self.ax.get_ylim()[0], bar_length.max() * 1.16)
             
         num_texts = len(self.ax.texts)
-        if self.use_index:
-            val = self.orig_index[i // self.steps_per_period]
-            if num_texts == 0:
-                self.ax.text(self.x_label, self.y_label, val, transform=self.ax.transAxes, fontsize=self.period_label_size)
+        if self.period_label:
+            if self.period_fmt:
+                idx_val = self.df_values.index[i]
+                if self.df_values.index.dtype.kind == 'M':
+                    s = idx_val.strftime(self.period_fmt)
+                else:
+                    s = self.period_fmt.format(x=idx_val)
             else:
-                self.ax.texts[0].set_text(val)
+                s = self.str_index[i]
+            if num_texts == 0:
+                # first frame
+                self.ax.text(s=s, transform=self.ax.transAxes, **self.period_label)
+            else:
+                self.ax.texts[0].set_text(s)
+
+        if self.period_summary_func:
+            values = self.df_values.iloc[i]
+            ranks = self.df_ranks.iloc[i]
+            text_dict = self.period_summary_func(values, ranks)
+            if 'x' not in text_dict or 'y' not in text_dict or 's' not in text_dict:
+                name = self.period_summary_func.__name__
+                raise ValueError(f'The dictionary returned from `{name}` must contain "x", "y", and "s"')
+            self.ax.text(transform=self.ax.transAxes, **text_dict)
 
         if self.label_bars:
-            for text in self.ax.texts[int(self.use_index):]:
-                text.remove()
             if self.orientation == 'h':
                 zipped = zip(bar_length, bar_location)
             else:
@@ -223,9 +319,32 @@ class _BarChartRace:
                 self.ax.text(xtext, ytext, text, ha=ha, rotation=rotation, 
                              fontsize=self.bar_label_size, va=va)
 
+        if self.perpendicular_bar_func:
+            if isinstance(self.perpendicular_bar_func, str):
+                val = pd.Series(bar_length).agg(self.perpendicular_bar_func)
+            else:
+                values = self.df_values.iloc[i]
+                ranks = self.df_ranks.iloc[i]
+                val = self.perpendicular_bar_func(values, ranks)
+
+            if not self.ax.lines:
+                if self.orientation == 'h':
+                    self.ax.axvline(val, lw=10, color='.5', zorder=.5)
+                else:
+                    self.ax.axhline(val, lw=10, color='.5', zorder=.5)
+            else:
+                line = self.ax.lines[0]
+                if self.orientation == 'h':
+                    line.set_xdata([val] * 2)
+                else:
+                    line.set_ydata([val] * 2)
+            
     def anim_func(self, i):
         for bar in self.ax.containers:
             bar.remove()
+        start = int(bool(self.period_label))
+        for text in self.ax.texts[start:]:
+            text.remove()
         self.plot_bars(i)
         
     def make_animation(self):
@@ -237,19 +356,27 @@ class _BarChartRace:
                              init_func, interval=interval)
 
         if self.html:
-            return anim.to_html5_video()
+            html = anim.to_html5_video()
+            plt.rcParams = self.orig_rcParams
+            return html
 
         extension = self.filename.split('.')[-1]
         if extension == 'gif':
             anim.save(self.filename, fps=self.fps, writer='imagemagick')
         else:
             anim.save(self.filename, fps=self.fps)
+        
+        plt.rcParams = self.orig_rcParams
 
 
-def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None, label_bars=True, 
-                   use_index=True, steps_per_period=10, period_length=500, figsize=(6.5, 3.5), cmap='dark24', 
-                   title=None, bar_label_size=7, tick_label_size=7, period_label_size=16, 
-                   fig=None, **kwargs):
+def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None, 
+                   fixed_order=False, fixed_max=False, steps_per_period=10, 
+                   interpolate_period=False, label_bars=True, bar_size=.95, 
+                   period_label=True, period_fmt=None, period_summary_func=None, 
+                   perpendicular_bar_func=None, period_length=500, figsize=(6, 3.5), 
+                   cmap='dark24', title=None, title_size='', bar_label_size=7, 
+                   tick_label_size=7, shared_fontdict=None, scale='linear', 
+                   writer=None, fig=None, bar_kwargs=None):
     '''
     Create an animated bar chart race using matplotlib. Data must be in 'wide' format where each
     row represents a single time period and each column represents a distinct category. 
@@ -257,16 +384,22 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
 
     Bar height and location change linearly from one time period to the next.
 
-    This is resource intensive - Start with just a few rows of data
+    If no `filename` is given, an HTML string is returned, otherwise the animation is
+    saved to disk.
+
+    This is resource intensive - Start with just a few rows of data to test
+
 
     Parameters
     ----------
     df : pandas DataFrame
-        Must be 'wide' where each row represents a single period of time. Each column contains
-        the values of the bars for that category. Optionally, use the index to label each time period.
+        Must be a 'wide' DataFrame where each row represents a single period of time. 
+        Each column contains the values of the bars for that category. 
+        Optionally, use the index to label each time period.
+        The index can be of any type.
 
     filename : `None` or str, default None
-        If `None` return animation as HTML5.
+        If `None` return animation as an HTML5 string.
         If a string, save animation to that filename location. Use .mp4 or .gif extensions
 
     orientation : 'h' or 'v', default 'h'
@@ -278,22 +411,114 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
 
     n_bars : int, default None
         Choose the maximum number of bars to display on the graph. By default, use all bars. 
-        New bars entering the race will appear from the bottom or top.
+        New bars entering the race will appear from the edge of the axes.
+
+    fixed_order : bool or list, default False
+        When `False`, bar order changes every time period to corresponds with `sort`.
+        When `True`, bars remained fixed according to their final value corresponding with `sort`
+        Otherwise, provide a list of the exact order of the categories for the entire duration
+
+    fixed_max : bool, default False
+        Whether to fix the maximum value of the axis containing the values.
+        When `False`, the axis for the values will have its maximum (xlim/ylim)
+        just after the largest bar of the current time period. 
+        The axis maximum will change along with the data.
+
+        When True, the maximum axis value will remain constant for the duration
+        of the animation. For example, in a horizontal bar chart, if the largest bar
+        has a value of 100 for the first time period and 10,000 for the last
+        time period. The xlim maximum will be 10,000 for each frame.
+
+    steps_per_period : int, default 10
+        The number of steps to go from one time period to the next. 
+        The bars will grow linearly between each period.
+
+    interpolate_period : bool, default `False`
+        Whether to interpolate the period. Only valid for datetime or
+        numeric indexes. When set to `True`, for example, 
+        the two consecutive periods 2020-03-29 and 2020-03-30 with 
+        `steps_per_period` set to 4 would yield a new index of
+        2020-03-29 00:00:00
+        2020-03-29 06:00:00
+        2020-03-29 12:00:00
+        2020-03-29 18:00:00
+        2020-03-30 00:00:00
     
     label_bars : bool, default `True`
         Whether to label the bars with their value on their right
 
-    use_index : bool, default `True`
-        Whether to use the index as the text in the plot
+    bar_size : float, default .95
+        Height/width of bars for horizontal/vertical bar charts. 
+        Use a number between 0 and 1
+        Represents the fraction of space that each bar takes up. 
+        When equal to 1, no gap remains between the bars.
 
-    steps_per_period : int, default 10
-        The number of steps to go from one time period to the next. 
-        The bar will grow linearly between each period.
+    period_label : bool or dict, default `True`
+        If `True` or dict, use the index as a large text label
+        on the axes whose value changes
+
+        Use a dictionary to supply the exact position of the period
+        along with any valid parameters of the matplotlib `text` method.
+        At a minimum, you must supply both 'x' and 'y' in axes coordinates
+
+        Example:
+        {
+            'x': .99,
+            'y': .8,
+            'ha': 'right',
+            'va': 'center'
+        }
+        
+        If `False` - don't place label on axes
+
+    period_fmt : str, default `None`
+        Either a string with date directives or 
+            a new-style (Python 3.6+) formatted string
+
+        For a string with a date directive, find the complete list here
+        https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
+        
+        Example of string with date directives
+            '%B %d, %Y'
+        Will change 2020/03/29 to March 29, 2020
+        
+        For new-style formatted string. Use curly braces and
+            the variable `x`, which will be passed the current period's index value.
+        Example:
+            'Period {x:10.2f}'
+
+        Date directives will only be used for datetime indexes.
+
+    period_summary_func : function, default None
+        Custom text added to the axes each period.
+        Create a user-defined function that accepts two pandas Series of the current time period's
+        values and ranks. It must return a dictionary containing at a minimum the keys
+        "x", "y", and "s" which will be passed to the matplotlib `text` method
+
+        Example:
+        def func(values, ranks):
+            total = values.sum()
+            s = f'Worldwide deaths: {total}'
+            return {'x': .85, 'y': .2, 's': s, 'ha': 'right', 'size': 11}
+
+    perpendicular_bar_func : function or str, default None
+        Creates a single bar perpendicular to the main bars that spans the length
+            of the axis.
+        Use either a string that the DataFrame `agg` method understands or a 
+            user-defined function.
+            
+        DataFrame strings - 'mean', 'median', 'max', 'min', etc..
+
+        The function is passed two pandas Series of the current time period's
+            and must return a single value.
+
+        def func(values, ranks):
+            return values.quantile(.75)
 
     period_length : int, default 500
         Number of milliseconds to animate each period (row). Default is 500ms (half of a second)
 
-    figsize : two-item tuple of numbers, default (6.5, 3.5)
+    figsize : two-item tuple of numbers, default (6, 3.5)
         matplotlib figure size in inches. Will be overridden if own figure supplied to `fig`
 
     cmap : str, matplotlib colormap instance, or list of colors, default 'dark24'
@@ -303,32 +528,60 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
     title : str, default None
         Title of plot
 
-    bar_label_size : int, float, default 7
-        Size in points of numeric labels just outside of the bars
+    title_size : number or str, default plt.rcParams['axes.titlesize']
+        Size in points of title or relative size str. See Font Help below.
 
-    tick_label_size : int, float, default 7
-        Size in points of tick labels
+    bar_label_size : number or str, default 7
+        Size in points or relative size str of numeric labels 
+        just outside of the bars. See Font Help below.
 
-    period_label_size : int, float, default 16
-        Size in points of label plotted with the axes that labels the period.
+    tick_label_size : number or str, default 7
+        Size in points of tick labels. See Font Help below. 
+        See Font Help below
+
+    shared_fontdict : dict, default None
+        Dictionary of font properties shared across the tick labels, bar labels, 
+        period labels, and title. The only property not shared is `size`. It will
+        be ignored if you try to set it.
+
+        Possible keys are:
+            'family', 'weight', 'color', 'style', 'stretch', 'weight', 'variant'
+        Here is an example dictionary:
+        {
+            'family' : 'Helvetica',
+            'weight' : 'bold',
+            'color' : 'rebeccapurple'
+        }
+
+    writer : str or matplotlib Writer instance, default plt.rcParams['animation.writer']
+
+    scale : 'linear' or 'log', default 'linear'
+        Type of scaling to use for the axis containing the values
 
     fig : matplotlib Figure, default None
-        For greater control over the aesthetics, supply your own figure with a single axes.
+        For greater control over the aesthetics, supply your own figure.
 
-    **kwargs : key, value pairs
-        Other keyword arguments passed to the matplotlib barh/bar function.
+    bar_kwargs : dict, default `None`
+        Other keyword arguments (within a dictionary) forwarded to the 
+            matplotlib `barh`/`bar` function.
+        Some examples:
+            `ec` - edgecolor - color of edge of bar. Default is 'white'
+            `lw` - width of edge in points. Default is 1.5
+            `alpha` - opacity of bars, 0 to 1
 
 
     Returns
     -------
-    Either HTML5 video or creates an mp4/gif file of the animation and returns `None`
+    When `filename` is left as `None`, an HTML5 video is returned.
+    Otherwise create an mp4/gif file of the animation and return `None`
 
     Notes
     -----
     Default DPI of 144
 
     It is possible for some bars to be out of order momentarily during a transition since
-    both height and location change linearly.
+    both height and location change linearly and not directly with respect to their 
+    current value. This keeps all the transitions identical.
 
     Examples
     --------
@@ -341,7 +594,7 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         orientation='h',
         sort='desc',
         label_bars=True,
-        use_index=True,
+        label_period=True,
         steps_per_period=10,
         period_length=500,
         cmap='dark24',
@@ -349,16 +602,26 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         bar_label_size=7,
         tick_label_size=7,
         period_label_size=16,
+        period_label_position=None,
         fig=None)
+
+    Font Help
+    ---------
+    Font size can also be a string - 'xx-small', 'x-small', 'small',  
+        'medium', 'large', 'x-large', 'xx-large', 'smaller', 'larger'
+    These sizes are relative to plt.rcParams['font.size'].
     '''
-    bcr = _BarChartRace(df, filename, orientation, sort, n_bars, label_bars, use_index, steps_per_period, 
-                        period_length, figsize, cmap, title, bar_label_size, tick_label_size, 
-                        period_label_size, fig, kwargs)
+    bcr = _BarChartRace(df, filename, orientation, sort, n_bars, fixed_order, fixed_max,
+                        steps_per_period, interpolate_period, label_bars, bar_size, 
+                        period_label, period_fmt, period_summary_func, perpendicular_bar_func, 
+                        period_length, figsize, cmap, title, title_size, bar_label_size, tick_label_size, 
+                        shared_fontdict, scale, writer, fig, bar_kwargs)
     return bcr.make_animation()
 
 def load_dataset(name='covid19'):
     '''
-    Return a pandas DataFrame suitable for immediate use in `bar_chart_race`
+    Return a pandas DataFrame suitable for immediate use in `bar_chart_race`.
+    Must be connected to the internet
 
     Parameters
     ----------
@@ -369,5 +632,170 @@ def load_dataset(name='covid19'):
     -------
     pandas DataFrame
     '''
-    return pd.read_csv(f'https://raw.githubusercontent.com/dexplo/bar_chart_race/master/data/{name}.csv', 
-                       index_col='date', parse_dates=['date'])
+    url = f'https://raw.githubusercontent.com/dexplo/bar_chart_race/master/data/{name}.csv'
+    return pd.read_csv(url, index_col='date', parse_dates=['date'])
+
+def prepare_wide_data(df, orientation='h', sort='desc', n_bars=None, interpolate_period=False, 
+                      steps_per_period=10, compute_ranks=True):
+    '''
+    Prepares 'wide' data for bar chart animation. 
+    Returns two DataFrames - the interpolated values and the interpolated ranks
+    
+    There is no need to use this function directly to create the animation. You can pass your
+    DataFrame directly to `bar_chart_race`.
+
+    This function is useful if you want to view the prepared data without creating an animation.
+
+    Parameters
+    ----------
+    df : pandas DataFrame
+        Must be a 'wide' pandas DataFrame where each row represents a single period of time. 
+        Each column contains the values of the bars for that category. 
+        Optionally, use the index to label each time period.
+
+    orientation : 'h' or 'v', default 'h'
+        Bar orientation - horizontal or vertical
+
+    sort : 'desc' or 'asc', default 'desc'
+        Choose how to sort the bars. Use 'desc' to put largest bars on top and 'asc' 
+        to place largest bars on bottom.
+
+    n_bars : int, default None
+        Choose the maximum number of bars to display on the graph. By default, use all bars. 
+        New bars entering the race will appear from the bottom or top.
+
+    interpolate_period : bool, default `False`
+        Whether to interpolate the period. Only valid for datetime or
+        numeric indexes. When set to `True`, for example, 
+        the two consecutive periods 2020-03-29 and 2020-03-30 with 
+        `steps_per_period` set to 4 would yield a new index of
+        2020-03-29 00:00:00
+        2020-03-29 06:00:00
+        2020-03-29 12:00:00
+        2020-03-29 18:00:00
+        2020-03-30 00:00:00
+
+    steps_per_period : int, default 10
+        The number of steps to go from one time period to the next. 
+        The bars will grow linearly between each period.
+
+    compute_ranks : bool, default True
+        When `True` return both the interpolated values and ranks DataFrames
+        Otherwise just return the values
+
+    Returns
+    -------
+    A tuple of DataFrames. The first is the interpolated values and the second
+    is the interpolated ranks.
+
+    Examples
+    --------
+    df_values, df_ranks = bcr.prepare_wide_data(df)
+    '''
+    if n_bars is None:
+        n_bars = df.shape[1]
+
+    df_values = df.reset_index()
+    df_values.index = df_values.index * steps_per_period
+    new_index = range(df_values.index[-1] + 1)
+    df_values = df_values.reindex(new_index)
+    if interpolate_period:
+        if df_values.iloc[:, 0].dtype.kind == 'M':
+            first, last = df_values.iloc[[0, -1], 0]
+            dr = pd.date_range(first, last, periods=len(df_values))
+            df_values.iloc[:, 0] = dr
+        else:
+            df_values.iloc[:, 0] = df_values.iloc[:, 0].interpolate()
+    else:
+        df_values.iloc[:, 0] = df_values.iloc[:, 0].fillna(method='ffill')
+    
+    df_values = df_values.set_index(df_values.columns[0])
+    if compute_ranks:
+        df_ranks = df_values.rank(axis=1, method='first', ascending=False).clip(upper=n_bars + 1)
+        if (sort == 'desc' and orientation == 'h') or (sort == 'asc' and orientation == 'v'):
+            df_ranks = n_bars + 1 - df_ranks
+        df_ranks = df_ranks.interpolate()
+    
+    df_values = df_values.interpolate()
+    if compute_ranks:
+        return df_values, df_ranks
+    return df_values
+
+def prepare_long_data(df, index, columns, values, aggfunc='sum', orientation='h', sort='desc', 
+                      n_bars=None, interpolate_period=False, steps_per_period=10, compute_ranks=True):
+    '''
+    Prepares 'long' data for bar chart animation. 
+    Returns two DataFrames - the interpolated values and the interpolated ranks
+    
+    You (currently) cannot pass long data to `bar_chart_race` directly. Use this function
+    to create your wide data first before passing it to `bar_chart_race`.
+
+    Parameters
+    ----------
+    df : pandas DataFrame
+        Must be a 'long' pandas DataFrame where one column contains the period,
+        another the categories and the third the values of each category for each period. 
+        
+        This DataFrame will be passed to the `pivot_table` method to turn it into a
+        wide DataFrame. It will then be passed to the `prepare_wide_data` function.
+
+    index : str
+        Name of column used for the time period. It will be placed in the index
+
+    columns : str
+        Name of column containing the categories for each time period. This column
+        will get pivoted so that each unique value is a column.
+
+    values : str
+        Name of column holding the values for each time period of each category.
+        This column will become the values of the resulting DataFrame
+
+    aggfunc : str or aggregation function, default 'sum'
+        String name of aggregation function ('sum', 'min', 'mean', 'max, etc...) 
+        or actual function (np.sum, np.min, etc...). 
+        Categories that have multiple values for the same time period must be 
+        aggregated for the animation to work.
+
+    orientation : 'h' or 'v', default 'h'
+        Bar orientation - horizontal or vertical
+
+    sort : 'desc' or 'asc', default 'desc'
+        Choose how to sort the bars. Use 'desc' to put largest bars on top and 'asc' 
+        to place largest bars on bottom.
+
+    n_bars : int, default None
+        Choose the maximum number of bars to display on the graph. By default, use all bars. 
+        New bars entering the race will appear from the bottom or top.
+
+    interpolate_period : bool, default `False`
+        Whether to interpolate the period. Only valid for datetime or
+        numeric indexes. When set to `True`, for example, 
+        the two consecutive periods 2020-03-29 and 2020-03-30 with 
+        `steps_per_period` set to 4 would yield a new index of
+        2020-03-29 00:00:00
+        2020-03-29 06:00:00
+        2020-03-29 12:00:00
+        2020-03-29 18:00:00
+        2020-03-30 00:00:00
+
+    steps_per_period : int, default 10
+        The number of steps to go from one time period to the next. 
+        The bars will grow linearly between each period.
+
+    compute_ranks : bool, default True
+        When `True` return both the interpolated values and ranks DataFrames
+        Otherwise just return the values
+
+    Returns
+    -------
+    A tuple of DataFrames. The first is the interpolated values and the second
+    is the interpolated ranks.
+
+    Examples
+    --------
+    df_values, df_ranks = bcr.prepare_long_data(df)
+    bcr.bar_chart_race(df_values, steps_per_period=1, period_length=50)
+    '''
+    df_wide = df.pivot_table(index=index, columns=columns, values=values, aggfunc=aggfunc)
+    return prepare_wide_data(df_wide, orientation, sort, n_bars, interpolate_period,
+                             steps_per_period, compute_ranks)
