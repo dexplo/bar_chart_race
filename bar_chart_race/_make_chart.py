@@ -8,10 +8,10 @@ from ._colormaps import DARK24
 class _BarChartRace:
     
     def __init__(self, df, filename, orientation, sort, n_bars, fixed_order, fixed_max,
-                 steps_per_period, interpolate_period, label_bars, bar_size, 
-                 period_label, period_fmt, period_summary_func, perpendicular_bar_func, 
-                 period_length, figsize, cmap, title, title_size, bar_label_size, tick_label_size, 
-                 shared_fontdict, scale, writer, fig, bar_kwargs):
+                 steps_per_period, interpolate_period, label_bars, bar_size, period_label, 
+                 period_fmt, period_summary_func, perpendicular_bar_func, period_length, figsize, 
+                 cmap, title, title_size, bar_label_size, tick_label_size, shared_fontdict, scale, 
+                 writer, fig, bar_kwargs):
         self.filename = filename
         self.orientation = orientation
         self.sort = sort
@@ -71,7 +71,8 @@ class _BarChartRace:
     def get_bar_kwargs(self, bar_kwargs):
         bar_kwargs = bar_kwargs or {}
         if 'width' in bar_kwargs or 'height' in bar_kwargs:
-            raise ValueError("Do not set the width or height with `bar_kwargs`. Instead, use `bar_size`.")
+            raise ValueError("Do not set the width or height with `bar_kwargs`. "
+                             "Instead, use `bar_size`.")
         if self.orientation == 'h':
             bar_kwargs['height'] = self.bar_size
         else:
@@ -163,8 +164,8 @@ class _BarChartRace:
         elif hasattr(cmap, 'tolist'):
             bar_colors = cmap.tolist()
         else:
-            raise TypeError('`cmap` must be a string name of a colormap, a matplotlib colormap instance' \
-                            'or a list of colors')
+            raise TypeError('`cmap` must be a string name of a colormap, a matplotlib colormap '
+                            'instance or a list of colors')
 
         # bar_colors is now a list
         n = len(bar_colors)
@@ -292,7 +293,8 @@ class _BarChartRace:
             text_dict = self.period_summary_func(values, ranks)
             if 'x' not in text_dict or 'y' not in text_dict or 's' not in text_dict:
                 name = self.period_summary_func.__name__
-                raise ValueError(f'The dictionary returned from `{name}` must contain "x", "y", and "s"')
+                raise ValueError(f'The dictionary returned from `{name}` must contain '
+                                  '"x", "y", and "s"')
             self.ax.text(transform=self.ax.transAxes, **text_dict)
 
         if self.label_bars:
@@ -369,54 +371,56 @@ class _BarChartRace:
         plt.rcParams = self.orig_rcParams
 
 
-def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None, 
-                   fixed_order=False, fixed_max=False, steps_per_period=10, 
-                   interpolate_period=False, label_bars=True, bar_size=.95, 
-                   period_label=True, period_fmt=None, period_summary_func=None, 
-                   perpendicular_bar_func=None, period_length=500, figsize=(6, 3.5), 
-                   cmap='dark24', title=None, title_size='', bar_label_size=7, 
-                   tick_label_size=7, shared_fontdict=None, scale='linear', 
-                   writer=None, fig=None, bar_kwargs=None):
+def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None, fixed_order=False, 
+                   fixed_max=False, steps_per_period=10, interpolate_period=False, label_bars=True, 
+                   bar_size=.95, period_label=True, period_fmt=None, period_summary_func=None, 
+                   perpendicular_bar_func=None, period_length=500, figsize=(6, 3.5), cmap='dark24', 
+                   title=None, title_size='', bar_label_size=7, tick_label_size=7, 
+                   shared_fontdict=None, scale='linear', writer=None, fig=None, bar_kwargs=None):
     '''
-    Create an animated bar chart race using matplotlib. Data must be in 'wide' format where each
-    row represents a single time period and each column represents a distinct category. 
-    Optionally, the index can label the time period.
+    Create an animated bar chart race using matplotlib. Data must be in 
+    'wide' format where each row represents a single time period and each 
+    column represents a distinct category. Optionally, the index can label 
+    the time period.
 
     Bar height and location change linearly from one time period to the next.
 
-    If no `filename` is given, an HTML string is returned, otherwise the animation is
-    saved to disk.
+    If no `filename` is given, an HTML string is returned, otherwise the 
+    animation is saved to disk.
 
-    This is resource intensive - Start with just a few rows of data to test
+    This is resource intensive - Start with just a few rows of data to test.
 
 
     Parameters
     ----------
     df : pandas DataFrame
-        Must be a 'wide' DataFrame where each row represents a single period of time. 
-        Each column contains the values of the bars for that category. 
-        Optionally, use the index to label each time period.
+        Must be a 'wide' DataFrame where each row represents a single period 
+        of time. Each column contains the values of the bars for that 
+        category. Optionally, use the index to label each time period.
         The index can be of any type.
 
     filename : `None` or str, default None
         If `None` return animation as an HTML5 string.
-        If a string, save animation to that filename location. Use .mp4 or .gif extensions
+        If a string, save animation to that filename location. 
+        Use .mp4 or .gif extensions
 
     orientation : 'h' or 'v', default 'h'
         Bar orientation - horizontal or vertical
 
     sort : 'desc' or 'asc', default 'desc'
-        Choose how to sort the bars. Use 'desc' to put largest bars on top and 'asc' to place largest
-        bars on bottom.
+        Choose how to sort the bars. Use 'desc' to put largest bars on top 
+        and 'asc' to place largest bars on bottom.
 
     n_bars : int, default None
-        Choose the maximum number of bars to display on the graph. By default, use all bars. 
-        New bars entering the race will appear from the edge of the axes.
+        Choose the maximum number of bars to display on the graph. 
+        By default, use all bars. New bars entering the race will appear 
+        from the edge of the axes.
 
     fixed_order : bool or list, default False
-        When `False`, bar order changes every time period to corresponds with `sort`.
-        When `True`, bars remained fixed according to their final value corresponding with `sort`
-        Otherwise, provide a list of the exact order of the categories for the entire duration
+        When `False`, bar order changes every time period to correspond 
+        with `sort`. When `True`, bars remained fixed according to their 
+        final value corresponding with `sort`. Otherwise, provide a list 
+        of the exact order of the categories for the entire duration.
 
     fixed_max : bool, default False
         Whether to fix the maximum value of the axis containing the values.
@@ -424,10 +428,11 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         just after the largest bar of the current time period. 
         The axis maximum will change along with the data.
 
-        When True, the maximum axis value will remain constant for the duration
-        of the animation. For example, in a horizontal bar chart, if the largest bar
-        has a value of 100 for the first time period and 10,000 for the last
-        time period. The xlim maximum will be 10,000 for each frame.
+        When True, the maximum axis value will remain constant for the 
+        duration of the animation. For example, in a horizontal bar chart, 
+        if the largest bar has a value of 100 for the first time period and 
+        10,000 for the last time period. The xlim maximum will be 10,000 
+        for each frame.
 
     steps_per_period : int, default 10
         The number of steps to go from one time period to the next. 
@@ -482,8 +487,8 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
             '%B %d, %Y'
         Will change 2020/03/29 to March 29, 2020
         
-        For new-style formatted string. Use curly braces and
-            the variable `x`, which will be passed the current period's index value.
+        For new-style formatted string. Use curly braces and the variable `x`, 
+        which will be passed the current period's index value.
         Example:
             'Period {x:10.2f}'
 
@@ -491,9 +496,10 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
 
     period_summary_func : function, default None
         Custom text added to the axes each period.
-        Create a user-defined function that accepts two pandas Series of the current time period's
-        values and ranks. It must return a dictionary containing at a minimum the keys
-        "x", "y", and "s" which will be passed to the matplotlib `text` method
+        Create a user-defined function that accepts two pandas Series of the 
+        current time period's values and ranks. It must return a dictionary 
+        containing at a minimum the keys "x", "y", and "s" which will be 
+        passed to the matplotlib `text` method.
 
         Example:
         def func(values, ranks):
@@ -502,28 +508,31 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
             return {'x': .85, 'y': .2, 's': s, 'ha': 'right', 'size': 11}
 
     perpendicular_bar_func : function or str, default None
-        Creates a single bar perpendicular to the main bars that spans the length
-            of the axis.
+        Creates a single bar perpendicular to the main bars that spans the 
+        length of the axis. 
+        
         Use either a string that the DataFrame `agg` method understands or a 
-            user-defined function.
+        user-defined function.
             
         DataFrame strings - 'mean', 'median', 'max', 'min', etc..
 
         The function is passed two pandas Series of the current time period's
-            and must return a single value.
+        data and ranks. It must return a single value.
 
         def func(values, ranks):
             return values.quantile(.75)
 
     period_length : int, default 500
-        Number of milliseconds to animate each period (row). Default is 500ms (half of a second)
+        Number of milliseconds to animate each period (row). 
+        Default is 500ms (half of a second)
 
     figsize : two-item tuple of numbers, default (6, 3.5)
-        matplotlib figure size in inches. Will be overridden if own figure supplied to `fig`
+        matplotlib figure size in inches. Will be overridden if figure 
+        supplied to `fig`.
 
     cmap : str, matplotlib colormap instance, or list of colors, default 'dark24'
-        Colors to be used for the bars. Colors will repeat if there are more bars
-        than colors.
+        Colors to be used for the bars. Colors will repeat if there are 
+        more bars than colors.
 
     title : str, default None
         Title of plot
@@ -540,9 +549,9 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         See Font Help below
 
     shared_fontdict : dict, default None
-        Dictionary of font properties shared across the tick labels, bar labels, 
-        period labels, and title. The only property not shared is `size`. It will
-        be ignored if you try to set it.
+        Dictionary of font properties shared across the tick labels, 
+        bar labels, period labels, and title. The only property not shared 
+        is `size`. It will be ignored if you try to set it.
 
         Possible keys are:
             'family', 'weight', 'color', 'style', 'stretch', 'weight', 'variant'
@@ -579,13 +588,15 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
     -----
     Default DPI of 144
 
-    It is possible for some bars to be out of order momentarily during a transition since
-    both height and location change linearly and not directly with respect to their 
-    current value. This keeps all the transitions identical.
+    It is possible for some bars to be out of order momentarily during a 
+    transition since both height and location change linearly and not 
+    directly with respect to their current value. This keeps all the 
+    transitions identical.
 
     Examples
     --------
-    Use the `load_data` function to get an example dataset to create an animation.
+    Use the `load_data` function to get an example dataset to 
+    create an animation.
 
     df = bcr.load_data('covid19')
     bcr.bar_chart_race(
@@ -612,9 +623,9 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
     These sizes are relative to plt.rcParams['font.size'].
     '''
     bcr = _BarChartRace(df, filename, orientation, sort, n_bars, fixed_order, fixed_max,
-                        steps_per_period, interpolate_period, label_bars, bar_size, 
-                        period_label, period_fmt, period_summary_func, perpendicular_bar_func, 
-                        period_length, figsize, cmap, title, title_size, bar_label_size, tick_label_size, 
+                        steps_per_period, interpolate_period, label_bars, bar_size, period_label, 
+                        period_fmt, period_summary_func, perpendicular_bar_func, period_length, 
+                        figsize, cmap, title, title_size, bar_label_size, tick_label_size, 
                         shared_fontdict, scale, writer, fig, bar_kwargs)
     return bcr.make_animation()
 
@@ -641,15 +652,17 @@ def prepare_wide_data(df, orientation='h', sort='desc', n_bars=None, interpolate
     Prepares 'wide' data for bar chart animation. 
     Returns two DataFrames - the interpolated values and the interpolated ranks
     
-    There is no need to use this function directly to create the animation. You can pass your
-    DataFrame directly to `bar_chart_race`.
+    There is no need to use this function directly to create the animation. 
+    You can pass your DataFrame directly to `bar_chart_race`.
 
-    This function is useful if you want to view the prepared data without creating an animation.
+    This function is useful if you want to view the prepared data without 
+    creating an animation.
 
     Parameters
     ----------
     df : pandas DataFrame
-        Must be a 'wide' pandas DataFrame where each row represents a single period of time. 
+        Must be a 'wide' pandas DataFrame where each row represents a 
+        single period of time. 
         Each column contains the values of the bars for that category. 
         Optionally, use the index to label each time period.
 
@@ -657,12 +670,13 @@ def prepare_wide_data(df, orientation='h', sort='desc', n_bars=None, interpolate
         Bar orientation - horizontal or vertical
 
     sort : 'desc' or 'asc', default 'desc'
-        Choose how to sort the bars. Use 'desc' to put largest bars on top and 'asc' 
-        to place largest bars on bottom.
+        Choose how to sort the bars. Use 'desc' to put largest bars on 
+        top and 'asc' to place largest bars on bottom.
 
     n_bars : int, default None
-        Choose the maximum number of bars to display on the graph. By default, use all bars. 
-        New bars entering the race will appear from the bottom or top.
+        Choose the maximum number of bars to display on the graph.
+        By default, use all bars. New bars entering the race will 
+        appear from the bottom or top.
 
     interpolate_period : bool, default `False`
         Whether to interpolate the period. Only valid for datetime or
@@ -721,8 +735,9 @@ def prepare_wide_data(df, orientation='h', sort='desc', n_bars=None, interpolate
         return df_values, df_ranks
     return df_values
 
-def prepare_long_data(df, index, columns, values, aggfunc='sum', orientation='h', sort='desc', 
-                      n_bars=None, interpolate_period=False, steps_per_period=10, compute_ranks=True):
+def prepare_long_data(df, index, columns, values, aggfunc='sum', orientation='h', 
+                      sort='desc', n_bars=None, interpolate_period=False, 
+                      steps_per_period=10, compute_ranks=True):
     '''
     Prepares 'long' data for bar chart animation. 
     Returns two DataFrames - the interpolated values and the interpolated ranks
@@ -733,11 +748,13 @@ def prepare_long_data(df, index, columns, values, aggfunc='sum', orientation='h'
     Parameters
     ----------
     df : pandas DataFrame
-        Must be a 'long' pandas DataFrame where one column contains the period,
-        another the categories and the third the values of each category for each period. 
+        Must be a 'long' pandas DataFrame where one column contains 
+        the period, another the categories, and the third the values 
+        of each category for each period. 
         
-        This DataFrame will be passed to the `pivot_table` method to turn it into a
-        wide DataFrame. It will then be passed to the `prepare_wide_data` function.
+        This DataFrame will be passed to the `pivot_table` method to turn 
+        it into a wide DataFrame. It will then be passed to the 
+        `prepare_wide_data` function.
 
     index : str
         Name of column used for the time period. It will be placed in the index
@@ -760,12 +777,13 @@ def prepare_long_data(df, index, columns, values, aggfunc='sum', orientation='h'
         Bar orientation - horizontal or vertical
 
     sort : 'desc' or 'asc', default 'desc'
-        Choose how to sort the bars. Use 'desc' to put largest bars on top and 'asc' 
-        to place largest bars on bottom.
+        Choose how to sort the bars. Use 'desc' to put largest bars on 
+        top and 'asc' to place largest bars on bottom.
 
     n_bars : int, default None
-        Choose the maximum number of bars to display on the graph. By default, use all bars. 
-        New bars entering the race will appear from the bottom or top.
+        Choose the maximum number of bars to display on the graph.
+        By default, use all bars. New bars entering the race will 
+        appear from the bottom or top.
 
     interpolate_period : bool, default `False`
         Whether to interpolate the period. Only valid for datetime or
