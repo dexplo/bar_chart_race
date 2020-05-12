@@ -6,7 +6,7 @@ Make animated bar chart races with matplotlib.
 
 ## Installation
 
-Install with `pip install bar_chart_race`
+Install with `pip install bar_chart_race` or `conda install -c conda-forge bar_chart_race`
 
 ## Usage
 
@@ -32,6 +32,7 @@ There is one main function, **`bar_chart_race`**, which we use to recreate the a
     filename='covid19_horiz_desc.mp4',
     orientation='h',
     sort='desc',
+    n_bars=None,
     label_bars=True,
     use_index=True,
     steps_per_period=10,
