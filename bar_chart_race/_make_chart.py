@@ -35,7 +35,7 @@ class _BarChartRace:
         self.tick_label_size = tick_label_size
         self.orig_rcParams = self.set_shared_fontdict(shared_fontdict)
         self.scale = scale
-        self.write = writer
+        self.writer = writer
         self.fps = 1000 / self.period_length * steps_per_period
         self.fig = fig
         
@@ -77,6 +77,8 @@ class _BarChartRace:
             bar_kwargs['height'] = self.bar_size
         else:
             bar_kwargs['width'] = self.bar_size
+        if 'alpha' not in bar_kwargs:
+            bar_kwargs['alpha'] = .8
         return bar_kwargs
 
     def get_period_label(self, period_label):
@@ -369,14 +371,17 @@ class _BarChartRace:
             anim.save(self.filename, fps=self.fps)
         
         plt.rcParams = self.orig_rcParams
+        return None
 
 
-def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None, fixed_order=False, 
-                   fixed_max=False, steps_per_period=10, interpolate_period=False, label_bars=True, 
-                   bar_size=.95, period_label=True, period_fmt=None, period_summary_func=None, 
-                   perpendicular_bar_func=None, period_length=500, figsize=(6, 3.5), cmap='dark24', 
-                   title=None, title_size='', bar_label_size=7, tick_label_size=7, 
-                   shared_fontdict=None, scale='linear', writer=None, fig=None, bar_kwargs=None):
+def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None, 
+                   fixed_order=False, fixed_max=False, steps_per_period=10, 
+                   interpolate_period=False, label_bars=True, bar_size=.95, 
+                   period_label=True, period_fmt=None, period_summary_func=None, 
+                   perpendicular_bar_func=None, period_length=500, figsize=(6, 3.5), 
+                   cmap='dark24', title=None, title_size='', bar_label_size=7, 
+                   tick_label_size=7, shared_fontdict=None, scale='linear', writer=None, 
+                   fig=None, bar_kwargs=None):
     '''
     Create an animated bar chart race using matplotlib. Data must be in 
     'wide' format where each row represents a single time period and each 
@@ -478,7 +483,7 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
 
     period_fmt : str, default `None`
         Either a string with date directives or 
-            a new-style (Python 3.6+) formatted string
+        a new-style (Python 3.6+) formatted string
 
         For a string with a date directive, find the complete list here
         https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
@@ -570,9 +575,10 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
     fig : matplotlib Figure, default None
         For greater control over the aesthetics, supply your own figure.
 
-    bar_kwargs : dict, default `None`
+    bar_kwargs : dict, default `None` (alpha=.8)
         Other keyword arguments (within a dictionary) forwarded to the 
-            matplotlib `barh`/`bar` function.
+        matplotlib `barh`/`bar` function. If no value for 'alpha' is given,
+        then it is set to .8 by default.
         Some examples:
             `ec` - edgecolor - color of edge of bar. Default is 'white'
             `lw` - width of edge in points. Default is 1.5
@@ -598,23 +604,37 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
     Use the `load_data` function to get an example dataset to 
     create an animation.
 
-    df = bcr.load_data('covid19')
+    df = bcr.load_dataset('covid19')
     bcr.bar_chart_race(
-        df=df,
-        filename='covid19_horiz_desc.mp4',
-        orientation='h',
-        sort='desc',
-        label_bars=True,
-        label_period=True,
-        steps_per_period=10,
-        period_length=500,
-        cmap='dark24',
-        title='COVID-19 Deaths by Country',
-        bar_label_size=7,
-        tick_label_size=7,
-        period_label_size=16,
-        period_label_position=None,
-        fig=None)
+        df=df, 
+        filename='covid19_horiz_desc.mp4', 
+        orientation='h', 
+        sort='desc', 
+        n_bars=8, 
+        fixed_order=False, 
+        fixed_max=True, 
+        steps_per_period=10, 
+        interpolate_period=False, 
+        label_bars=True, 
+        bar_size=.95, 
+        period_label={'x': .99, 'y': .8, 'ha': 'right', 'va': 'center'}, 
+        period_fmt='%B %d, %Y', 
+        period_summary_func=lambda v, r: {'x': .85, 'y': .2, 
+                                          's': f'Worldwide deaths: {v.sum()}', 
+                                          'ha': 'right', 'size': 11}, 
+        perpendicular_bar_func='median', 
+        period_length=500, 
+        figsize=(5, 3), 
+        cmap='dark24', 
+        title='COVID-19 Deaths by Country', 
+        title_size='', 
+        bar_label_size=7, 
+        tick_label_size=7, 
+        shared_fontdict={'family' : 'Helvetica', 'weight' : 'bold', 'color' : '.1'}, 
+        scale='linear', 
+        writer=None, 
+        fig=None, 
+        bar_kwargs={'alpha': .7})        
 
     Font Help
     ---------
