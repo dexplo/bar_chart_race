@@ -1,5 +1,6 @@
 import setuptools
 import re
+from bar_chart_race import __version__
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -10,7 +11,7 @@ long_description = re.sub(pat, repl, long_description)
 
 setuptools.setup(
     name="bar_chart_race",
-    version="0.0.7",
+    version=__version__,
     author="Ted Petrou",
     author_email="petrou.theodore@gmail.com",
     description="Create animated bar chart races using matplotlib",
