@@ -664,7 +664,11 @@ def load_dataset(name='covid19'):
     pandas DataFrame
     '''
     url = f'https://raw.githubusercontent.com/dexplo/bar_chart_race/master/data/{name}.csv'
-    return pd.read_csv(url, index_col='date', parse_dates=['date'])
+
+    index_dict = {'covid19': 'date',
+                 'urban_pop': 'year'}
+    index_col = index_dict[name]
+    return pd.read_csv(url, index_col=index_col, parse_dates=[index_col])
 
 def prepare_wide_data(df, orientation='h', sort='desc', n_bars=None, interpolate_period=False, 
                       steps_per_period=10, compute_ranks=True):
