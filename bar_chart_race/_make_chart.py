@@ -133,6 +133,7 @@ class _BarChartRace:
         elif isinstance(self.fixed_order, list):
             cols = self.fixed_order
             df = df[cols]
+            self.n_bars = min(len(cols), self.n_bars)
             
         compute_ranks = self.fixed_order is False
         dfs = prepare_wide_data(df, self.orientation, self.sort, self.n_bars,
