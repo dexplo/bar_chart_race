@@ -1,8 +1,11 @@
 # Bar Chart Race
 
+[![](https://img.shields.io/pypi/v/bar_chart_race)](https://pypi.org/project/bar_chart_race)
+[![PyPI - License](https://img.shields.io/pypi/l/bar_chart_race)](LICENSE)
+
 Make animated bar chart races with matplotlib.
 
-![gif](videos/covid19_horiz_desc.gif)
+![gif](docs/videos/covid19_horiz_desc.gif)
 
 ## Installation
 
@@ -18,7 +21,7 @@ Must begin with a pandas DataFrame containing 'wide' data where:
   
 The data below is an example of properly formatted data. It shows total deaths from COVID-19 for the highest 20 countries by date.
 
-![gif](images/wide_data.png)
+![gif](docs/images/wide_data.png)
 
 ### Main function - `bar_chart_race`
 
@@ -71,4 +74,4 @@ Make bars vertical by setting `orientation` to `'v'`. Use `n_bars` if you want t
     title='Urban Population')
 ```
 
-![gif](videos/urban_vert_asc.gif)
+![gif](docs/videos/urban_vert_asc.gif)
