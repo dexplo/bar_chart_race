@@ -4,3 +4,4 @@ notebooks/
 *egg-info/
 build/
 dist/
+site/
