@@ -1,0 +1,44 @@
+site_name: Bar Chart Race
+site_description: Animated bar chart races in Python with matplotlib
+site_author: Ted Petrou
+site_url: https://www.dexplo.org/bar_chart_race
+repo_url: https://github.com/dexplo/bar_chart_race
+copyright: Copyright @ 2020 Ted Petrou
+
+theme:
+  name: material
+  features:
+    - tabs
+
+nav:
+  - Home: index.md
+  - More Dexplo Libraries:
+      - Dexplo: https://www.dexplo.org
+
+extra:
+  social:
+    - icon: fontawesome/brands/github-alt
+      link: https://github.com/dexplo
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/TedPetrou
+    - icon: fontawesome/brands/linkedin
+      link: https://linkedin.com/in/TedPetrou
+    - icon: fontawesome/brands/youtube
+      link: https://www.youtube.com/c/dunderdata
+    - icon: fontawesome/brands/facebook
+      link: https://www.facebook.com/dunderdata
+
+markdown_extensions:
+    - admonition
+    - toc:
+        permalink: True
+    - codehilite:
+        guess_lang: false
+
+plugins:
+    - search
+    - minify:
+        minify_html: true
+
+extra_javascript:
+  - https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML
