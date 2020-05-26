@@ -91,3 +91,18 @@ class TestSimpleBC:
         bcr.bar_chart_race(self.df, figsize=(4, 2.5), n_bars=6, title='Great title', title_size=4)
         bcr.bar_chart_race(self.df, figsize=(4, 2.5), n_bars=6, title='Great title', 
                            title_size='xx-large')
+    
+    def test_label_size(self):
+        bcr.bar_chart_race(self.df, figsize=(4, 2.5), n_bars=6, 
+                           bar_label_size=4, tick_label_size=12)
+
+    def test_scale(self):
+        bcr.bar_chart_race(self.df, figsize=(4, 2.5), n_bars=6, scale='log')
+
+    def test_save(self):
+        bcr.bar_chart_race(self.df, 'videos/test.mp4', figsize=(4, 2.5), n_bars=6)
+        bcr.bar_chart_race(self.df, 'videos/test.gif', figsize=(4, 2.5), n_bars=6)
+        bcr.bar_chart_race(self.df, 'videos/test.html', figsize=(4, 2.5), n_bars=6)
+
+    def test_writer(self):
+        bcr.bar_chart_race(self.df, 'videos/test.mpeg', figsize=(4, 2.5), n_bars=6, writer='imagemagick')
