@@ -15,6 +15,7 @@ class _BarChartRace:
                  cmap, title, title_size, bar_label_size, tick_label_size, shared_fontdict, scale, 
                  writer, fig, bar_kwargs, filter_column_colors):
         self.filename = filename
+        self.extension = self.get_extension()
         self.orientation = orientation
         self.sort = sort
         self.n_bars = n_bars or df.shape[1]
@@ -37,7 +38,7 @@ class _BarChartRace:
         self.tick_label_size = tick_label_size
         self.orig_rcParams = self.set_shared_fontdict(shared_fontdict)
         self.scale = scale
-        self.writer = writer
+        self.writer = self.get_writer(writer)
         self.fps = 1000 / self.period_length * steps_per_period
         self.fig = fig
         self.filter_column_colors = filter_column_colors
@@ -55,6 +56,10 @@ class _BarChartRace:
             self.dpi = fig.dpi
         else:
             self.fig, self.ax = self.create_figure()
+
+    def get_extension(self):
+        if self.filename:
+            return self.filename.split('.')[-1]
 
     def validate_params(self):
         if isinstance(self.filename, str):
@@ -128,6 +133,16 @@ class _BarChartRace:
                                     "sans-serif', 'serif',"
                                     "'stretch', 'style', 'variant', 'weight'")
         return orig_rcParams
+
+    def get_writer(self, writer):
+        if writer is None:
+            if self.extension == 'gif':
+                writer = 'imagemagick'
+            elif self.extension == 'html':
+                writer = 'html'
+            else:
+                writer = plt.rcParams['animation.writer']
+        return writer
 
     def prepare_data(self, df):
         if self.fixed_order is True:
@@ -398,20 +413,26 @@ class _BarChartRace:
         anim = FuncAnimation(self.fig, self.anim_func, range(len(self.df_values)), 
                              init_func, interval=interval)
 
-        if self.html:
-            html = anim.to_html5_video()
+        try:
+            if self.html:
+                ret_val = anim.to_html5_video()
+            else:
+                ret_val = anim.save(self.filename, fps=self.fps, writer=self.writer)
+        except Exception as e:
+            if self.extension != 'gif':
+                message = f'''You do not have ffmpeg installed on your machine. Download
+                            ffmpeg from here: https://www.ffmpeg.org/download.html.
+                            
+                            Matplotlib's original error message below:\n
+                            {str(e)}
+                            '''
+            else:
+                message = str(e)
+            raise Exception(message)
+        finally:
             plt.rcParams = self.orig_rcParams
-            return html
 
-        extension = self.filename.split('.')[-1]
-        if extension == 'gif':
-            anim.save(self.filename, fps=self.fps, writer='imagemagick')
-        else:
-            anim.save(self.filename, fps=self.fps)
-        
-        
-        plt.rcParams = self.orig_rcParams
-        return None
+        return ret_val
 
 
 def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None, 
@@ -433,6 +454,11 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
     If no `filename` is given, an HTML string is returned, otherwise the 
     animation is saved to disk.
 
+    You must have ffmpeg installed on your machine to save files to disk.
+    Get ffmpeg here: https://www.ffmpeg.org/download.html
+
+    To save .gif files you'll need to install ImageMagick.
+
     This is resource intensive - Start with just a few rows of data to test.
 
 
@@ -447,7 +473,8 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
     filename : `None` or str, default None
         If `None` return animation as an HTML5 string.
         If a string, save animation to that filename location. 
-        Use .mp4 or .gif extensions
+        Use .mp4, .gif, .html, .mpeg, .mov and any other extensions supported
+        by ffmpeg or ImageMagick.
 
     orientation : 'h' or 'v', default 'h'
         Bar orientation - horizontal or vertical
@@ -607,7 +634,17 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
             'color' : 'rebeccapurple'
         }
 
-    writer : str or matplotlib Writer instance, default plt.rcParams['animation.writer']
+    writer : str or matplotlib Writer instance
+        By default, the writer will be 'ffmpeg' unless creating a gif,
+        then it will be 'imagemagick', or an html file, then it 
+        will be 'html'.
+            
+        Find all of the availabe Writers:
+        >>> from matplotlib import animation
+        >>> animation.writers.list()
+
+        You must have ffmpeg or ImageMagick installed in order
+
 
     scale : 'linear' or 'log', default 'linear'
         Type of scaling to use for the axis containing the values
@@ -652,7 +689,7 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
     Returns
     -------
     When `filename` is left as `None`, an HTML5 video is returned.
-    Otherwise create an mp4/gif file of the animation and return `None`
+    Otherwise create a file of the animation and return `None`
 
     Notes
     -----
