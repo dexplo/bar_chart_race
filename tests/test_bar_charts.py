@@ -96,6 +96,10 @@ class TestSimpleBC:
         bcr.bar_chart_race(self.df, figsize=(4, 2.5), n_bars=6, 
                            bar_label_size=4, tick_label_size=12)
 
+    def test_shared_fontdict(self):
+        bcr.bar_chart_race(self.df, figsize=(4, 2.5), n_bars=6, 
+                   shared_fontdict={'family': 'Courier New', 'weight': 'bold', 'color': 'teal'}))
+
     def test_scale(self):
         bcr.bar_chart_race(self.df, figsize=(4, 2.5), n_bars=6, scale='log')
 
@@ -105,4 +109,15 @@ class TestSimpleBC:
         bcr.bar_chart_race(self.df, 'videos/test.html', figsize=(4, 2.5), n_bars=6)
 
     def test_writer(self):
-        bcr.bar_chart_race(self.df, 'videos/test.mpeg', figsize=(4, 2.5), n_bars=6, writer='imagemagick')
+        bcr.bar_chart_race(self.df, 'videos/test.mpeg', figsize=(4, 2.5), n_bars=6, 
+                           writer='imagemagick')
+
+    def test_fig(self):
+        fig, ax = plt.subplots(dpi=100)
+        bcr.bar_chart_race(self.df, n_bars=6, fig=fig)
+
+    def test_dpi(self):
+        bcr.bar_chart_race(self.df, n_bars=6, dpi=90)
+
+    def test_bar_kwargs(self):
+        bcr.bar_chart_race(self.df, n_bars=6, bar_kwargs={'alpha': .2, 'ec': 'black', 'lw': 3})
