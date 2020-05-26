@@ -1,3 +1,5 @@
+import warnings
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,7 +13,7 @@ class _BarChartRace:
                  steps_per_period, interpolate_period, label_bars, bar_size, period_label, 
                  period_fmt, period_summary_func, perpendicular_bar_func, period_length, figsize, 
                  cmap, title, title_size, bar_label_size, tick_label_size, shared_fontdict, scale, 
-                 writer, fig, bar_kwargs):
+                 writer, fig, bar_kwargs, filter_column_colors):
         self.filename = filename
         self.orientation = orientation
         self.sort = sort
@@ -30,7 +32,7 @@ class _BarChartRace:
         self.figsize = figsize
         self.dpi = 144
         self.title = title
-        self.title_size = title_size
+        self.title_size = title_size or plt.rcParams['axes.titlesize']
         self.bar_label_size = bar_label_size
         self.tick_label_size = tick_label_size
         self.orig_rcParams = self.set_shared_fontdict(shared_fontdict)
@@ -38,11 +40,13 @@ class _BarChartRace:
         self.writer = writer
         self.fps = 1000 / self.period_length * steps_per_period
         self.fig = fig
+        self.filter_column_colors = filter_column_colors
         
         self.validate_params()
         self.bar_kwargs = self.get_bar_kwargs(bar_kwargs)
         self.html = self.filename is None
         self.df_values, self.df_ranks = self.prepare_data(df)
+        self.col_filt = self.get_col_filt()
         self.bar_colors = self.get_bar_colors(cmap)
         self.str_index = self.df_values.index.astype('str')
         if self.fig is not None:
@@ -104,7 +108,7 @@ class _BarChartRace:
     def set_shared_fontdict(self, shared_fontdict):
         orig_rcParams = plt.rcParams.copy()
         if shared_fontdict is None:
-            return {}
+            return orig_rcParams
         for k, v in shared_fontdict.items():
             if k not in ['fontsize', 'size']:
                 if k in ['cursive', 'family', 'fantasy', 'monospace', 'sans-serif', 'serif']:
@@ -118,10 +122,10 @@ class _BarChartRace:
                 try:
                     plt.rcParams[f'font.{k}'] = v
                 except KeyError:
-                    raise KeyError(f"{k} is not a valid key in `sharedfont_dict`"\
-                                    "It must be one of "\
-                                    "'cursive', 'family', 'fantasy', 'monospace',"\
-                                    "sans-serif', 'serif',"\
+                    raise KeyError(f"{k} is not a valid key in `sharedfont_dict`"
+                                    "It must be one of "
+                                    "'cursive', 'family', 'fantasy', 'monospace',"
+                                    "sans-serif', 'serif',"
                                     "'stretch', 'style', 'variant', 'weight'")
         return orig_rcParams
 
@@ -139,8 +143,12 @@ class _BarChartRace:
         dfs = prepare_wide_data(df, self.orientation, self.sort, self.n_bars,
                                 self.interpolate_period, self.steps_per_period,
                                 compute_ranks)
-        if self.fixed_order:
+        if isinstance(dfs, tuple):
+            df_values, df_ranks = dfs
+        else:
             df_values = dfs
+
+        if self.fixed_order:
             n = df_values.shape[1] + 1
             m = df_values.shape[0]
             rank_row = np.arange(1, n)
@@ -150,9 +158,25 @@ class _BarChartRace:
             
             ranks_arr = np.repeat(rank_row.reshape(1, -1), m, axis=0)
             df_ranks = pd.DataFrame(data=ranks_arr, columns=cols)
-            dfs = df_values, df_ranks
-        return dfs
-            
+
+        return df_values, df_ranks
+
+    def get_col_filt(self):
+        col_filt = pd.Series([True] * self.df_values.shape[1])
+        if self.n_bars < self.df_ranks.shape[1]:
+            orient_sort = self.orientation, self.sort
+            if orient_sort in [('h', 'asc'), ('v', 'desc')]:
+                # 1 is high
+                col_filt = (self.df_ranks < self.n_bars + .99).any()
+            else:
+                # 1 is low
+                col_filt = (self.df_ranks > 0).any()
+
+            if self.filter_column_colors and not col_filt.all():
+                self.df_values = self.df_values.loc[:, col_filt]
+                self.df_ranks = self.df_ranks.loc[:, col_filt]
+        return col_filt
+        
     def get_bar_colors(self, cmap):
         if isinstance(cmap, str):
             if cmap == 'dark24':
@@ -164,18 +188,32 @@ class _BarChartRace:
             bar_colors = cmap(range(cmap.N)).tolist()
         elif isinstance(cmap, list):
             bar_colors = cmap
+        elif isinstance(cmap, tuple):
+            bar_colors = list(cmap)
         elif hasattr(cmap, 'tolist'):
             bar_colors = cmap.tolist()
         else:
             raise TypeError('`cmap` must be a string name of a colormap, a matplotlib colormap '
-                            'instance or a list of colors')
+                            'instance, list, or tuple of colors')
 
         # bar_colors is now a list
         n = len(bar_colors)
+        orig_bar_colors = bar_colors
         if self.df_values.shape[1] > n:
             bar_colors = bar_colors * (self.df_values.shape[1] // n + 1)
-        return np.array(bar_colors[:self.df_values.shape[1]])
-        
+        bar_colors = np.array(bar_colors[:self.df_values.shape[1]])
+
+        if not self.filter_column_colors:
+            if not self.col_filt.all():
+                col_idx = np.where(self.col_filt)[0] % n
+                col_idx_ct = np.bincount(col_idx, minlength=n)
+                num_cols = max(self.col_filt.sum(), n)
+                exp_ct = np.bincount(np.arange(num_cols) % n, minlength=n)
+                if (col_idx_ct > exp_ct).any():
+                    warnings.warn("Some of your columns never make an appearance in the animation. "
+                                    "To reduce color repetition, set `filter_column_colors` to `True`")
+        return bar_colors
+
     def create_figure(self):
         fig = plt.Figure(figsize=self.figsize, dpi=self.dpi)
         limit = (.2, self.n_bars + .8)
@@ -202,7 +240,7 @@ class _BarChartRace:
         ax.set_axisbelow(True)
         ax.tick_params(length=0, labelsize=self.tick_label_size, pad=2)
         ax.set_facecolor('.9')
-        ax.set_title(self.title)
+        ax.set_title(self.title, size=self.title_size)
         for spine in ax.spines.values():
             spine.set_visible(False)
         return fig, ax
@@ -217,7 +255,7 @@ class _BarChartRace:
         if self.orientation == 'h':
             ax.barh(fake_cols, [1] * self.df_values.shape[1])
             ax.tick_params(labelrotation=0, axis='y', labelsize=self.tick_label_size)
-            ax.set_title(self.title)
+            ax.set_title(self.title, size=self.title_size)
             fig.canvas.print_figure(io.BytesIO())
             orig_pos = ax.get_position()
             ax.set_yticklabels(self.df_values.columns)
@@ -225,7 +263,7 @@ class _BarChartRace:
         else:
             ax.bar(fake_cols, [1] * self.df_values.shape[1])
             ax.tick_params(labelrotation=30, axis='x', labelsize=self.tick_label_size)
-            ax.set_title(self.title)
+            ax.set_title(self.title, size=self.title_size)
             fig.canvas.print_figure(io.BytesIO())
             orig_pos = ax.get_position()
             ax.set_xticklabels(self.df_values.columns, ha='right')
@@ -371,6 +409,7 @@ class _BarChartRace:
         else:
             anim.save(self.filename, fps=self.fps)
         
+        
         plt.rcParams = self.orig_rcParams
         return None
 
@@ -380,9 +419,9 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
                    interpolate_period=False, label_bars=True, bar_size=.95, 
                    period_label=True, period_fmt=None, period_summary_func=None, 
                    perpendicular_bar_func=None, period_length=500, figsize=(6, 3.5), 
-                   cmap='dark24', title=None, title_size='', bar_label_size=7, 
+                   cmap='dark24', title=None, title_size=None, bar_label_size=7, 
                    tick_label_size=7, shared_fontdict=None, scale='linear', writer=None, 
-                   fig=None, bar_kwargs=None):
+                   fig=None, bar_kwargs=None, filter_column_colors=False):
     '''
     Create an animated bar chart race using matplotlib. Data must be in 
     'wide' format where each row represents a single time period and each 
@@ -585,6 +624,30 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
             `lw` - width of edge in points. Default is 1.5
             `alpha` - opacity of bars, 0 to 1
 
+    filter_column_colors : bool, default `False`
+        When setting n_bars, it's possible that some columns never 
+        appear in the animation. Regardless, all columns get assigned
+        a color by default. 
+        
+        For instance, suppose you have 100 columns 
+        in your DataFrame, set n_bars to 10, and 15 different columns 
+        make at least one appearance in the animation. Even if your 
+        colormap has at least 15 colors, it's possible that many 
+        bars will be the same color, since each of the 100 columns is
+        assigned of the colormaps colors.
+
+        Setting this to `True` will map your colormap to just those 
+        columns that make an appearance in the animation, helping
+        avoid duplication of colors.
+
+        Setting this to `True` will also have the (possibly unintended)
+        consequence of changing the colors of each color every time a 
+        new integer for n_bars is used.
+
+        EXPERIMENTAL
+        This parameter is experimental and may be changed/removed
+        in a later version.
+
 
     Returns
     -------
@@ -647,7 +710,7 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
                         steps_per_period, interpolate_period, label_bars, bar_size, period_label, 
                         period_fmt, period_summary_func, perpendicular_bar_func, period_length, 
                         figsize, cmap, title, title_size, bar_label_size, tick_label_size, 
-                        shared_fontdict, scale, writer, fig, bar_kwargs)
+                        shared_fontdict, scale, writer, fig, bar_kwargs, filter_column_colors)
     return bcr.make_animation()
 
 def load_dataset(name='covid19'):
