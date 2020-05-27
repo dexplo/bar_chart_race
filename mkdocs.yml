@@ -12,7 +12,9 @@ theme:
 
 nav:
   - Home: index.md
-  - More Dexplo Libraries:
+  - Installation: installation.md
+  - Tutorial: tutorial.md
+  - Dexplo Libraries:
       - Dexplo: https://www.dexplo.org
 
 extra:
