@@ -75,3 +75,5 @@ Make bars vertical by setting `orientation` to `'v'`. Use `n_bars` if you want t
 ```
 
 ![gif](videos/urban_vert_asc.gif)
+
+<video controls><source src="videos/basic_1.mp4" type="video/mp4"></video>
