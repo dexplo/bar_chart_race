@@ -775,7 +775,8 @@ def load_dataset(name='covid19'):
     '''
     url = f'https://raw.githubusercontent.com/dexplo/bar_chart_race/master/data/{name}.csv'
 
-    index_dict = {'covid19': 'date',
+    index_dict = {'covid19_tutorial': 'date',
+                'covid19': 'date',
                  'urban_pop': 'year'}
     index_col = index_dict[name]
     return pd.read_csv(url, index_col=index_col, parse_dates=[index_col])
