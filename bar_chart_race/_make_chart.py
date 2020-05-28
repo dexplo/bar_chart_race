@@ -5,13 +5,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from matplotlib import ticker, colors
-from ._colormaps import DARK24
 
 class _BarChartRace:
     
     def __init__(self, df, filename, orientation, sort, n_bars, fixed_order, fixed_max,
-                 steps_per_period, interpolate_period, label_bars, bar_size, period_label, 
-                 period_fmt, period_summary_func, perpendicular_bar_func, period_length, figsize, 
+                 steps_per_period, period_length, interpolate_period, label_bars, bar_size, 
+                 period_label, period_fmt, period_summary_func, perpendicular_bar_func, figsize, 
                  cmap, title, title_size, bar_label_size, tick_label_size, shared_fontdict, scale, 
                  writer, fig, dpi, bar_kwargs, filter_column_colors):
         self.filename = filename
@@ -187,12 +186,13 @@ class _BarChartRace:
         
     def get_bar_colors(self, cmap):
         if isinstance(cmap, str):
-            if cmap == 'dark24':
-                cmap = DARK24
-            else:
-                cmap = plt.cm.get_cmap(cmap)
-
-        if isinstance(cmap, colors.Colormap):
+            from ._colormaps import colormaps
+            try:
+                bar_colors = colormaps[cmap.lower()]
+            except KeyError:
+                raise KeyError(f'Colormap {cmap} does not exist. Here are the '
+                               f'possible colormaps: {colormaps.keys()}')
+        elif isinstance(cmap, colors.Colormap):
             bar_colors = cmap(range(cmap.N)).tolist()
         elif isinstance(cmap, list):
             bar_colors = cmap
@@ -442,9 +442,9 @@ class _BarChartRace:
 
 def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None, 
                    fixed_order=False, fixed_max=False, steps_per_period=10, 
-                   interpolate_period=False, label_bars=True, bar_size=.95, 
-                   period_label=True, period_fmt=None, period_summary_func=None, 
-                   perpendicular_bar_func=None, period_length=500, figsize=(6, 3.5),
+                   period_length=500, interpolate_period=False, label_bars=True, 
+                   bar_size=.95, period_label=True, period_fmt=None, 
+                   period_summary_func=None, perpendicular_bar_func=None, figsize=(6, 3.5),
                    cmap='dark24', title=None, title_size=None, bar_label_size=7, 
                    tick_label_size=7, shared_fontdict=None, scale='linear', writer=None, 
                    fig=None, dpi=144, bar_kwargs=None, filter_column_colors=False):
@@ -514,6 +514,10 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
     steps_per_period : int, default 10
         The number of steps to go from one time period to the next. 
         The bars will grow linearly between each period.
+
+    period_length : int, default 500
+        Number of milliseconds to animate each period (row). 
+        Default is 500ms (half of a second)
 
     interpolate_period : bool, default `False`
         Whether to interpolate the period. Only valid for datetime or
@@ -599,17 +603,13 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         def func(values, ranks):
             return values.quantile(.75)
 
-    period_length : int, default 500
-        Number of milliseconds to animate each period (row). 
-        Default is 500ms (half of a second)
-
     figsize : two-item tuple of numbers, default (6, 3.5)
         matplotlib figure size in inches. Will be overridden if figure 
         supplied to `fig`.
 
     cmap : str, matplotlib colormap instance, or list of colors, default 'dark24'
-        Colors to be used for the bars. Colors will repeat if there are 
-        more bars than colors.
+        Colors to be used for the bars. All matplotlib and plotly colormaps are 
+        available by string name. Colors will repeat if there are more bars than colors.
 
     title : str, default None
         Title of plot
@@ -722,6 +722,7 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         fixed_order=False, 
         fixed_max=True, 
         steps_per_period=10, 
+        period_length=500, 
         interpolate_period=False, 
         label_bars=True, 
         bar_size=.95, 
@@ -731,7 +732,6 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
                                           's': f'Total deaths: {v.sum()}', 
                                           'ha': 'right', 'size': 11}, 
         perpendicular_bar_func='median', 
-        period_length=500, 
         figsize=(5, 3), 
         dpi=144,
         cmap='dark24', 
@@ -753,8 +753,8 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
     These sizes are relative to plt.rcParams['font.size'].
     '''
     bcr = _BarChartRace(df, filename, orientation, sort, n_bars, fixed_order, fixed_max,
-                        steps_per_period, interpolate_period, label_bars, bar_size, period_label, 
-                        period_fmt, period_summary_func, perpendicular_bar_func, period_length, 
+                        steps_per_period, period_length, interpolate_period, label_bars, bar_size, 
+                        period_label, period_fmt, period_summary_func, perpendicular_bar_func, 
                         figsize, cmap, title, title_size, bar_label_size, tick_label_size, 
                         shared_fontdict, scale, writer, fig, dpi, bar_kwargs, filter_column_colors)
     return bcr.make_animation()
