@@ -11,5 +11,13 @@
      <loc>https://www.dexplo.org/bar_chart_race/tutorial/</loc>
      <lastmod>2020-05-28</lastmod>
      <changefreq>daily</changefreq>
+    </url><url>
+     <loc>https://www.dexplo.org/bar_chart_race/upcoming/</loc>
+     <lastmod>2020-05-28</lastmod>
+     <changefreq>daily</changefreq>
+    </url><url>
+     <loc>https://www.dexplo.org/bar_chart_race/api/</loc>
+     <lastmod>2020-05-28</lastmod>
+     <changefreq>daily</changefreq>
     </url>
 </urlset>
