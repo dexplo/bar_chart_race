@@ -71,8 +71,8 @@ bcr.bar_chart_race(
 
 Leave the `filename` parameter as `None` to return the animation as HTML. You can subsequently embed the animation into a Jupyter Notebook with the following.
 
-```ipython
-In [1]: bcr_html = bcr.bar_chart_race(df=df, filename=None)
-In [2]: from IPython.display import HTML
-In [3]: HTML(bcr_html)
+```python
+bcr_html = bcr.bar_chart_race(df=df, filename=None)
+from IPython.display import HTML
+HTML(bcr_html)
 ```

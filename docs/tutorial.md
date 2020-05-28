@@ -114,6 +114,17 @@ bcr.bar_chart_race(df, steps_per_period=3)
     <video controls ><source src="../videos/basic_steps.mp4" type="video/mp4"></video>
 </div>
 
+You may also change the amount of time per period with `period_length`, which is set to 500 milliseconds (half of a second) by default.
+
+```python
+bcr.bar_chart_race(df, steps_per_period=20, period_length=200)
+```
+
+<div class="vid">
+    <video controls ><source src="../videos/basic_period_length.mp4" type="video/mp4"></video>
+</div>
+
+
 ### Interpolate the period
 
 By default, the label for each frame changes after the entire period has been plotted. Linearly interpolate the value for the period with `interpolate_period`. Below, every frame increase by 1 / 10 of a day (2 hours and 24 minutes).
@@ -258,5 +269,50 @@ bcr.bar_chart_race(df, perpendicular_bar_func=func)
     <video controls ><source src="../videos/other_perpendicular_func.mp4" type="video/mp4"></video>
 </div>
 
+## Bar colors
+
+By default, the `'dark24'` colormap is used. This is a qualitative color map, originally found from the [plotly express documentation](https://plotly.com/python/discrete-color/#color-sequences-in-plotly-express). All [matplotlib](https://matplotlib.org/tutorials/colors/colormaps.html) and [plotly](https://plotly.com/python/builtin-colorscales/) colormaps are available by name.
+
+```python
+bcr.bar_chart_race(df, cmap='antique')
+```
+
+<div class="vid">
+    <video controls ><source src="../videos/color_map.mp4" type="video/mp4"></video>
+</div>
+
+### Reduce color repetition
+
+It is possible that some colors repeat in your animation, even if there are more colors in the colormap than bars in the animation. This will only happen if you set the `n_bars` parameter, as colors are assigned to each column upon. You'll get a warning advising you to set 
+`filter_column_colors` to `True`, which will only assign colors to those bars appearing in the animation.
+
+The following example uses the Accent colormap which has 8 unique colors. The animation is set to have a maximum of 7 bars, but there are still repeating colors.
+
+```python
+bcr.bar_chart_race(df, cmap='accent', n_bars=7)
+```
+
+!!! warning "`UserWarning`"
+    Some of your columns never make an appearance in the animation. To reduce color repetition, set `filter_column_colors` to `True`
+
+
+<div class="vid">
+    <video controls ><source src="../videos/color_warning.mp4" type="video/mp4"></video>
+</div>
+
+Setting `filter_column_colors` to `True` will reduce the likelihood of repeating colors, but will still happen if the total number of unique bars is more than the number of colors in the colormap.
+
+```python
+bcr.bar_chart_race(df, cmap='accent', n_bars=7, filter_column_colors=True)
+```
+<div class="vid">
+    <video controls ><source src="../videos/color_warning_fixed.mp4" type="video/mp4"></video>
+</div>
+
 ## Saving the animation
 
+By default, a (very long) string of HTML will be returned from the call to `bar_chart_race`. In order to save the file to disk, use a string of the file name of where you'd like to save. You'll need to [install ffmpeg](../installation#installing-ffmpeg) first in order to save the animation. Once installed, you'll be able to save the animation as a wide variety of formats (mp4, m4v, mov, etc...). To save the animation as a gif, install ImageMagick.
+
+```
+bcr.bar_chart_race(df, 'docs/videos/covid19.mp4', figsize=(5, 3))
+```
