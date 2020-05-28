@@ -4,6 +4,7 @@ site_author: Ted Petrou
 site_url: https://www.dexplo.org/bar_chart_race
 repo_url: https://github.com/dexplo/bar_chart_race
 copyright: Copyright @ 2020 Ted Petrou
+google_analytics: ['UA-119777567-7', 'dexplo.org']
 
 theme:
   name: material
@@ -14,6 +15,8 @@ nav:
   - Home: index.md
   - Installation: installation.md
   - Tutorial: tutorial.md
+  - Upcoming Features: upcoming.md
+  - API Reference: api.md
   - Dexplo Libraries:
       - Dexplo: https://www.dexplo.org
 
@@ -36,6 +39,7 @@ markdown_extensions:
         permalink: True
     - codehilite:
         guess_lang: false
+    - pymdownx.superfences
 
 plugins:
     - search
