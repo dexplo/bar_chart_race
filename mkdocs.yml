@@ -14,7 +14,9 @@ theme:
 nav:
   - Home: index.md
   - Installation: installation.md
+  - What's New: whats_new.md
   - Tutorial: tutorial.md
+  - Data Preparation: data_preparation.md
   - Upcoming Features: upcoming.md
   - API Reference: api.md
   - Dexplo Libraries:
