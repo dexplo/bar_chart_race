@@ -5,11 +5,11 @@
 
 Make animated bar chart races in Python with matplotlib.
 
-![gif](docs/images/covid19_horiz.gif)
+![img](docs/images/covid19_horiz.gif)
 
 ## Official Documentation
 
-Visit the [bar_chart_race official documentation](https://www.dexplo.org/bar_chart_race) for complete usage instructions.
+Visit the [bar_chart_race official documentation](https://www.dexplo.org/bar_chart_race) for detailed usage instructions.
 
 ## Installation
 
@@ -28,7 +28,7 @@ Must begin with a pandas DataFrame containing 'wide' data where:
   
 The data below is an example of properly formatted data. It shows total deaths from COVID-19 for several countries by date.
 
-![gif](docs/images/wide_data.png)
+![img](docs/images/wide_data.png)
 
 ### Main function - `bar_chart_race`
 
@@ -75,8 +75,8 @@ bcr.bar_chart_race(
 
 Leave the `filename` parameter as `None` to return the animation as HTML. You can subsequently embed the animation into a Jupyter Notebook with the following.
 
-```ipython
-In [1]: bcr_html = bcr.bar_chart_race(df=df, filename=None)
-In [2]: from IPython.display import HTML
-In [3]: HTML(bcr_html)
+```python
+bcr_html = bcr.bar_chart_race(df=df, filename=None)
+from IPython.display import HTML
+HTML(bcr_html)
 ```
