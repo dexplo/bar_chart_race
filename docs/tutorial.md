@@ -28,19 +28,13 @@ html_string = bcr.bar_chart_race(df)
 HTML(html_string)
 ```
 
-<style>
-    .vid {
-        display: flex;
-        justify-content: center;
-    }
-    video {
-        width: 85%;
-    }
-</style>
+{% macro video(name) %}
+    <div class="vid">
+        <video controls ><source src="../videos/{{ name }}.mp4" type="video/mp4"></video>
+    </div>
+{% endmacro %}
 
-<div class="vid">
-    <video controls ><source src="../videos/basic_default.mp4" type="video/mp4"></video>
-</div>
+<div>{{ video('basic_default') }}</div>
 
 ### Vertical bars
 
@@ -50,9 +44,7 @@ By default, bars are horizontal. Use the `orientation` parameter to switch it to
 bcr.bar_chart_race(df, orientation='v')
 ```
 
-<div class="vid">
-    <video controls ><source src="../videos/basic_vert.mp4" type="video/mp4"></video>
-</div>
+<div>{{ video('basic_vert') }}</div>
 
 ### Ascending bars
 
@@ -62,9 +54,7 @@ By default, the bars are plotted in descending order. Change the order by settin
 bcr.bar_chart_race(df, sort='asc')
 ```
 
-<div class="vid">
-    <video controls ><source src="../videos/basic_asc.mp4" type="video/mp4"></video>
-</div>
+<div>{{ video('basic_asc') }}</div>
 
 ### Limit the number of bars
 
@@ -74,9 +64,7 @@ By default, all columns will be plotted. Use `n_bars` to limit the number. When 
 bcr.bar_chart_race(df, n_bars=6)
 ```
 
-<div class="vid">
-    <video controls ><source src="../videos/basic_n_bars.mp4" type="video/mp4"></video>
-</div>
+<div>{{ video('basic_n_bars') }}</div>
 
 ### Fix the order of the bars
 
@@ -86,9 +74,7 @@ By default, the bars will be ordered. Set `fixed_order` to `True` or to a specif
 bcr.bar_chart_race(df, fixed_order=['Iran', 'USA', 'Italy', 'Spain', 'Belgium'])
 ```
 
-<div class="vid">
-    <video controls ><source src="../videos/basic_fixed_order.mp4" type="video/mp4"></video>
-</div>
+<div>{{ video('basic_fixed_order') }}</div>
 
 ### Fix the maximum value
 
@@ -98,9 +84,7 @@ By default, the maximum value of the axis moves with the largest bar. Set `fixed
 bcr.bar_chart_race(df, fixed_max=True)
 ```
 
-<div class="vid">
-    <video controls ><source src="../videos/basic_fixed_max.mp4" type="video/mp4"></video>
-</div>
+<div>{{ video('basic_fixed_max') }}</div>
 
 ### Change animation smoothness
 
@@ -110,9 +94,7 @@ By default, 10 frames are used to step from one period to the next. Increase/dec
 bcr.bar_chart_race(df, steps_per_period=3)
 ```
 
-<div class="vid">
-    <video controls ><source src="../videos/basic_steps.mp4" type="video/mp4"></video>
-</div>
+<div>{{ video('basic_steps') }}</div>
 
 You may also change the amount of time per period with `period_length`, which is set to 500 milliseconds (half of a second) by default.
 
@@ -120,10 +102,7 @@ You may also change the amount of time per period with `period_length`, which is
 bcr.bar_chart_race(df, steps_per_period=20, period_length=200)
 ```
 
-<div class="vid">
-    <video controls ><source src="../videos/basic_period_length.mp4" type="video/mp4"></video>
-</div>
-
+<div>{{ video('basic_period_length') }}</div>
 
 ### Interpolate the period
 
@@ -133,9 +112,7 @@ By default, the label for each frame changes after the entire period has been pl
 bcr.bar_chart_race(df, interpolate_period=True)
 ```
 
-<div class="vid">
-    <video controls ><source src="../videos/basic_interpolate.mp4" type="video/mp4"></video>
-</div>
+<div>{{ video('basic_interpolate') }}</div>
 
 ## Plot properties
 
@@ -148,14 +125,12 @@ Many properties of the plot can be set.
 * `title` - title of plot
 
 ```python
-bcr.bar_chart_race(df, figsize=(5, 3), dpi=100, label_bars=False, 
+bcr.bar_chart_race(df, figsize=(5, 3), dpi=100, label_bars=False,
                    period_label={'x': .99, 'y': .1, 'ha': 'right', 'color': 'red'},
                    title='COVID-19 Deaths by Country')
 ```
 
-<div class="vid">
-    <video controls ><source src="../videos/basic_props.mp4" type="video/mp4"></video>
-</div>
+<div>{{ video('basic_props') }}</div>
 
 ### Label sizes
 
@@ -166,9 +141,7 @@ bcr.bar_chart_race(df, bar_label_size=4, tick_label_size=5,
                    title='COVID-19 Deaths by Country', title_size='smaller')
 ```
 
-<div class="vid">
-    <video controls ><source src="../videos/basic_label_size.mp4" type="video/mp4"></video>
-</div>
+<div>{{ video('basic_label_size') }}</div>
 
 ### Setting font properties
 
@@ -180,22 +153,16 @@ bcr.bar_chart_race(df, title='COVID-19 Deaths by Country',
                                     'color': 'rebeccapurple'})
 ```
 
-<div class="vid">
-    <video controls ><source src="../videos/basic_shared_font.mp4" type="video/mp4"></video>
-</div>
-
+<div>{{ video('basic_shared_font') }}</div>
 ### Customize bar properties
 
 Set `bar_kwargs` to a dictionary of keyword arguments forwarded to the matploblib `bar` function to control bar properties.
-
 
 ```python
 bcr.bar_chart_race(df, bar_kwargs={'alpha': .2, 'ec': 'black', 'lw': 3})
 ```
 
-<div class="vid">
-    <video controls ><source src="../videos/basic_bar_kwargs.mp4" type="video/mp4"></video>
-</div>
+<div>{{ video('basic_bar_kwargs') }}</div>
 
 ## Additional features
 
@@ -209,10 +176,7 @@ Format the label of the period by setting `period_fmt` to a string with either a
 bcr.bar_chart_race(df, period_fmt='%b %-d, %Y')
 ```
 
-<div class="vid">
-    <video controls ><source src="../videos/other_date_directive.mp4" type="video/mp4"></video>
-</div>
-
+<div>{{ video('other_date_directive') }}</div>
 
 ### Use numbers for the index instead of dates
 
@@ -223,9 +187,7 @@ bcr.bar_chart_race(df.reset_index(drop=True), interpolate_period=True,
                    period_fmt='Index value - {x:.2f}')
 ```
 
-<div class="vid">
-    <video controls ><source src="../videos/other_string_fmt.mp4" type="video/mp4"></video>
-</div>
+<div>{{ video('other_string_fmt') }}</div>
 
 ### Add text summarizing the entire period
 
@@ -241,9 +203,7 @@ def summary(values, ranks):
 bcr.bar_chart_race(df, period_summary_func=summary)
 ```
 
-<div class="vid">
-    <video controls ><source src="../videos/other_summary.mp4" type="video/mp4"></video>
-</div>
+<div>{{ video('other_summary') }}</div>
 
 ## Add a perpendicular bar
 
@@ -253,9 +213,7 @@ Add a single bar perpendicular to the main bars by defining a function that acce
 bcr.bar_chart_race(df, perpendicular_bar_func='mean')
 ```
 
-<div class="vid">
-    <video controls ><source src="../videos/other_perpendicular.mp4" type="video/mp4"></video>
-</div>
+<div>{{ video('other_perpendicular') }}</div>
 
 An example with a user-defined function:
 
@@ -265,9 +223,7 @@ def func(values, ranks):
 bcr.bar_chart_race(df, perpendicular_bar_func=func)
 ```
 
-<div class="vid">
-    <video controls ><source src="../videos/other_perpendicular_func.mp4" type="video/mp4"></video>
-</div>
+<div>{{ video('other_perpendicular_func') }}</div>
 
 ## Bar colors
 
@@ -277,9 +233,7 @@ By default, the `'dark24'` colormap is used. This is a qualitative color map, or
 bcr.bar_chart_race(df, cmap='antique')
 ```
 
-<div class="vid">
-    <video controls ><source src="../videos/color_map.mp4" type="video/mp4"></video>
-</div>
+<div>{{ video('color_map') }}</div>
 
 ### Reduce color repetition
 
@@ -295,19 +249,15 @@ bcr.bar_chart_race(df, cmap='accent', n_bars=7)
 !!! warning "`UserWarning`"
     Some of your columns never make an appearance in the animation. To reduce color repetition, set `filter_column_colors` to `True`
 
-
-<div class="vid">
-    <video controls ><source src="../videos/color_warning.mp4" type="video/mp4"></video>
-</div>
+<div>{{ video('color_warning') }}</div>
 
 Setting `filter_column_colors` to `True` will reduce the likelihood of repeating colors, but will still happen if the total number of unique bars is more than the number of colors in the colormap.
 
 ```python
 bcr.bar_chart_race(df, cmap='accent', n_bars=7, filter_column_colors=True)
 ```
-<div class="vid">
-    <video controls ><source src="../videos/color_warning_fixed.mp4" type="video/mp4"></video>
-</div>
+
+<div>{{ video('color_warning_fixed') }}</div>
 
 ## Saving the animation
 
