@@ -259,9 +259,42 @@ bcr.bar_chart_race(df, cmap='accent', n_bars=7, filter_column_colors=True)
 
 <div>{{ video('color_warning_fixed') }}</div>
 
+## Using your own figure
+
+If you want to highly customize the animation, set the `fig` parameter to a previously created figure. This figure must have at aleast one matplotlib axes created within it.
+
+```python
+fig, ax = plt.subplots(figsize=(5, 2), dpi=120)
+ax.set_facecolor((0, 0, 1, .3))
+bcr.bar_chart_race(df, n_bars=3, fig=fig)
+```
+
+<div>{{ video('other_figure') }}</div>
+
+### With subplots
+
+It's possible to add an animation to a matplotlib figure containing multiple subplots. The first subplot will be used for the animation.
+
+```python
+from matplotlib import dates
+fig, ax_array = plt.subplots(2, 2, figsize=(8, 4), dpi=120, tight_layout=True)
+ax1, ax2, ax3, ax4 = ax_array.flatten()
+fig.suptitle('Animation in First Axes', y=1)
+
+ax2.plot(df)
+ax2.xaxis.set_major_locator(dates.DayLocator([3, 7, 12]))
+ax3.bar(df.index, df.median(axis=1))
+ax3.xaxis.set_major_locator(dates.DayLocator([3, 7, 12]))
+ax4.pie(df.iloc[-1], radius=1.5, labels=df.columns)
+
+bcr.bar_chart_race(df, n_bars=3, fig=fig)
+```
+
+<div>{{ video('other_subplots') }}</div>
+
 ## Saving the animation
 
-By default, a (very long) string of HTML will be returned from the call to `bar_chart_race`. In order to save the file to disk, use a string of the file name of where you'd like to save. You'll need to [install ffmpeg](../installation#installing-ffmpeg) first in order to save the animation. Once installed, you'll be able to save the animation as a wide variety of formats (mp4, m4v, mov, etc...). To save the animation as a gif, install ImageMagick.
+By default, a (very long) string of HTML will be returned from the call to `bar_chart_race`. In order to save the file to disk, use a string of the file name of where you'd like to save as the second argument. You'll need to [install ffmpeg](../installation#installing-ffmpeg) first in order to save the animation. Once installed, you'll be able to save the animation as a wide variety of formats (mp4, m4v, mov, etc...). To save the animation as a gif, install ImageMagick.
 
 ```
 bcr.bar_chart_race(df, 'docs/videos/covid19.mp4', figsize=(5, 3))
