@@ -87,6 +87,9 @@ class TestSimpleBC:
         bcr.bar_chart_race(self.df, figsize=(4, 2.5), cmap=['red', 'blue'], 
                            filter_column_colors=True)
 
+        with pytest.raises(KeyError):
+            bcr.bar_chart_race(self.df, cmap='adf')
+
     def test_title(self):
         bcr.bar_chart_race(self.df, figsize=(4, 2.5), n_bars=6, title='Great title', title_size=4)
         bcr.bar_chart_race(self.df, figsize=(4, 2.5), n_bars=6, title='Great title', 
