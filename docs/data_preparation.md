@@ -67,12 +67,20 @@ df_ranks.head(16)
 
 ### Usage before animation
 
-If you wish to use this function before an animation, set `steps_per_period` to 1
+If you wish to use this function before an animation, set `steps_per_period` to 1.
 
 ```python
 df_values, df_ranks = bcr.prepare_long_data(df_baseball, index='year', columns='name',
                                             values='hr', steps_per_period=1,
                                             orientation='h', sort='desc')
+
+def period_summary(values, ranks):
+    top2 = values.nlargest(2)
+    leader = top2.index[0]
+    lead = top2.iloc[0] - top2.iloc[1]
+    s = f'{leader} by {lead:.0f}'
+    return {'s': s, 'x': .95, 'y': .07, 'ha': 'right', 'size': 8}
+
 bcr.bar_chart_race(df_values, period_length=1000,
                    fixed_max=True, fixed_order=True, n_bars=10,
                    figsize=(5, 3), period_fmt='Season {x:,.0f}',

@@ -14,7 +14,7 @@ The data you choose to animate as a bar chart race must be provided in a specifi
 
 The data below is an example of properly formatted data. It shows total deaths from COVID-19 for several countries by date. Each row represents a single day's worth of data. Each column represents a single country's deaths. The index contains the date. Any pandas DataFrame that conforms to this structure may be used to create a bar chart race.
 
-![](images/wide_data.png)
+{% include 'html/tutorial_1.html' %}
 
 ## Basic bar chart races
 
