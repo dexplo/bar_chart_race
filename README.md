@@ -80,3 +80,23 @@ bcr_html = bcr.bar_chart_race(df=df, filename=None)
 from IPython.display import HTML
 HTML(bcr_html)
 ```
+
+### Customization
+
+There are many options to customize the bar chart race to get the animation you desire. Below, we have an animation where the maximum x-value and order of the bars are set for the entire duration. A custom summary label and perpendicular bar of median is also added.
+
+```python
+def period_summary(values, ranks):
+    top2 = values.nlargest(2)
+    leader = top2.index[0]
+    lead = top2.iloc[0] - top2.iloc[1]
+    s = f'{leader} by {lead:.0f}'
+    return {'s': s, 'x': .95, 'y': .07, 'ha': 'right', 'size': 8}
+
+bcr.bar_chart_race(df_baseball, period_length=1000,
+                   fixed_max=True, fixed_order=True, n_bars=10,
+                   figsize=(5, 3), period_fmt='Season {x:,.0f}',
+                   title='Top 10 Home Run Hitters by Season Played')
+```
+
+![](docs/images/prepare_long.gif)
