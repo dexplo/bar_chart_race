@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    <meta property="og:url" content="{{ page.canonical_url }}">
+    {% if page and page.meta and page.meta.title %}
+        <meta property="og:title" content="{{ page.meta.title }}">
+    {% elif page and page.title and not page.is_homepage %}
+        <meta property="og:title" content="{{ page.title }} - {{ config.site_name }}">
+    {% else %}
+        <meta property="og:title" content="{{ config.site_name }}">
+    {% endif %}
+    <meta property="og:description" content="{{ config.site_description }}">
+    <meta property="og:image" content="images/covid19_horiz.gif">
+    <meta property="og:image:alt" content="Bar chart race of COVID-19 deaths for selected countries with Python">
+    <meta property="og:image:type" content="image/gif">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@DunderData">
+    <meta name="twitter:creator" content="@TedPetrou">
+    {% if page and page.meta and page.meta.title %}
+        <meta property="twitter:title" content="{{ page.meta.title }}">
+    {% elif page and page.title and not page.is_homepage %}
+        <meta property="twitter:title" content="{{ page.title }} - {{ config.site_name }}">
+    {% else %}
+        <meta property="twitter:title" content="{{ config.site_name }}">
+    {% endif %}
+    <meta name="twitter:description" content="{{ config.site_description }}">
+    <meta name="twitter:image" content="images/twitter_card.png">
+    <meta name="twitter:image:alt" content="Bar Chart Race with Python">
+{% endblock %}
