@@ -557,6 +557,12 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         
         If `False` - don't place label on axes
 
+        The default location depends on `orientation` and `sort`
+        * h, desc -> x=.95, y=.15, ha='right', va='center'
+        * h, asc -> x=.95, y=.85, ha='right', va='center'
+        * v, desc -> x=.95, y=.85, ha='right', va='center'
+        * v, asc -> x=.05, y=.85, ha='left', va='center'
+
     period_fmt : str, default `None`
         Either a string with date directives or 
         a new-style (Python 3.6+) formatted string
@@ -767,7 +773,12 @@ def load_dataset(name='covid19'):
     Parameters
     ----------
     name : str, default 'covid19'
-        Name of dataset to load. Either 'covid19' or 'urban_pop'
+        Name of dataset to load from the bar_chart_race github repository.
+        Choices include:
+        * 'covid19'
+        * 'covid19_tutorial'
+        * 'urban_pop'
+        * 'baseball'
 
     Returns
     -------
@@ -776,10 +787,12 @@ def load_dataset(name='covid19'):
     url = f'https://raw.githubusercontent.com/dexplo/bar_chart_race/master/data/{name}.csv'
 
     index_dict = {'covid19_tutorial': 'date',
-                'covid19': 'date',
-                 'urban_pop': 'year'}
+                  'covid19': 'date',
+                  'urban_pop': 'year',
+                  'baseball': None}
     index_col = index_dict[name]
-    return pd.read_csv(url, index_col=index_col, parse_dates=[index_col])
+    parse_dates = [index_col] if index_col else None
+    return pd.read_csv(url, index_col=index_col, parse_dates=parse_dates)
 
 def prepare_wide_data(df, orientation='h', sort='desc', n_bars=None, interpolate_period=False, 
                       steps_per_period=10, compute_ranks=True):
@@ -949,6 +962,7 @@ def prepare_long_data(df, index, columns, values, aggfunc='sum', orientation='h'
     df_values, df_ranks = bcr.prepare_long_data(df)
     bcr.bar_chart_race(df_values, steps_per_period=1, period_length=50)
     '''
-    df_wide = df.pivot_table(index=index, columns=columns, values=values, aggfunc=aggfunc)
+    df_wide = df.pivot_table(index=index, columns=columns, values=values, 
+                             aggfunc=aggfunc).fillna(method='ffill')
     return prepare_wide_data(df_wide, orientation, sort, n_bars, interpolate_period,
                              steps_per_period, compute_ranks)
