@@ -1,0 +1,42 @@
+table {
+    background-color: transparent;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    margin-left:0;
+    margin-right:0;
+    border:none;
+    border-collapse: collapse;
+    border-spacing:0;
+    color:black;
+    font-size:13px;
+    table-layout:fixed;
+    }
+thead {
+    border-bottom:1px solid black;vertical-align:bottom;
+    }
+tr, th, td {
+    text-align:right;
+    vertical-align: middle;
+    padding:0.5em 0.5em;
+    line-height:normal;
+    white-space:normal;
+    max-width:none;
+    border:none;
+    }
+th {
+    font-weight:bold; 
+    text-align:left;
+    }
+tbody tr:nth-child(odd){
+    background:#f5f5f5;
+    }
+    :link{
+    text-decoration:underline;
+}
+
+.vid {
+    display: flex;
+    justify-content: center;
+}
+.vid video {
+    width: 85%;
+}
