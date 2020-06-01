@@ -54,7 +54,7 @@ bcr.bar_chart_race(
     period_length=500,
     figsize=(5, 3),
     dpi=144,
-    cmap='dark24',
+    cmap='dark12',
     title='COVID-19 Deaths by Country',
     title_size='',
     bar_label_size=7,
