@@ -99,4 +99,4 @@ bcr.bar_chart_race(df_baseball, period_length=1000,
                    title='Top 10 Home Run Hitters by Season Played')
 ```
 
-![img](docs/images/prepare_long.gif)
+![img](docs/images/prepare_long.png)
