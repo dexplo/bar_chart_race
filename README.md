@@ -83,7 +83,7 @@ bcr.bar_chart_race(df=df, filename=None)
 
 ### Customization
 
-There are many options to customize the bar chart race to get the animation you desire. Below, we have an animation where the maximum x-value and order of the bars are set for the entire duration. A custom summary label and perpendicular bar of median is also added.
+There are many options to customize the bar chart race to get the animation you desire. Below, we have an animation where the maximum x-value and order of the bars are set for the entire duration. A custom summary label and perpendicular bar of the median is also added.
 
 ```python
 def period_summary(values, ranks):
