@@ -18,14 +18,12 @@ The data below is an example of properly formatted data. It shows total deaths f
 
 ## Basic bar chart races
 
-A single main function, `bar_chart_race`, exists to create the animations. Calling it with the defaults returns the animation as an HTML string. The `load_dataset` function is available to load sample DataFrames. If you are working within a Jupyter Notebook, you can import the `HTML` function from the `IPython.display` module to embed the video directly into the notebook.
+A single main function, `bar_chart_race`, exists to create the animations. Calling it with the defaults returns the animation as an HTML string. The `load_dataset` function is available to load sample DataFrames. If you are working within a Jupyter Notebook, it will automatically be embedded in the output as a video.
 
 ```python
 import bar_chart_race as bcr
-from IPython.display import HTML
 df = bcr.load_dataset('covid19_tutorial')
-html_string = bcr.bar_chart_race(df)
-HTML(html_string)
+bcr.bar_chart_race(df)
 ```
 
 {% macro video(name) %}
@@ -137,7 +135,7 @@ bcr.bar_chart_race(df, figsize=(5, 3), dpi=100, label_bars=False,
 Control the size of labels with `bar_label_size`, `tick_label_size`, and `title_size`.
 
 ```python
-bcr.bar_chart_race(df, bar_label_size=4, tick_label_size=5, 
+bcr.bar_chart_race(df, bar_label_size=4, tick_label_size=5,
                    title='COVID-19 Deaths by Country', title_size='smaller')
 ```
 
@@ -183,7 +181,7 @@ bcr.bar_chart_race(df, period_fmt='%b %-d, %Y')
 It's not necessary to have dates or times in the index of the DataFrame. Below, the index is dropped, which replaces it with integers beginning at 0. These are then interpolated and formatted.
 
 ```python
-bcr.bar_chart_race(df.reset_index(drop=True), interpolate_period=True, 
+bcr.bar_chart_race(df.reset_index(drop=True), interpolate_period=True,
                    period_fmt='Index value - {x:.2f}')
 ```
 
@@ -227,7 +225,7 @@ bcr.bar_chart_race(df, perpendicular_bar_func=func)
 
 ## Bar colors
 
-By default, the `'dark24'` colormap is used. This is a qualitative color map, originally found from the [plotly express documentation](https://plotly.com/python/discrete-color/#color-sequences-in-plotly-express). All [matplotlib](https://matplotlib.org/tutorials/colors/colormaps.html) and [plotly](https://plotly.com/python/builtin-colorscales/) colormaps are available by name.
+By default, the `'dark12'` colormap is used, with 12 unique colors. This is a qualitative color map containing every other color from the 'dark24' colormap originally found from the [plotly express documentation](https://plotly.com/python/discrete-color/#color-sequences-in-plotly-express). All [matplotlib](https://matplotlib.org/tutorials/colors/colormaps.html) and [plotly](https://plotly.com/python/builtin-colorscales/) colormaps are available by name. The entire `'dark24'` colormap will be used by default when your DataFrame contains more than 12 columns.
 
 ```python
 bcr.bar_chart_race(df, cmap='antique')
@@ -294,8 +292,25 @@ bcr.bar_chart_race(df, n_bars=3, fig=fig)
 
 ## Saving the animation
 
-By default, a (very long) string of HTML will be returned from the call to `bar_chart_race`. In order to save the file to disk, use a string of the file name of where you'd like to save as the second argument. You'll need to [install ffmpeg](../installation#installing-ffmpeg) first in order to save the animation. Once installed, you'll be able to save the animation as a wide variety of formats (mp4, m4v, mov, etc...). To save the animation as a gif, install ImageMagick.
+### Default returned values
+
+By default, the video will be embedded into your Jupyter Notebook. If you are not in a Jupyter Notebook, but have IPython installed, an `HTML` object will be returned. Retrieve the underlying HTML with the `data` attribute.
+
+```python
+html = bcr.bar_chart_race(df)
+html.data # very long string of HTML
+```
+
+If you do not have IPython installed, then a string of HTML will be returned directly.
+
+### Saving to disk
+
+In order to save the animation to disk, use a string of the file name of where you'd like to save as the second argument. You'll need to [install ffmpeg](../installation#installing-ffmpeg) first in order to save the animation. Once installed, you'll be able to save the animation as a wide variety of formats (mp4, m4v, mov, etc...). To save the animation as a gif, install ImageMagick.
 
 ```
 bcr.bar_chart_race(df, 'docs/videos/covid19.mp4', figsize=(5, 3))
 ```
+
+### Matplotlib writer
+
+To customize the animation, set the `writer` parameter to a matplotlib `MovieWriter` object instance.
