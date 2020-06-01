@@ -185,6 +185,11 @@ class _BarChartRace:
         return col_filt
         
     def get_bar_colors(self, cmap):
+        if cmap is None:
+            cmap = 'dark12'
+            if self.df_values.shape[1] > 12:
+                cmap = 'dark24'
+            
         if isinstance(cmap, str):
             from ._colormaps import colormaps
             try:
@@ -421,6 +426,11 @@ class _BarChartRace:
         try:
             if self.html:
                 ret_val = anim.to_html5_video()
+                try:
+                    from IPython.display import HTML
+                    ret_val = HTML(ret_val)
+                except ImportError:
+                    pass
             else:
                 ret_val = anim.save(self.filename, fps=self.fps, writer=self.writer)
         except Exception as e:
@@ -445,7 +455,7 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
                    period_length=500, interpolate_period=False, label_bars=True, 
                    bar_size=.95, period_label=True, period_fmt=None, 
                    period_summary_func=None, perpendicular_bar_func=None, figsize=(6, 3.5),
-                   cmap='dark24', title=None, title_size=None, bar_label_size=7, 
+                   cmap=None, title=None, title_size=None, bar_label_size=7, 
                    tick_label_size=7, shared_fontdict=None, scale='linear', writer=None, 
                    fig=None, dpi=144, bar_kwargs=None, filter_column_colors=False):
     '''
@@ -613,9 +623,16 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         matplotlib figure size in inches. Will be overridden if figure 
         supplied to `fig`.
 
-    cmap : str, matplotlib colormap instance, or list of colors, default 'dark24'
+    cmap : str, matplotlib colormap instance, or list of colors, default 'dark12'
         Colors to be used for the bars. All matplotlib and plotly colormaps are 
         available by string name. Colors will repeat if there are more bars than colors.
+
+        "dark12" is a discrete colormap with every other color from the "dark24"
+        plotly colormap. If there are more than 12 columns, then the default 
+        colormap will be "dark24"
+
+        Append "_r" to the colormap name to use the reverse of the colormap.
+        i.e. "dark12_r"
 
     title : str, default None
         Title of plot
@@ -740,7 +757,7 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         perpendicular_bar_func='median', 
         figsize=(5, 3), 
         dpi=144,
-        cmap='dark24', 
+        cmap='dark12', 
         title='COVID-19 Deaths by Country', 
         title_size='', 
         bar_label_size=7, 
