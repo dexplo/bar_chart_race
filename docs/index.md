@@ -67,14 +67,12 @@ bcr.bar_chart_race(
     filter_column_colors=False)  
 ```
 
-### Save animation to disk or return HTML
+### Save animation to disk or embed into a Jupyter Notebook
 
-Leave the `filename` parameter as `None` to return the animation as HTML. You can subsequently embed the animation into a Jupyter Notebook with the following.
+If you are working within a Jupyter Notebook leave the `filename` as `None` and it will be automatically embedded into a Jupyter Notebook.
 
 ```python
 bcr_html = bcr.bar_chart_race(df=df, filename=None)
-from IPython.display import HTML
-HTML(bcr_html)
 ```
 
 ### Customization
