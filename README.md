@@ -58,7 +58,7 @@ bcr.bar_chart_race(
     period_length=500,
     figsize=(5, 3),
     dpi=144,
-    cmap='dark24',
+    cmap='dark12',
     title='COVID-19 Deaths by Country',
     title_size='',
     bar_label_size=7,
@@ -73,13 +73,13 @@ bcr.bar_chart_race(
 
 ### Save animation to disk or return HTML
 
-Leave the `filename` parameter as `None` to return the animation as HTML. You can subsequently embed the animation into a Jupyter Notebook with the following.
+Leave the `filename` parameter as `None` to return the animation as HTML. If you are running a Jupyter Notebook, it will automatically be embedded into it.
 
 ```python
-bcr_html = bcr.bar_chart_race(df=df, filename=None)
-from IPython.display import HTML
-HTML(bcr_html)
+bcr.bar_chart_race(df=df, filename=None)
 ```
+
+![img](docs/images/bcr_notebook.png)
 
 ### Customization
 
@@ -99,4 +99,4 @@ bcr.bar_chart_race(df_baseball, period_length=1000,
                    title='Top 10 Home Run Hitters by Season Played')
 ```
 
-![](docs/images/prepare_long.gif)
+![img](docs/images/prepare_long.gif)
