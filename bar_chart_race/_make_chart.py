@@ -186,8 +186,8 @@ class _BarChartRace:
         
     def get_bar_colors(self, cmap):
         if cmap is None:
-            cmap = 'dark12'
-            if self.df_values.shape[1] > 12:
+            cmap = 't10'
+            if self.df_values.shape[1] > 10:
                 cmap = 'dark24'
             
         if isinstance(cmap, str):
@@ -464,7 +464,7 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
     column represents a distinct category. Optionally, the index can label 
     the time period.
 
-    Bar height and location change linearly from one time period to the next.
+    Bar length and location change linearly from one time period to the next.
 
     If no `filename` is given, an HTML string is returned, otherwise the 
     animation is saved to disk.
@@ -474,7 +474,7 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
 
     To save .gif files you'll need to install ImageMagick.
 
-    This is resource intensive - Start with just a few rows of data to test.
+    This is resource intensive - start with just a few rows of data to test.
 
 
     Parameters
@@ -623,13 +623,13 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         matplotlib figure size in inches. Will be overridden if figure 
         supplied to `fig`.
 
-    cmap : str, matplotlib colormap instance, or list of colors, default 'dark12'
-        Colors to be used for the bars. All matplotlib and plotly colormaps are 
-        available by string name. Colors will repeat if there are more bars than colors.
+    cmap : str, matplotlib colormap instance, or list of colors, default 't10'
+        Colors to be used for the bars. All matplotlib and plotly 
+        colormaps are available by string name. Colors will repeat 
+        if there are more bars than colors.
 
-        "dark12" is a discrete colormap with every other color from the "dark24"
-        plotly colormap. If there are more than 12 columns, then the default 
-        colormap will be "dark24"
+        "t10" is a discrete colormap. If there are more than 12 columns, 
+        then the default colormap will be "dark24"
 
         Append "_r" to the colormap name to use the reverse of the colormap.
         i.e. "dark12_r"
