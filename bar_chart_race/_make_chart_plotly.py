@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import bar_chart_race as bcr
 import plotly.graph_objects as go
 import plotly
 
@@ -12,7 +11,7 @@ class _BarChartRace:
     
     def __init__(self, df, filename, orientation, sort, n_bars, fixed_order, fixed_max,
                  steps_per_period, period_length, interpolate_period, period_label, 
-                 period_fmt, period_summary_func, perpendicular_bar_func, cmap, title, 
+                 period_fmt, period_summary_func, perpendicular_bar_func, colors, title, 
                  bar_size, textposition, texttemplate, bar_label_font, tick_label_font, 
                  scale, bar_kwargs, layout_kwargs, filter_column_colors):
         self.filename = filename
@@ -34,7 +33,7 @@ class _BarChartRace:
         self.period_length = period_length
         self.title = self.get_title(title)
         self.bar_label_font = self.get_font(bar_label_font)
-        self.tick_label_font = self.get_font(tick_label_font)
+        self.tick_label_font = self.get_font(tick_label_font, True)
         self.scale = scale
         self.duration = self.period_length / steps_per_period
         self.filter_column_colors = filter_column_colors
@@ -44,7 +43,7 @@ class _BarChartRace:
         self.layout_kwargs = self.get_layout_kwargs(layout_kwargs)
         self.df_values, self.df_ranks = self.prepare_data(df)
         self.col_filt = self.get_col_filt()
-        self.bar_colors = self.get_bar_colors(cmap)
+        self.bar_colors = self.get_bar_colors(colors)
         self.set_xy_limits()
         self.str_index = self.df_values.index.astype('str')
         
@@ -127,12 +126,12 @@ class _BarChartRace:
         raise TypeError('`title` must be a string, dictionary, or '
                         '`plotly.graph_objects.layout.Title` instance')
 
-    def get_font(self, font):
+    def get_font(self, font, rotate=False):
         if isinstance(font, (int, float)):
-            return {'size': font}
-        elif isinstance(font, dict):
-            return font
-        raise TypeError('`font` must be a number or dictionary of font properties')
+            font = {'size': font}
+        elif not isinstance(font, dict):
+            raise TypeError('`font` must be a number or dictionary of font properties')
+        return font
             
     def prepare_data(self, df):
         if self.fixed_order is True:
@@ -182,30 +181,28 @@ class _BarChartRace:
                 self.df_ranks = self.df_ranks.loc[:, col_filt]
         return col_filt
         
-    def get_bar_colors(self, cmap):
-        if cmap is None:
-            cmap = 't10'
+    def get_bar_colors(self, colors):
+        if colors is None:
+            colors = 't10'
             if self.df_values.shape[1] > 10:
-                cmap = 'dark24'
+                colors = 'dark24'
             
-        if isinstance(cmap, str):
+        if isinstance(colors, str):
             from ._colormaps import colormaps
             try:
-                bar_colors = colormaps[cmap.lower()]
+                bar_colors = colormaps[colors.lower()]
             except KeyError:
-                raise KeyError(f'Colormap {cmap} does not exist. Here are the '
+                raise KeyError(f'Colormap {colors} does not exist. Here are the '
                                f'possible colormaps: {colormaps.keys()}')
-        elif isinstance(cmap, colors.Colormap):
-            bar_colors = cmap(range(cmap.N)).tolist()
-        elif isinstance(cmap, list):
-            bar_colors = cmap
-        elif isinstance(cmap, tuple):
-            bar_colors = list(cmap)
-        elif hasattr(cmap, 'tolist'):
-            bar_colors = cmap.tolist()
+        elif isinstance(colors, list):
+            bar_colors = colors
+        elif isinstance(colors, tuple):
+            bar_colors = list(colors)
+        elif hasattr(colors, 'tolist'):
+            bar_colors = colors.tolist()
         else:
-            raise TypeError('`cmap` must be a string name of a colormap, a matplotlib colormap '
-                            'instance, list, or tuple of colors')
+            raise TypeError('`colors` must be a string name of a colormap or '
+                            'sequence of colors.')
 
         # bar_colors is now a list
         n = len(bar_colors)
@@ -254,14 +251,17 @@ class _BarChartRace:
             label_axis = dict(tickmode='array', tickvals=bar_loc, ticktext=cols, 
                               tickfont=self.tick_label_font)
             label_axis['range'] = self.ylimit if self.orientation == 'h' else self.xlimit
-            value_axis = dict(showgrid=True)
+            if self.orientation == 'v':
+                label_axis['tickangle'] = -90
+        
+            value_axis = dict(showgrid=True, type=self.scale)
             value_axis['range'] = self.xlimit if self.orientation == 'h' else self.ylimit
 
             bar = go.Bar(x=x, y=y, width=self.bar_size, textposition=self.textposition,
                          texttemplate=self.texttemplate, orientation=self.orientation, 
                          marker_color=colors, insidetextfont=self.bar_label_font, 
-                         cliponaxis=False,
-                         outsidetextfont=self.bar_label_font, **self.bar_kwargs)
+                         cliponaxis=False, outsidetextfont=self.bar_label_font, 
+                         **self.bar_kwargs)
 
             data = [bar]
             if self.perpendicular_bar_func:
@@ -338,7 +338,8 @@ class _BarChartRace:
             buttons=[dict(label="Play",
                           method="animate",
                           args=[None, {"frame": {"duration": self.duration, "redraw": True},
-                                       "fromcurrent": True}]),
+                                       "fromcurrent": True,
+                                    }]),
                      dict(label="Pause",
                           method="animate",
                           args=[[None], {"frame": {"duration": 0, "redraw": False},
@@ -358,7 +359,7 @@ def bar_chart_race_plotly(df, filename=None, orientation='h', sort='desc', n_bar
                           fixed_order=False, fixed_max=False, steps_per_period=10, 
                           period_length=500, interpolate_period=False, period_label=True, 
                           period_fmt=None, period_summary_func=None, perpendicular_bar_func=None,
-                          cmap=None, title=None, bar_size=.95, textposition='outside', 
+                          colors=None, title=None, bar_size=.95, textposition='outside', 
                           texttemplate=None, bar_label_font=12, tick_label_font=12, 
                           scale='linear', bar_kwargs=None, layout_kwargs=None, 
                           filter_column_colors=False):
@@ -368,12 +369,12 @@ def bar_chart_race_plotly(df, filename=None, orientation='h', sort='desc', n_bar
     column represents a distinct category. Optionally, the index can label 
     the time period.
 
-    Bar height and location change linearly from one time period to the next.
+    Bar length and location change linearly from one time period to the next.
 
-    If no `filename` is given, a plotly animation is returned that is embedded
+    If no `filename` is given, a plotly figure is returned that is embedded
     into the notebook.
 
-    This is resource intensive - Start with just a few rows of data to test.
+    This is resource intensive - start with just a few rows of data to test.
 
 
     Parameters
@@ -386,7 +387,7 @@ def bar_chart_race_plotly(df, filename=None, orientation='h', sort='desc', n_bar
 
     filename : `None` or str, default None
         If `None` return plotly animation, otherwise save
-        to disk.
+        to disk. Can only save as HTML at this time.
 
     orientation : 'h' or 'v', default 'h'
         Bar orientation - horizontal or vertical
@@ -505,13 +506,12 @@ def bar_chart_race_plotly(df, filename=None, orientation='h', sort='desc', n_bar
         def func(values, ranks):
             return values.quantile(.75)
 
-    cmap : str, matplotlib colormap instance, or list of colors, default 't10'
+    colors : str or sequence colors, default 't10'
         Colors to be used for the bars. All matplotlib and plotly colormaps are 
         available by string name. Colors will repeat if there are more bars than colors.
 
-        "dark12" is a discrete colormap with every other color from the "dark24"
-        plotly colormap. If there are more than 12 columns, then the default 
-        colormap will be "dark24"
+        "t10" is the default colormap. If there are more than 10 columns, 
+        then the default colormap will be "dark24"
 
         Append "_r" to the colormap name to use the reverse of the colormap.
         i.e. "dark12_r"
@@ -646,9 +646,9 @@ def bar_chart_race_plotly(df, filename=None, orientation='h', sort='desc', n_bar
         period_fmt='%B %d, %Y', 
         period_summary_func=lambda v, r: {'x': .85, 'y': .2, 
                                           's': f'Total deaths: {v.sum()}', 
-                                          'ha': 'right', 'size': 11}, 
+                                          'size': 11}, 
         perpendicular_bar_func='median', 
-        cmap='dark12', 
+        colors='dark12', 
         title='COVID-19 Deaths by Country', 
         bar_size=.95,
         textposition='outside', 
@@ -661,7 +661,7 @@ def bar_chart_race_plotly(df, filename=None, orientation='h', sort='desc', n_bar
     '''
     bcr = _BarChartRace(df, filename, orientation, sort, n_bars, fixed_order, fixed_max,
                         steps_per_period, period_length, interpolate_period, period_label, 
-                        period_fmt, period_summary_func, perpendicular_bar_func, cmap, title, 
+                        period_fmt, period_summary_func, perpendicular_bar_func, colors, title, 
                         bar_size, textposition, texttemplate, bar_label_font, tick_label_font, 
                         scale, bar_kwargs, layout_kwargs, filter_column_colors)
     return bcr.make_animation()
