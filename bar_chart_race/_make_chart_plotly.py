@@ -14,7 +14,7 @@ class _BarChartRace:
                  steps_per_period, period_length, interpolate_period, period_label, 
                  period_fmt, period_summary_func, perpendicular_bar_func, cmap, title, 
                  bar_size, textposition, texttemplate, bar_label_font, tick_label_font, 
-                 scale, bar_kwargs, filter_column_colors):
+                 scale, bar_kwargs, layout_kwargs, filter_column_colors):
         self.filename = filename
         self.extension = self.get_extension()
         self.orientation = orientation
@@ -41,6 +41,7 @@ class _BarChartRace:
         
         self.validate_params()
         self.bar_kwargs = self.get_bar_kwargs(bar_kwargs)
+        self.layout_kwargs = self.get_layout_kwargs(layout_kwargs)
         self.df_values, self.df_ranks = self.prepare_data(df)
         self.col_filt = self.get_col_filt()
         self.bar_colors = self.get_bar_colors(cmap)
@@ -79,6 +80,21 @@ class _BarChartRace:
             return bar_kwargs
         raise TypeError('`bar_kwargs` must be None or a dictionary mapping `go.Bar` parameters '
                         'to values.')
+
+    def get_layout_kwargs(self, layout_kwargs):
+        if layout_kwargs is None:
+            return {'showlegend': False}
+        elif isinstance(layout_kwargs, dict):
+            if {'xaxis', 'yaxis', 'annotations'} & layout_kwargs.keys():
+                raise ValueError('`layout_kwargs` cannot contain "xaxis", "yaxis", or '
+                                 ' "annotations".')
+            if 'showlegend' not in layout_kwargs:
+                layout_kwargs['showlegend'] = False
+            return layout_kwargs
+        elif isinstance(layout_kwargs, plotly.graph_objs._layout.Layout):
+            return self.get_layout_kwargs(layout_kwargs.to_plotly_json())
+        raise TypeError('`layout_kwargs` must be None, a dictionary mapping '
+                        '`go.Layout` parameters to values or an instance of `go.Layout`.')
 
     def get_period_label(self, period_label):
         if not period_label:
@@ -244,6 +260,7 @@ class _BarChartRace:
             bar = go.Bar(x=x, y=y, width=self.bar_size, textposition=self.textposition,
                          texttemplate=self.texttemplate, orientation=self.orientation, 
                          marker_color=colors, insidetextfont=self.bar_label_font, 
+                         cliponaxis=False,
                          outsidetextfont=self.bar_label_font, **self.bar_kwargs)
 
             data = [bar]
@@ -255,7 +272,8 @@ class _BarChartRace:
                              else (label_axis, value_axis)
 
             annotations = self.get_annotations(i)
-            layout = go.Layout(xaxis=xaxis, yaxis=yaxis, annotations=annotations, showlegend=False)
+            layout = go.Layout(xaxis=xaxis, yaxis=yaxis, annotations=annotations, 
+                               **self.layout_kwargs)
             frames.append(go.Frame(data=data, layout=layout))
         return frames
     
@@ -342,7 +360,8 @@ def bar_chart_race_plotly(df, filename=None, orientation='h', sort='desc', n_bar
                           period_fmt=None, period_summary_func=None, perpendicular_bar_func=None,
                           cmap=None, title=None, bar_size=.95, textposition='outside', 
                           texttemplate=None, bar_label_font=12, tick_label_font=12, 
-                          scale='linear', bar_kwargs=None, filter_column_colors=False):
+                          scale='linear', bar_kwargs=None, layout_kwargs=None, 
+                          filter_column_colors=False):
     '''
     Create an animated bar chart race using Plotly. Data must be in 
     'wide' format where each row represents a single time period and each 
@@ -556,8 +575,18 @@ def bar_chart_race_plotly(df, filename=None, orientation='h', sort='desc', n_bar
         Other keyword arguments (within a dictionary) forwarded to the 
         plotly `go.Bar` function. If no value for 'opacity' is given,
         then it is set to .8 by default.
-        
 
+    layout_kwargs : dict or go.Layout instance, default None
+        Other keyword arguments (within a dictionary) forwarded to the 
+        plotly `go.Layout` function. Use this to control the size of
+        the figure.
+        Example:
+        {
+            'width': 600,
+            'height': 400,
+            'showlegend': True
+        }
+        
     filter_column_colors : bool, default `False`
         When setting n_bars, it's possible that some columns never 
         appear in the animation. Regardless, all columns get assigned
@@ -634,5 +663,5 @@ def bar_chart_race_plotly(df, filename=None, orientation='h', sort='desc', n_bar
                         steps_per_period, period_length, interpolate_period, period_label, 
                         period_fmt, period_summary_func, perpendicular_bar_func, cmap, title, 
                         bar_size, textposition, texttemplate, bar_label_font, tick_label_font, 
-                        scale, bar_kwargs, filter_column_colors)
+                        scale, bar_kwargs, layout_kwargs, filter_column_colors)
     return bcr.make_animation()
