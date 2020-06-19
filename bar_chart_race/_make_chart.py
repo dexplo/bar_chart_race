@@ -9,10 +9,11 @@ from matplotlib import ticker, colors
 class _BarChartRace:
     
     def __init__(self, df, filename, orientation, sort, n_bars, fixed_order, fixed_max,
-                 steps_per_period, period_length, interpolate_period, label_bars, bar_size, 
-                 period_label, period_fmt, period_summary_func, perpendicular_bar_func, figsize, 
-                 cmap, title, title_size, bar_label_size, tick_label_size, shared_fontdict, scale, 
-                 writer, fig, dpi, bar_kwargs, filter_column_colors):
+                 steps_per_period, period_length, interpolate_period, bar_label_position, 
+                 bar_label_fmt, bar_size, period_label, period_fmt, period_summary_func, 
+                 perpendicular_bar_func, figsize, cmap, title, title_size, bar_label_size, 
+                 tick_label_size, shared_fontdict, scale, writer, fig, dpi, bar_kwargs, 
+                 filter_column_colors):
         self.filename = filename
         self.extension = self.get_extension()
         self.orientation = orientation
@@ -22,7 +23,8 @@ class _BarChartRace:
         self.fixed_max = fixed_max
         self.steps_per_period = steps_per_period
         self.interpolate_period = interpolate_period
-        self.label_bars = label_bars
+        self.bar_label_position = bar_label_position
+        self.bar_label_fmt = bar_label_fmt
         self.bar_size = bar_size
         self.period_label = self.get_period_label(period_label)
         self.period_fmt = period_fmt
@@ -66,6 +68,9 @@ class _BarChartRace:
 
         if self.orientation not in ('h', 'v'):
             raise ValueError('`orientation` must be "h" or "v"')
+
+        if self.bar_label_position not in ('outside', 'inside', None):
+            raise ValueError('`bar_label_position` must be one of "outside", "inside" or None')
 
     def get_bar_kwargs(self, bar_kwargs):
         bar_kwargs = bar_kwargs or {}
@@ -186,7 +191,7 @@ class _BarChartRace:
         
     def get_bar_colors(self, cmap):
         if cmap is None:
-            cmap = 't10'
+            cmap = 'dark12'
             if self.df_values.shape[1] > 10:
                 cmap = 'dark24'
             
@@ -363,29 +368,46 @@ class _BarChartRace:
                                   '"x", "y", and "s"')
             self.ax.text(transform=self.ax.transAxes, **text_dict)
 
-        if self.label_bars:
+        if self.bar_label_position:
             if self.orientation == 'h':
                 zipped = zip(bar_length, bar_location)
             else:
                 zipped = zip(bar_location, bar_length)
 
+            if self.orientation == 'h':
+                rotation = 0
+                ha = 'left'
+                va = 'center'
+                delta = .01
+                if self.bar_label_position == 'inside':
+                    delta = -.01
+                    ha = 'right'
+            else:
+                rotation = 90
+                ha = 'center'
+                va = 'bottom'
+                delta = .01
+                if self.bar_label_position == 'inside':
+                    delta = -.01
+                    va = 'top'
+
             for x1, y1 in zipped:
                 xtext, ytext = self.ax.transLimits.transform((x1, y1))
                 if self.orientation == 'h':
-                    xtext += .01
-                    text = f'{x1:,.0f}'
-                    rotation = 0
-                    ha = 'left'
-                    va = 'center'
+                    xtext += delta
+                    val = x1
                 else:
-                    ytext += .015
-                    text = f'{y1:,.0f}'
-                    rotation = 90
-                    ha = 'center'
-                    va = 'bottom'
+                    ytext += delta
+                    val = y1
+
+                if callable(self.bar_label_fmt):
+                    text = self.bar_label_fmt(val)
+                else:
+                    text = self.bar_label_fmt.format(x=val)
+
                 xtext, ytext = self.ax.transLimits.inverted().transform((xtext, ytext))
-                text = self.ax.text(xtext, ytext, text, ha=ha, rotation=rotation, 
-                             fontsize=self.bar_label_size, va=va)
+                self.ax.text(xtext, ytext, text, ha=ha, rotation=rotation, 
+                             fontsize=self.bar_label_size, va=va, clip_on=True)
 
         if self.perpendicular_bar_func:
             if isinstance(self.perpendicular_bar_func, str):
@@ -434,15 +456,16 @@ class _BarChartRace:
             else:
                 ret_val = anim.save(self.filename, fps=self.fps, writer=self.writer)
         except Exception as e:
-            if self.extension != 'gif':
-                message = f'''You do not have ffmpeg installed on your machine. Download
-                            ffmpeg from here: https://www.ffmpeg.org/download.html.
+            message = str(e)
+            # if self.extension != 'gif':
+            #     message = f'''You do not have ffmpeg installed on your machine. Download
+            #                 ffmpeg from here: https://www.ffmpeg.org/download.html.
                             
-                            Matplotlib's original error message below:\n
-                            {str(e)}
-                            '''
-            else:
-                message = str(e)
+            #                 Matplotlib's original error message below:\n
+            #                 {str(e)}
+            #                 '''
+            # else:
+            #     message = str(e)
             raise Exception(message)
         finally:
             plt.rcParams = self.orig_rcParams
@@ -452,7 +475,8 @@ class _BarChartRace:
 
 def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None, 
                    fixed_order=False, fixed_max=False, steps_per_period=10, 
-                   period_length=500, interpolate_period=False, label_bars=True, 
+                   period_length=500, interpolate_period=False, 
+                   bar_label_position='outside', bar_label_fmt='{x:,.0f}',
                    bar_size=.95, period_label=True, period_fmt=None, 
                    period_summary_func=None, perpendicular_bar_func=None, figsize=(6, 3.5),
                    cmap=None, title=None, title_size=None, bar_label_size=7, 
@@ -539,9 +563,22 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         2020-03-29 12:00:00
         2020-03-29 18:00:00
         2020-03-30 00:00:00
+
+    bar_label_position : 'outside', 'inside', None, deault 'outside'
+        Position where bar label will be placed. Use None when 
+        no label is desired.
     
-    label_bars : bool, default `True`
-        Whether to label the bars with their value on their right
+    bar_label_fmt : str or function, default '{x:,.0f}'
+        A new-style formatted string to control the formatting
+        of the bar labels. Use `x` as the variable name.
+
+        Provide a function that accepts one numeric argument,
+        the value of the bar and returns a string
+
+        Example:
+        def func(val):
+            new_val = int(round(val, -3))
+            return f'{new_val:,.0f}'
 
     bar_size : float, default .95
         Height/width of bars for horizontal/vertical bar charts. 
@@ -623,13 +660,13 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         matplotlib figure size in inches. Will be overridden if figure 
         supplied to `fig`.
 
-    cmap : str, matplotlib colormap instance, or list of colors, default 't10'
+    cmap : str, matplotlib colormap instance, or list of colors, default 'dark12'
         Colors to be used for the bars. All matplotlib and plotly 
         colormaps are available by string name. Colors will repeat 
         if there are more bars than colors.
 
-        "t10" is a discrete colormap. If there are more than 12 columns, 
-        then the default colormap will be "dark24"
+        'dark12' is a discrete colormap. If there are more than 12 columns, 
+        then the default colormap will be 'dark24'
 
         Append "_r" to the colormap name to use the reverse of the colormap.
         i.e. "dark12_r"
@@ -747,7 +784,7 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         steps_per_period=10, 
         period_length=500, 
         interpolate_period=False, 
-        label_bars=True, 
+        bar_label_fmt=True, 
         bar_size=.95, 
         period_label={'x': .99, 'y': .8, 'ha': 'right', 'va': 'center'}, 
         period_fmt='%B %d, %Y', 
@@ -776,10 +813,11 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
     These sizes are relative to plt.rcParams['font.size'].
     '''
     bcr = _BarChartRace(df, filename, orientation, sort, n_bars, fixed_order, fixed_max,
-                        steps_per_period, period_length, interpolate_period, label_bars, bar_size, 
-                        period_label, period_fmt, period_summary_func, perpendicular_bar_func, 
-                        figsize, cmap, title, title_size, bar_label_size, tick_label_size, 
-                        shared_fontdict, scale, writer, fig, dpi, bar_kwargs, filter_column_colors)
+                        steps_per_period, period_length, interpolate_period, bar_label_position, 
+                        bar_label_fmt, bar_size, period_label, period_fmt, period_summary_func, 
+                        perpendicular_bar_func, figsize, cmap, title, title_size, bar_label_size, 
+                        tick_label_size, shared_fontdict, scale, writer, fig, dpi, bar_kwargs, 
+                        filter_column_colors)
     return bcr.make_animation()
 
 def load_dataset(name='covid19'):
