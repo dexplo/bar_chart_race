@@ -1,5 +1,11 @@
 # What's New
 
+## Version 0.2
+
+* Bar label position able to be specified ('outside', 'inside', or None) using new parameter `bar_label_position`.
+* Bar label formatting possible with string or function using new parameter `bar_label_fmt`
+* Removal of parameter `label_bars`
+
 ## Version 0.1
 
 Released June 1, 2020
