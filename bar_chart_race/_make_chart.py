@@ -40,17 +40,20 @@ class _BarChartRace:
         self.orig_rcParams = self.set_shared_fontdict(shared_fontdict)
         self.scale = scale
         self.writer = self.get_writer(writer)
+        self.dpi = dpi
         self.fps = 1000 / self.period_length * steps_per_period
         self.filter_column_colors = filter_column_colors
+        self.extra_pixels = 0
         
         self.validate_params()
         self.bar_kwargs = self.get_bar_kwargs(bar_kwargs)
         self.html = self.filename is None
         self.df_values, self.df_ranks = self.prepare_data(df)
-        self.fig, self.ax = self.get_fig(fig, dpi)
         self.col_filt = self.get_col_filt()
         self.bar_colors = self.get_bar_colors(cmap)
         self.str_index = self.df_values.index.astype('str')
+        self.subplots_adjust = self.get_subplots_adjust()
+        self.fig = self.get_fig(fig)
         
 
     def get_extension(self):
@@ -117,6 +120,8 @@ class _BarChartRace:
                                  'to supply the name of the title')
         elif title is not None:
             raise TypeError('`title` must be either a string or dictionary')
+        else:
+            return {'label': None}
         return title
 
     def set_shared_fontdict(self, shared_fontdict):
@@ -184,7 +189,7 @@ class _BarChartRace:
             df_ranks = pd.DataFrame(data=ranks_arr, columns=cols)
 
         return df_values, df_ranks
-
+        
     def get_col_filt(self):
         col_filt = pd.Series([True] * self.df_values.shape[1])
         if self.n_bars < self.df_ranks.shape[1]:
@@ -244,7 +249,65 @@ class _BarChartRace:
                                     "To reduce color repetition, set `filter_column_colors` to `True`")
         return bar_colors
 
-    def get_fig(self, fig, dpi):
+    def prepare_axes(self, ax):
+        value_axis = ax.xaxis if self.orientation == 'h' else ax.yaxis
+        value_axis.grid(True, color='white')
+        value_axis.set_major_formatter(ticker.StrMethodFormatter('{x:,.0f}'))
+        ax.tick_params(labelsize=self.tick_label_size, length=0, pad=2)
+        ax.minorticks_off()
+        ax.set_axisbelow(True)
+        ax.set_facecolor('.9')
+        ax.set_title(**self.title)
+        min_val = 1 if self.scale == 'log' else 0
+
+        for spine in ax.spines.values():
+            spine.set_visible(False)
+
+        limit = (.2, self.n_bars + .8)
+        if self.orientation == 'h':
+            ax.set_ylim(limit)
+            ax.set_xscale(self.scale)
+        else:
+            ax.set_xlim(limit)
+            ax.set_yscale(self.scale)
+            ax.tick_params(axis='x', labelrotation=30)
+
+        if self.fixed_max:
+            value_axis.set_lim(min_val, values.max() * 1.16)
+
+    def get_subplots_adjust(self):
+        import io
+        fig = plt.Figure(figsize=self.figsize, dpi=self.dpi)
+        ax = fig.add_subplot()
+        plot_func = ax.barh if self.orientation == 'h' else ax.bar
+        bar_location, bar_length, cols, _ = self.get_bar_info(-1)
+        plot_func(bar_location, bar_length, tick_label=cols)
+        self.prepare_axes(ax)
+        texts = self.add_bar_labels(ax, bar_location, bar_length)
+
+        min_val = 1 if self.scale == 'log' else 0
+        fig.canvas.print_figure(io.BytesIO(), format='png')
+        xmin = min(label.get_window_extent().x0 for label in ax.get_yticklabels()) 
+        xmin /= (self.dpi * fig.get_figwidth())
+        left = ax.get_position().x0 - xmin + .01
+
+        ymin = min(label.get_window_extent().y0 for label in ax.get_xticklabels()) 
+        ymin /= (self.dpi * fig.get_figheight())
+        bottom = ax.get_position().y0 - ymin + .01
+
+        if self.bar_label_position == 'outside':
+            max_bar = max(bar_length)
+            if self.orientation == 'h':
+                max_bar_pixels = ax.transData.transform((max_bar, 0))[0]
+                max_text = max(text.get_window_extent().x1 for text in texts)
+            else:
+                max_bar_pixels = ax.transData.transform((0, max_bar))[1]
+                max_text = max(text.get_window_extent().y1 for text in texts)
+            
+            self.extra_pixels = max_text - max_bar_pixels + 10
+        return left, bottom
+
+    def get_fig(self, fig):
         if fig is not None and not isinstance(fig, plt.Figure):
             raise TypeError('`fig` must be a matplotlib Figure instance')
         if fig is not None:
@@ -253,108 +316,53 @@ class _BarChartRace:
             ax = fig.axes[0]
             self.figsize = fig.get_size_inches()
         else:
-            fig, ax = self.create_figure(dpi)
-        return fig, ax
+            fig = self.create_figure()
+        return fig
 
-    def create_figure(self, dpi):
-        fig = plt.Figure(figsize=self.figsize, dpi=dpi)
-        limit = (.2, self.n_bars + .8)
-        rect = self.calculate_new_figsize(fig)
-        ax = fig.add_axes(rect)
-        min_val = 1 if self.scale == 'log' else 0
-        if self.orientation == 'h':
-            ax.set_ylim(limit)
-            if self.fixed_max:
-                ax.set_xlim(min_val, self.df_values.max().max() * 1.05 * 1.11)
-            ax.grid(True, axis='x', color='white')
-            ax.set_xscale(self.scale)
-            ax.xaxis.set_major_formatter(ticker.StrMethodFormatter('{x:,.0f}'))
-        else:
-            ax.set_xlim(limit)
-            if self.fixed_max:
-                ax.set_ylim(min_val, self.df_values.max().max() * 1.05 * 1.16)
-            ax.grid(True, axis='y', color='white')
-            ax.set_xticklabels(ax.get_xticklabels(), ha='right', rotation=30)
-            ax.set_yscale(self.scale)
-            ax.yaxis.set_major_formatter(ticker.StrMethodFormatter('{x:,.0f}'))
-
-        ax.minorticks_off()
-        ax.set_axisbelow(True)
-        ax.tick_params(length=0, labelsize=self.tick_label_size, pad=2)
-        ax.set_facecolor('.9')
-        ax.set_title(self.title)
-        for spine in ax.spines.values():
-            spine.set_visible(False)
-        return fig, ax
-
-    def calculate_new_figsize(self, real_fig):
-        import io
-        fig = plt.Figure(tight_layout=True, figsize=self.figsize)
+    def create_figure(self):
+        fig = plt.Figure(figsize=self.figsize, dpi=self.dpi)
         ax = fig.add_subplot()
-        fake_cols = [chr(i + 70) for i in range(self.df_values.shape[1])]
-        max_val = self.df_values.max().max()
-        # min_val = 1 if self.scale == 'log' else 0
-        if self.orientation == 'h':
-            ax.barh(fake_cols, [1] * self.df_values.shape[1])
-            ax.tick_params(labelrotation=0, axis='y', labelsize=self.tick_label_size)
-            ax.set_title(**self.title)
-            fig.canvas.print_figure(io.BytesIO())
-            orig_pos = ax.get_position()
-            ax.set_yticklabels(self.df_values.columns)
-            ax.set_xticklabels([max_val] * len(ax.get_xticks()))
-        else:
-            ax.bar(fake_cols, [1] * self.df_values.shape[1])
-            ax.tick_params(labelrotation=30, axis='x', labelsize=self.tick_label_size)
-            ax.set_title(**self.title)
-            fig.canvas.print_figure(io.BytesIO())
-            orig_pos = ax.get_position()
-            ax.set_xticklabels(self.df_values.columns, ha='right')
-            ax.set_yticklabels([max_val] * len(ax.get_yticks()))
-        
-        fig.canvas.print_figure(io.BytesIO(), format='png')
-        new_pos = ax.get_position()
+        left, bottom = self.subplots_adjust
+        fig.subplots_adjust(left=left, bottom=bottom)
+        self.prepare_axes(ax)
+        return fig
 
-        coordx, prev_coordx = new_pos.x0, orig_pos.x0
-        coordy, prev_coordy = new_pos.y0, orig_pos.y0
-        old_w, old_h = self.figsize
-
-        # if coordx > prev_coordx or coordy > prev_coordy:
-        prev_w_inches = prev_coordx * old_w
-        total_w_inches = coordx * old_w
-        extra_w_inches = total_w_inches - prev_w_inches
-        new_w_inches = extra_w_inches + old_w
-
-        prev_h_inches = prev_coordy * old_h
-        total_h_inches = coordy * old_h
-        extra_h_inches = total_h_inches - prev_h_inches
-        new_h_inches = extra_h_inches + old_h
-
-        real_fig.set_size_inches(new_w_inches, new_h_inches)
-        left = total_w_inches / new_w_inches
-        bottom = total_h_inches / new_h_inches
-        width = orig_pos.x1 - left
-        height = orig_pos.y1 - bottom
-        return [left, bottom, width, height]
-            
-    def plot_bars(self, i):
+    def get_bar_info(self, i):
         bar_location = self.df_ranks.iloc[i].values
         top_filt = (bar_location > 0) & (bar_location < self.n_bars + 1)
         bar_location = bar_location[top_filt]
         bar_length = self.df_values.iloc[i].values[top_filt]
         cols = self.df_values.columns[top_filt]
         colors = self.bar_colors[top_filt]
+        return bar_location, bar_length, cols, colors
+
+    def plot_bars(self, ax, i):
+        bar_location, bar_length, cols, colors = self.get_bar_info(i)
         if self.orientation == 'h':
-            self.ax.barh(bar_location, bar_length, tick_label=cols, 
-                         color=colors, **self.bar_kwargs)
-            if not self.fixed_max:
-                self.ax.set_xlim(self.ax.get_xlim()[0], bar_length.max() * 1.1)
+            ax.barh(bar_location, bar_length, tick_label=cols, 
+                    color=colors, **self.bar_kwargs)
+            if not self.fixed_max and self.bar_label_position == 'outside':
+                max_bar = bar_length.max()
+                new_max_pixels = ax.transData.transform((max_bar, 0))[0] + self.extra_pixels
+                new_xmax = ax.transData.inverted().transform((new_max_pixels, 0))[0]
+                ax.set_xlim(ax.get_xlim()[0], new_xmax)
         else:
-            self.ax.bar(bar_location, bar_length, tick_label=cols, 
-                        color=colors, **self.bar_kwargs)
-            if not self.fixed_max:
-                self.ax.set_ylim(self.ax.get_ylim()[0], bar_length.max() * 1.16)
+            ax.bar(bar_location, bar_length, tick_label=cols, 
+                   color=colors, **self.bar_kwargs)
+            ax.set_xticklabels(ax.get_xticklabels(), ha='right')
+            if not self.fixed_max and self.bar_label_position == 'outside':
+                max_bar = bar_length.max()
+                new_max_pixels = ax.transData.transform((0, max_bar))[1] + self.extra_pixels
+                new_ymax = ax.transData.inverted().transform((0, new_max_pixels))[1]
+                ax.set_ylim(ax.get_ylim()[0], new_ymax)
+
             
-        num_texts = len(self.ax.texts)
+        self.add_period_label(ax, i)
+        self.add_period_summary(ax, i)
+        self.add_bar_labels(ax, bar_location, bar_length)
+        self.add_perpendicular_bar(ax, bar_length)
+
+    def add_period_label(self, ax, i):
         if self.period_label:
             if self.period_fmt:
                 idx_val = self.df_values.index[i]
@@ -364,12 +372,14 @@ class _BarChartRace:
                     s = self.period_fmt.format(x=idx_val)
             else:
                 s = self.str_index[i]
-            if num_texts == 0:
-                # first frame
-                self.ax.text(s=s, transform=self.ax.transAxes, **self.period_label)
-            else:
-                self.ax.texts[0].set_text(s)
 
+            if len(ax.texts) == 0:
+                # first frame
+                ax.text(s=s, transform=ax.transAxes, **self.period_label)
+            else:
+                ax.texts[0].set_text(s)
+
+    def add_period_summary(self, ax, i):
         if self.period_summary_func:
             values = self.df_values.iloc[i]
             ranks = self.df_ranks.iloc[i]
@@ -378,8 +388,9 @@ class _BarChartRace:
                 name = self.period_summary_func.__name__
                 raise ValueError(f'The dictionary returned from `{name}` must contain '
                                   '"x", "y", and "s"')
-            self.ax.text(transform=self.ax.transAxes, **text_dict)
+            ax.text(transform=ax.transAxes, **text_dict)
 
+    def add_bar_labels(self, ax, bar_location, bar_length):
         if self.bar_label_position:
             if self.orientation == 'h':
                 zipped = zip(bar_length, bar_location)
@@ -403,8 +414,9 @@ class _BarChartRace:
                     delta = -.01
                     va = 'top'
 
+            text_objs = []
             for x1, y1 in zipped:
-                xtext, ytext = self.ax.transLimits.transform((x1, y1))
+                xtext, ytext = ax.transLimits.transform((x1, y1))
                 if self.orientation == 'h':
                     xtext += delta
                     val = x1
@@ -417,10 +429,14 @@ class _BarChartRace:
                 else:
                     text = self.bar_label_fmt.format(x=val)
 
-                xtext, ytext = self.ax.transLimits.inverted().transform((xtext, ytext))
-                self.ax.text(xtext, ytext, text, ha=ha, rotation=rotation, 
-                             fontsize=self.bar_label_size, va=va, clip_on=True)
+                xtext, ytext = ax.transLimits.inverted().transform((xtext, ytext))
 
+                text_obj = ax.text(xtext, ytext, text, ha=ha, rotation=rotation, 
+                                   fontsize=self.bar_label_size, va=va, clip_on=True)
+                text_objs.append(text_obj)
+            return text_objs
+
+    def add_perpendicular_bar(self, ax, bar_length):
         if self.perpendicular_bar_func:
             if isinstance(self.perpendicular_bar_func, str):
                 val = pd.Series(bar_length).agg(self.perpendicular_bar_func)
@@ -429,29 +445,31 @@ class _BarChartRace:
                 ranks = self.df_ranks.iloc[i]
                 val = self.perpendicular_bar_func(values, ranks)
 
-            if not self.ax.lines:
+            if not ax.lines:
                 if self.orientation == 'h':
-                    self.ax.axvline(val, lw=10, color='.5', zorder=.5)
+                    ax.axvline(val, lw=10, color='.5', zorder=.5)
                 else:
-                    self.ax.axhline(val, lw=10, color='.5', zorder=.5)
+                    ax.axhline(val, lw=10, color='.5', zorder=.5)
             else:
-                line = self.ax.lines[0]
+                line = ax.lines[0]
                 if self.orientation == 'h':
                     line.set_xdata([val] * 2)
                 else:
                     line.set_ydata([val] * 2)
             
     def anim_func(self, i):
-        for bar in self.ax.containers:
+        ax = self.fig.axes[0]
+        for bar in ax.containers:
             bar.remove()
         start = int(bool(self.period_label))
-        for text in self.ax.texts[start:]:
+        for text in ax.texts[start:]:
             text.remove()
-        self.plot_bars(i)
+        self.plot_bars(ax, i)
         
     def make_animation(self):
         def init_func():
-            self.plot_bars(0)
+            ax = self.fig.axes[0]
+            self.plot_bars(ax, 0)
         
         interval = self.period_length / self.steps_per_period
         anim = FuncAnimation(self.fig, self.anim_func, range(len(self.df_values)), 
@@ -469,15 +487,6 @@ class _BarChartRace:
                 ret_val = anim.save(self.filename, fps=self.fps, writer=self.writer)
         except Exception as e:
             message = str(e)
-            # if self.extension != 'gif':
-            #     message = f'''You do not have ffmpeg installed on your machine. Download
-            #                 ffmpeg from here: https://www.ffmpeg.org/download.html.
-                            
-            #                 Matplotlib's original error message below:\n
-            #                 {str(e)}
-            #                 '''
-            # else:
-            #     message = str(e)
             raise Exception(message)
         finally:
             plt.rcParams = self.orig_rcParams
@@ -531,8 +540,8 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         Bar orientation - horizontal or vertical
 
     sort : 'desc' or 'asc', default 'desc'
-        Choose how to sort the bars. Use 'desc' to put largest bars on top 
-        and 'asc' to place largest bars on bottom.
+        Sorts the bars. Use 'desc' to place largest bars on top/left 
+        and 'asc' to place largest bars on bottom/right.
 
     n_bars : int, default None
         Choose the maximum number of bars to display on the graph. 
@@ -576,7 +585,7 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         2020-03-29 18:00:00
         2020-03-30 00:00:00
 
-    bar_label_position : 'outside', 'inside', None, deault 'outside'
+    bar_label_position : 'outside', 'inside', or None - default 'outside'
         Position where bar label will be placed. Use None when 
         no label is desired.
     
