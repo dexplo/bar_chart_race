@@ -92,23 +92,28 @@ class _BarChartRace:
         return bar_kwargs
 
     def get_period_label(self, period_label):
-        if not period_label:
+        if period_label is False:
             return False
-        elif period_label is True:
-            period_label = {'size': 12}
-            if self.orientation == 'h':
-                period_label['x'] = .95
-                period_label['y'] = .15 if self.sort == 'desc' else .85
-                period_label['ha'] = 'right'
-                period_label['va'] = 'center'
-            else:
-                period_label['x'] = .95 if self.sort == 'desc' else .05
-                period_label['y'] = .85
-                period_label['ha'] = 'right' if self.sort == 'desc' else 'left'
-                period_label['va'] = 'center'
+
+        default_period_label = {'size': 12}
+        if self.orientation == 'h':
+            default_period_label['x'] = .95
+            default_period_label['y'] = .15 if self.sort == 'desc' else .85
+            default_period_label['ha'] = 'right'
+            default_period_label['va'] = 'center'
         else:
-            if 'x' not in period_label or 'y' not in period_label:
-                raise ValueError('`period_label` dictionary must have keys for "x" and "y"')
+            default_period_label['x'] = .95 if self.sort == 'desc' else .05
+            default_period_label['y'] = .85
+            default_period_label['ha'] = 'right' if self.sort == 'desc' else 'left'
+            default_period_label['va'] = 'center'
+
+        if period_label is True:
+            return default_period_label
+        elif isinstance(period_label, dict):
+            period_label = {**default_period_label, **period_label}
+        else:
+            raise TypeError('`period_label` must be a boolean or dictionary')
+
         return period_label
 
     def get_title(self, title):
@@ -391,7 +396,7 @@ class _BarChartRace:
         self.add_period_label(ax, i)
         self.add_period_summary(ax, i)
         self.add_bar_labels(ax, bar_location, bar_length)
-        self.add_perpendicular_bar(ax, bar_length)
+        self.add_perpendicular_bar(ax, bar_length, i)
 
     def add_period_label(self, ax, i):
         if self.period_label:
@@ -467,7 +472,7 @@ class _BarChartRace:
                 text_objs.append(text_obj)
             return text_objs
 
-    def add_perpendicular_bar(self, ax, bar_length):
+    def add_perpendicular_bar(self, ax, bar_length, i):
         if self.perpendicular_bar_func:
             if isinstance(self.perpendicular_bar_func, str):
                 val = pd.Series(bar_length).agg(self.perpendicular_bar_func)
@@ -640,23 +645,23 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
 
     period_label : bool or dict, default `True`
         If `True` or dict, use the index as a large text label
-        on the axes whose value changes
+        on the axes whose value changes each frame. If `False`,
+        don't place label on axes.
 
-        Use a dictionary to supply the exact position of the period
-        along with any valid parameters of the matplotlib `text` method.
-        At a minimum, you must supply both 'x' and 'y' in axes coordinates
+        Use a dictionary to supply any valid parameters of the 
+        matplotlib `text` method.
 
         Example:
         {
             'x': .99,
             'y': .8,
             'ha': 'right',
-            'va': 'center'
+            'va': 'center',
+            'size': 8
         }
-        
-        If `False` - don't place label on axes
 
-        The default location depends on `orientation` and `sort`
+        The default location depends on `orientation` and `sort`; 
+        x and y are in axes units
         * h, desc -> x=.95, y=.15, ha='right', va='center'
         * h, asc -> x=.95, y=.85, ha='right', va='center'
         * v, desc -> x=.95, y=.85, ha='right', va='center'
