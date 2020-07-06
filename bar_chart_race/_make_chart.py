@@ -249,6 +249,13 @@ class _BarChartRace:
                                     "To reduce color repetition, set `filter_column_colors` to `True`")
         return bar_colors
 
+    def get_max_plotted_value(self):
+        plotted_values = []
+        for i in range(len(self.df_values)):
+            _, bar_length, _, _ = self.get_bar_info(i)
+            plotted_values.append(max(bar_length))
+        return max(plotted_values)
+
     def prepare_axes(self, ax):
         value_axis = ax.xaxis if self.orientation == 'h' else ax.yaxis
         value_axis.grid(True, color='white')
@@ -272,9 +279,6 @@ class _BarChartRace:
             ax.set_yscale(self.scale)
             ax.tick_params(axis='x', labelrotation=30)
 
-        if self.fixed_max:
-            value_axis.set_lim(min_val, values.max() * 1.16)
-
     def get_subplots_adjust(self):
         import io
         fig = plt.Figure(figsize=self.figsize, dpi=self.dpi)
@@ -282,6 +286,7 @@ class _BarChartRace:
         plot_func = ax.barh if self.orientation == 'h' else ax.bar
         bar_location, bar_length, cols, _ = self.get_bar_info(-1)
         plot_func(bar_location, bar_length, tick_label=cols)
+                
         self.prepare_axes(ax)
         texts = self.add_bar_labels(ax, bar_location, bar_length)
 
@@ -295,6 +300,12 @@ class _BarChartRace:
         ymin /= (self.dpi * fig.get_figheight())
         bottom = ax.get_position().y0 - ymin + .01
 
+        if self.fixed_max:
+            if self.orientation == 'h':
+                self.fixed_max_value = ax.get_xlim()[1]
+            else:
+                self.fixed_max_value = ax.get_ylim()[1]
+
         if self.bar_label_position == 'outside':
             max_bar = max(bar_length)
             if self.orientation == 'h':
@@ -305,7 +316,27 @@ class _BarChartRace:
                 max_text = max(text.get_window_extent().y1 for text in texts)
             
             self.extra_pixels = max_text - max_bar_pixels + 10
+
+            if self.fixed_max:
+                end_pixel = max_bar_pixels + self.extra_pixels
+                if self.orientation == 'h':
+                    self.fixed_max_value = ax.transData.inverted().transform((end_pixel, 0))[0]
+                else:
+                    self.fixed_max_value = ax.transData.inverted().transform((0, end_pixel))[1]
         return left, bottom
+
+    def fix_axis_limits(self, ax):
+        if self.scale == 'log':
+            if self.orientation == 'h':
+                ax.set_xlim(1)
+            else:
+                ax.set_ylim(1)
+
+        if self.fixed_max:
+            if self.orientation == 'h':
+                ax.set_xlim(None, self.fixed_max_value)
+            else:
+                ax.set_ylim(None, self.fixed_max_value)
 
     def get_fig(self, fig):
         if fig is not None and not isinstance(fig, plt.Figure):
@@ -325,6 +356,7 @@ class _BarChartRace:
         left, bottom = self.subplots_adjust
         fig.subplots_adjust(left=left, bottom=bottom)
         self.prepare_axes(ax)
+        self.fix_axis_limits(ax)
         return fig
 
     def get_bar_info(self, i):
@@ -355,7 +387,6 @@ class _BarChartRace:
                 new_max_pixels = ax.transData.transform((0, max_bar))[1] + self.extra_pixels
                 new_ymax = ax.transData.inverted().transform((0, new_max_pixels))[1]
                 ax.set_ylim(ax.get_ylim()[0], new_ymax)
-
             
         self.add_period_label(ax, i)
         self.add_period_summary(ax, i)
