@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
@@ -96,30 +98,36 @@ class _BarChartRace:
                         '`go.Layout` parameters to values or an instance of `go.Layout`.')
 
     def get_period_label(self, period_label):
-        if not period_label:
+        if period_label is False:
             return False
-        elif period_label is True:
-            period_label = {}
-            if self.orientation == 'h':
-                period_label['x'] = .95
-                period_label['y'] = .15 if self.sort == 'desc' else .85
-                period_label['ha'] = 'right'
-                period_label['va'] = 'center'
-            else:
-                period_label['x'] = .95 if self.sort == 'desc' else .05
-                period_label['y'] = .85
-                period_label['ha'] = 'right' if self.sort == 'desc' else 'left'
-                period_label['va'] = 'center'
+
+        default_period_label = {'size': 12}
+        if self.orientation == 'h':
+            default_period_label['x'] = .95
+            default_period_label['y'] = .15 if self.sort == 'desc' else .85
+            default_period_label['ha'] = 'right'
+            default_period_label['va'] = 'center'
         else:
-            if 'x' not in period_label or 'y' not in period_label:
-                raise ValueError('`period_label` dictionary must have keys for "x" and "y"')
+            default_period_label['x'] = .95 if self.sort == 'desc' else .05
+            default_period_label['y'] = .85
+            default_period_label['ha'] = 'right' if self.sort == 'desc' else 'left'
+            default_period_label['va'] = 'center'
+
+        if period_label is True:
+            return default_period_label
+        elif isinstance(period_label, dict):
+            period_label = {**default_period_label, **period_label}
+        else:
+            raise TypeError('`period_label` must be a boolean or dictionary')
+
         return period_label
 
     def get_title(self, title):
         if title is None:
             return
         if isinstance(title, str):
-            return {'text': title, 'y':.85, 'x':0.5, 
+            return {'text': title, 'y': 1, 'x': .5, 'xref': 'paper', 'yref': 'paper',
+                    'pad': {'b': 10},
                     'xanchor': 'center', 'yanchor': 'bottom'}
         elif isinstance(title, (dict, plotly.graph_objects.layout.Title)):
             return title
@@ -144,9 +152,9 @@ class _BarChartRace:
             self.n_bars = min(len(cols), self.n_bars)
             
         compute_ranks = self.fixed_order is False
-        dfs = prepare_wide_data(df, self.orientation, self.sort, self.n_bars,
-                                self.interpolate_period, self.steps_per_period,
-                                compute_ranks)
+        dfs = prepare_wide_data(df, orientation=self.orientation, sort=self.sort, 
+                                n_bars=self.n_bars, interpolate_period=self.interpolate_period, 
+                                steps_per_period=self.steps_per_period, compute_ranks=compute_ranks)
         if isinstance(dfs, tuple):
             df_values, df_ranks = dfs
         else:
@@ -183,7 +191,7 @@ class _BarChartRace:
         
     def get_bar_colors(self, colors):
         if colors is None:
-            colors = 't10'
+            colors = 'dark12'
             if self.df_values.shape[1] > 10:
                 colors = 'dark24'
             
@@ -210,6 +218,7 @@ class _BarChartRace:
         if self.df_values.shape[1] > n:
             bar_colors = bar_colors * (self.df_values.shape[1] // n + 1)
         bar_colors = np.array(bar_colors[:self.df_values.shape[1]])
+        
 
         if not self.filter_column_colors:
             if not self.col_filt.all():
@@ -229,14 +238,15 @@ class _BarChartRace:
         if self.orientation == 'h':
             self.ylimit = limit
             if self.fixed_max:
-                self.xlimit = [min_val, self.df_values.max().max() * 1.05 * 1.11]
+                self.xlimit = [min_val, self.df_values.max().max() * 1.1]
         else:
             self.xlimit = limit
             if self.fixed_max:
-                self.ylimit = [min_val, self.df_values.max().max() * 1.05 * 1.16]
+                self.ylimit = [min_val, self.df_values.max().max() * 1.1]
   
     def get_frames(self):
         frames = []
+        slider_steps = []
         for i in range(len(self.df_values)):
             bar_loc = self.df_ranks.iloc[i].values
             top_filt = (bar_loc > 0) & (bar_loc < self.n_bars + 1)
@@ -264,18 +274,29 @@ class _BarChartRace:
                          **self.bar_kwargs)
 
             data = [bar]
-            if self.perpendicular_bar_func:
-                pbar = self.get_perpendicular_bar(bar_vals, i)
-                data = [pbar, bar]
+            # if self.perpendicular_bar_func:
+            #     pbar = self.get_perpendicular_bar(bar_vals, i, layout)
+            #     layout.update(shapes=[pbar], overwrite=True)
 
             xaxis, yaxis = (value_axis, label_axis) if self.orientation == 'h' \
                              else (label_axis, value_axis)
 
             annotations = self.get_annotations(i)
+            if i % self.steps_per_period == 0:
+                slider_steps.append(
+                            {"args": [[i],
+                                {"frame": {"duration": self.duration, "redraw": True},
+                                 "mode": "immediate",
+                                 "fromcurrent": True,
+                                 "transition": {"duration": self.duration}
+                                }],
+                            "label": str(self.df_ranks.index[i]),
+                            "method": "animate"})
             layout = go.Layout(xaxis=xaxis, yaxis=yaxis, annotations=annotations, 
-                               **self.layout_kwargs)
-            frames.append(go.Frame(data=data, layout=layout))
-        return frames
+                                **self.layout_kwargs)
+            frames.append(go.Frame(data=data, layout=layout, name=i))
+
+        return frames, slider_steps
     
     def get_annotations(self, i):
         annotations = []
@@ -306,7 +327,7 @@ class _BarChartRace:
 
         return annotations
 
-    def get_perpendicular_bar(self, bar_vals, i):
+    def get_perpendicular_bar(self, bar_vals, i, layout):
         if isinstance(self.perpendicular_bar_func, str):
             val = pd.Series(bar_vals).agg(self.perpendicular_bar_func)
         else:
@@ -315,40 +336,74 @@ class _BarChartRace:
             val = self.perpendicular_bar_func(values, ranks)
 
         vals = [val, val]
-        if self.orientation == 'h':
-            x, y, o = vals, self.ylimit, 'v'
-            width = (self.xlimit[1] - self.xlimit[0]) * .02 
-        else:
-            x, y, o = self.xlimit, vals, 'h'
-            width = (self.ylimit[1] - self.ylimit[0]) * .02 
+        # if self.orientation == 'h':
+        #     x, y, o = vals, self.ylimit, 'v'
+        #     # width = (self.xlimit[1] - self.xlimit[0]) * .02 
+        # else:
+        #     x, y, o = self.xlimit, vals, 'h'
+        #     # width = (self.ylimit[1] - self.ylimit[0]) * .02 
         
-        return go.Bar(x=x, y=y, width=width, orientation=o, marker_color='rgba(50, 50, 50, .2)')
+        # return go.Bar(x=x, y=y, width=width, orientation=o, marker_color='rgba(50, 50, 50, .2)')
+        xmax = layout.xaxis.range[1]
+        xmiddle = val / xmax
+        return dict(type="rect", xref="paper", yref="paper",
+            x0=xmiddle - .05,
+            y0=0,
+            x1=xmiddle + .05,
+            y1=1,
+            fillcolor="red",
+            # layer="below",
+            # line_width=0
+            )
+
             
     def make_animation(self):
-        frames = self.get_frames()
+        frames, slider_steps = self.get_frames()
         data = frames[0].data
         layout = frames[0].layout
         layout.title = self.title
+        print("duration", self.duration, "num frames", len(frames))
+
         layout.updatemenus = [dict(
             type="buttons",
             direction = "left",
-            x=.9, 
-            y=1.05,
+            x=1, 
+            y=1.02,
+            xanchor='right',
             yanchor='bottom',
             buttons=[dict(label="Play",
                           method="animate",
+                          # redraw must be true for bar plots
                           args=[None, {"frame": {"duration": self.duration, "redraw": True},
-                                       "fromcurrent": True,
                                     }]),
                      dict(label="Pause",
                           method="animate",
                           args=[[None], {"frame": {"duration": 0, "redraw": False},
                                          "mode": "immediate",
-                                        "transition": {"duration": 0}}]),
+                                         "transition": {"duration": 0}}]),
                      ]
                      )]
 
-        fig = go.Figure(data=data, layout=layout, frames=frames)
+        sliders_dict = {
+                        "active": 0,
+                        "yanchor": "top",
+                        "xanchor": "left",
+                        "currentvalue": {
+                            "font": {"size": 20},
+                            "prefix": "Year:",
+                            "visible": True,
+                            "xanchor": "right"
+                        },
+                        "transition": {"duration": self.duration, "easing": "cubic-in-out"},
+                        "pad": {"b": 10, "t": 50},
+                        "len": 0.9,
+                        "x": 0.1,
+                        "y": 0,
+                        "steps": slider_steps
+                    }
+        layout.sliders = [sliders_dict]
+
+        fig = go.Figure(data=data, layout=layout, frames=frames[1:])
         if self.filename:
             fig.write_html(self.filename)
         else:
@@ -506,12 +561,12 @@ def bar_chart_race_plotly(df, filename=None, orientation='h', sort='desc', n_bar
         def func(values, ranks):
             return values.quantile(.75)
 
-    colors : str or sequence colors, default 't10'
+    colors : str or sequence colors, default 'dark12'
         Colors to be used for the bars. All matplotlib and plotly colormaps are 
         available by string name. Colors will repeat if there are more bars than colors.
 
-        "t10" is the default colormap. If there are more than 10 columns, 
-        then the default colormap will be "dark24"
+        'dark12' is the default colormap. If there are more than 10 columns, 
+        then the default colormap will be 'dark24'
 
         Append "_r" to the colormap name to use the reverse of the colormap.
         i.e. "dark12_r"
