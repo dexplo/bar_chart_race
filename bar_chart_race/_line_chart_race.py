@@ -212,17 +212,18 @@ class _LineChartRace:
         for spine in self.ax.spines.values():
             spine.set_visible(False)
 
-        self.ax.tick_params(length=0)
+        self.ax.tick_params(length=0, labelsize=self.tick_label_size)
         self.ax.set_facecolor('.9')
-        self.ax.grid(True, axis='y')
+        self.ax.grid(True)
         self.ax.xaxis_date()
-        self.ax.xaxis.set_major_formatter(mdates.DateFormatter('%-d'))
+        self.ax.xaxis.set_major_formatter(mdates.DateFormatter('%-m/%-d'))
+        self.ax.yaxis.set_major_formatter(ticker.StrMethodFormatter('{x:,.0f}'))
         
         df_cur = self.df_values.iloc[0]
         x, y = df_cur.name, df_cur.values
         x = mdates.date2num(x)
         for col, val, color in zip(self.df_values.columns, y, self.colors):
-            self.ax.text(x, val, col, ha='center', va='bottom')
+            self.ax.text(x, val, col, ha='center', va='bottom', size='smaller')
             self.ax.add_collection(LineCollection([[(x, val)]], colors=[color]))
 
     def anim_func(self, i):
@@ -237,7 +238,7 @@ class _LineChartRace:
             collection.set_segments(seg)
             color_arr = collection.get_colors()
             color_arr = np.append(color_arr, [color], axis=0)
-            color_arr[:, -1] *= .97
+            color_arr[:, -1] *= .985
             collection.set_color(color_arr)
             text.set_position((x, val))
         
@@ -245,7 +246,6 @@ class _LineChartRace:
         interval = self.period_length / self.steps_per_period
         anim = FuncAnimation(self.fig, self.anim_func, range(1, len(self.df_values)), 
                              self.init_func, interval=interval)
-
         try:
             if self.html:
                 ret_val = anim.to_html5_video()
