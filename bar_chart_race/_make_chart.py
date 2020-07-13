@@ -536,27 +536,22 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
                    bar_label_position='outside', bar_label_fmt='{x:,.0f}',
                    bar_size=.95, period_label=True, period_fmt=None, 
                    period_summary_func=None, perpendicular_bar_func=None, figsize=(6, 3.5),
-                   cmap=None, title=None, bar_label_size=7, 
-                   tick_label_size=7, shared_fontdict=None, scale='linear', writer=None, 
+                   cmap=None, title=None, bar_label_size=7, tick_label_size=7, 
+                   shared_fontdict=None, scale='linear', writer=None, 
                    fig=None, dpi=144, bar_kwargs=None, filter_column_colors=False):
     '''
     Create an animated bar chart race using matplotlib. Data must be in 
     'wide' format where each row represents a single time period and each 
     column represents a distinct category. Optionally, the index can label 
-    the time period.
-
-    Bar length and location change linearly from one time period to the next.
+    the time period. Bar length and location change linearly from one 
+    time period to the next.
 
     If no `filename` is given, an HTML string is returned, otherwise the 
     animation is saved to disk.
 
     You must have ffmpeg installed on your machine to save files to disk.
-    Get ffmpeg here: https://www.ffmpeg.org/download.html
-
-    To save .gif files you'll need to install ImageMagick.
-
-    This is resource intensive - start with just a few rows of data to test.
-
+    Get ffmpeg here: https://www.ffmpeg.org/download.html To save .gif 
+    files you'll need to install ImageMagick.
 
     Parameters
     ----------
