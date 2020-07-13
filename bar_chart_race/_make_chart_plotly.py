@@ -729,7 +729,7 @@ def bar_chart_race_plotly(df, filename=None, orientation='h', sort='desc', n_bar
         steps_per_period=10, 
         period_length=500, 
         interpolate_period=False, 
-        period_label={'x': .99, 'y': .8, 'ha': 'right', 'va': 'center'}, 
+        period_label={'x': .99, 'y': .8, 'font': {'size': 25, 'color': 'blue'}}, 
         period_fmt='%B %d, %Y', 
         period_summary_func=lambda v, r: {'x': .85, 'y': .2, 
                                           's': f'Total deaths: {v.sum()}', 
