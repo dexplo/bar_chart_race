@@ -11,11 +11,11 @@ from ._utils import prepare_wide_data
 class _BarChartRace:
     
     def __init__(self, df, filename, orientation, sort, n_bars, fixed_order, fixed_max,
-                 steps_per_period, period_length, interpolate_period, bar_label_position, 
-                 bar_label_fmt, bar_size, period_label, period_fmt, period_summary_func, 
-                 perpendicular_bar_func, figsize, cmap, title, bar_label_size, 
-                 tick_label_size, shared_fontdict, scale, writer, fig, dpi, bar_kwargs, 
-                 filter_column_colors):
+                 steps_per_period, period_length, end_period_pause, interpolate_period, 
+                 bar_label_position, bar_label_fmt, bar_size, period_label, period_fmt, 
+                 period_summary_func, perpendicular_bar_func, figsize, cmap, title, 
+                 bar_label_size, tick_label_size, shared_fontdict, scale, writer, fig, 
+                 dpi, bar_kwargs, filter_column_colors):
         self.filename = filename
         self.extension = self.get_extension()
         self.orientation = orientation
@@ -33,6 +33,7 @@ class _BarChartRace:
         self.period_summary_func = period_summary_func
         self.perpendicular_bar_func = perpendicular_bar_func
         self.period_length = period_length
+        self.end_period_pause = end_period_pause
         self.figsize = figsize
         self.title = self.get_title(title)
         self.bar_label_size = bar_label_size
@@ -494,6 +495,8 @@ class _BarChartRace:
                     line.set_ydata([val] * 2)
             
     def anim_func(self, i):
+        if i is None:
+            return
         ax = self.fig.axes[0]
         for bar in ax.containers:
             bar.remove()
@@ -506,10 +509,20 @@ class _BarChartRace:
         def init_func():
             ax = self.fig.axes[0]
             self.plot_bars(ax, 0)
-        
+
         interval = self.period_length / self.steps_per_period
-        anim = FuncAnimation(self.fig, self.anim_func, range(len(self.df_values)), 
-                             init_func, interval=interval)
+        pause = int(self.end_period_pause // interval)
+        print('pause is', pause)
+
+        def frame_generator(n):
+            for i in range(n):
+                yield i
+                if i % self.steps_per_period == 0 and i != 0 and i != n - 1:
+                    for _ in range(pause):
+                        yield None
+        
+        frames = frame_generator(len(self.df_values))
+        anim = FuncAnimation(self.fig, self.anim_func, frames, init_func, interval=interval)
 
         try:
             if self.html:
@@ -532,7 +545,7 @@ class _BarChartRace:
 
 def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None, 
                    fixed_order=False, fixed_max=False, steps_per_period=10, 
-                   period_length=500, interpolate_period=False, 
+                   period_length=500, end_period_pause=0, interpolate_period=False, 
                    bar_label_position='outside', bar_label_fmt='{x:,.0f}',
                    bar_size=.95, period_label=True, period_fmt=None, 
                    period_summary_func=None, perpendicular_bar_func=None, figsize=(6, 3.5),
@@ -604,6 +617,10 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
     period_length : int, default 500
         Number of milliseconds to animate each period (row). 
         Default is 500ms (half of a second)
+
+    end_period_pause : int, default 0
+        Number of milliseconds to pause the animation at the end of
+        each period.
 
     interpolate_period : bool, default `False`
         Whether to interpolate the period. Only valid for datetime or
@@ -872,9 +889,9 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
     These sizes are relative to plt.rcParams['font.size'].
     '''
     bcr = _BarChartRace(df, filename, orientation, sort, n_bars, fixed_order, fixed_max,
-                        steps_per_period, period_length, interpolate_period, bar_label_position, 
-                        bar_label_fmt, bar_size, period_label, period_fmt, period_summary_func, 
-                        perpendicular_bar_func, figsize, cmap, title, bar_label_size, 
-                        tick_label_size, shared_fontdict, scale, writer, fig, dpi, bar_kwargs, 
-                        filter_column_colors)
+                        steps_per_period, period_length, end_period_pause, interpolate_period, 
+                        bar_label_position, bar_label_fmt, bar_size, period_label, period_fmt, 
+                        period_summary_func, perpendicular_bar_func, figsize, cmap, title, 
+                        bar_label_size, tick_label_size, shared_fontdict, scale, writer, fig, 
+                        dpi, bar_kwargs, filter_column_colors)
     return bcr.make_animation()
