@@ -512,7 +512,6 @@ class _BarChartRace:
 
         interval = self.period_length / self.steps_per_period
         pause = int(self.end_period_pause // interval)
-        print('pause is', pause)
 
         def frame_generator(n):
             for i in range(n):
@@ -620,7 +619,16 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
 
     end_period_pause : int, default 0
         Number of milliseconds to pause the animation at the end of
-        each period.
+        each period. This number must be greater than or equal to 
+        period_length / steps_per_period or there will be no pause.
+        This is due to all frames having the same time interval.
+
+        By default, each frame is 500 / 10 or 50 milliseconds,
+        therefore end_period_pause must be at least 50 for there
+        to be a pause. The pause will be in increments of this
+        calculated interval and not exact. For example, setting the
+        end_period_pause to 725 will produce a pause of 700 
+        milliseconds (by default).
 
     interpolate_period : bool, default `False`
         Whether to interpolate the period. Only valid for datetime or
