@@ -265,23 +265,24 @@ class _BarChartRace:
         frames = []
         slider_steps = []
         for i in range(len(self.df_values)):
-            bar_loc = self.df_ranks.iloc[i].values
-            top_filt = (bar_loc > 0) & (bar_loc < self.n_bars + 1)
-            bar_vals = self.df_values.iloc[i].values[top_filt]
-            bar_loc = bar_loc[top_filt]
-            bar_loc = bar_loc + np.random.rand(len(bar_loc)) / 10_000 # done to prevent stacking of bars
-            x, y = (bar_vals, bar_loc) if self.orientation == 'h' else (bar_loc, bar_vals)
+            bar_locs = self.df_ranks.iloc[i].values
+            top_filt = (bar_locs >= 0) & (bar_locs < self.n_bars + 1)
+            bar_vals = self.df_values.iloc[i].values
+            bar_vals[bar_locs == 0] = 0
             # self.set_value_limit(bar_vals) # plotly bug? not updating range
             
-            cols = self.df_values.columns[top_filt]
-            colors = self.bar_colors[top_filt]
+            cols = self.df_values.columns.values.copy()
+            cols[bar_locs == 0] = ' '
+            colors = self.bar_colors
+            bar_locs = bar_locs + np.random.rand(len(bar_locs)) / 10_000 # done to prevent stacking of bars
+            x, y = (bar_vals, bar_locs) if self.orientation == 'h' else (bar_locs, bar_vals)
 
-            label_axis = dict(tickmode='array', tickvals=bar_loc, ticktext=cols, 
+            label_axis = dict(tickmode='array', tickvals=bar_locs, ticktext=cols, 
                               tickfont=self.tick_label_font)
             label_axis['range'] = self.ylimit if self.orientation == 'h' else self.xlimit
             if self.orientation == 'v':
                 label_axis['tickangle'] = -90
-        
+
             value_axis = dict(showgrid=True, type=self.scale)
             value_axis['range'] = self.xlimit if self.orientation == 'h' else self.ylimit
 
