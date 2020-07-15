@@ -13,7 +13,7 @@ class _BarChartRace:
     def __init__(self, df, filename, orientation, sort, n_bars, fixed_order, fixed_max,
                  steps_per_period, period_length, interpolate_period, period_label, 
                  period_fmt, period_summary_func, perpendicular_bar_func, colors, title, 
-                 bar_size, textposition, texttemplate, bar_label_font, tick_label_font, 
+                 bar_size, bar_textposition, bar_texttemplate, bar_label_font, tick_label_font, 
                  hovertemplate, slider, scale, bar_kwargs, layout_kwargs, 
                  write_html_kwargs, filter_column_colors):
         self.filename = filename
@@ -26,8 +26,8 @@ class _BarChartRace:
         self.steps_per_period = steps_per_period
         self.interpolate_period = interpolate_period
         self.bar_size = bar_size
-        self.textposition = textposition
-        self.texttemplate = self.get_texttemplate(texttemplate)
+        self.bar_textposition = bar_textposition
+        self.bar_texttemplate = self.get_bar_texttemplate(bar_texttemplate)
         self.period_label = self.get_period_label(period_label)
         self.period_fmt = period_fmt
         self.period_summary_func = period_summary_func
@@ -56,10 +56,10 @@ class _BarChartRace:
         if self.filename:
             return self.filename.split('.')[-1]
 
-    def get_texttemplate(self, texttemplate):
-        if texttemplate is None:
-            texttemplate = '%{x:,.0f}' if self.orientation == 'h' else '%{y:,.0f}'
-        return texttemplate
+    def get_bar_texttemplate(self, bar_texttemplate):
+        if bar_texttemplate is None:
+            bar_texttemplate = '%{x:,.0f}' if self.orientation == 'h' else '%{y:,.0f}'
+        return bar_texttemplate
 
     def validate_params(self):
         if isinstance(self.filename, str):
@@ -295,8 +295,8 @@ class _BarChartRace:
             value_axis = dict(showgrid=True, type=self.scale)
             value_axis['range'] = self.xlimit if self.orientation == 'h' else self.ylimit
 
-            bar = go.Bar(x=x, y=y, width=self.bar_size, textposition=self.textposition,
-                         texttemplate=self.texttemplate, orientation=self.orientation, 
+            bar = go.Bar(x=x, y=y, width=self.bar_size, textposition=self.bar_textposition,
+                         texttemplate=self.bar_texttemplate, orientation=self.orientation, 
                          marker_color=colors, insidetextfont=self.bar_label_font, 
                          cliponaxis=False, outsidetextfont=self.bar_label_font, 
                          hovertemplate=self.hovertemplate, **self.bar_kwargs)
@@ -434,8 +434,8 @@ def bar_chart_race_plotly(df, filename=None, orientation='h', sort='desc', n_bar
                           fixed_order=False, fixed_max=False, steps_per_period=10, 
                           period_length=500, interpolate_period=False, period_label=True, 
                           period_fmt=None, period_summary_func=None, perpendicular_bar_func=None,
-                          colors=None, title=None, bar_size=.95, textposition='outside', 
-                          texttemplate=None, bar_label_font=12, tick_label_font=12, 
+                          colors=None, title=None, bar_size=.95, bar_textposition='outside', 
+                          bar_texttemplate=None, bar_label_font=12, tick_label_font=12, 
                           hovertemplate=None, slider=True, scale='linear', bar_kwargs=None, 
                           layout_kwargs=None, write_html_kwargs=None, filter_column_colors=False):
     '''
@@ -612,12 +612,12 @@ def bar_chart_race_plotly(df, filename=None, orientation='h', sort='desc', n_bar
         Represents the fraction of space that each bar takes up. 
         When equal to 1, no gap remains between the bars.
 
-    textposition : str or sequence, default `None`
+    bar_textposition : str or sequence, default `None`
         Position on bar to place its label.
         Use one of the strings - 'inside', 'outside', 'auto', 'none'
         or a sequence of the above
 
-    texttemplate : str, default '%{x:,.0f}' or '%{y:,.0f}'
+    bar_texttemplate : str, default '%{x:,.0f}' or '%{y:,.0f}'
         Template string used for rendering the text inside/outside
         the bars. Variables are inserted using %{variable},
         for example "y: %{y}". Numbers are formatted using
@@ -752,8 +752,8 @@ def bar_chart_race_plotly(df, filename=None, orientation='h', sort='desc', n_bar
         colors='dark12', 
         title='COVID-19 Deaths by Country', 
         bar_size=.95,
-        textposition='outside', 
-        texttemplate='%{x}',
+        bar_textposition='outside', 
+        bar_texttemplate='%{x}',
         bar_label_font=12, 
         tick_label_font=12, 
         hovertemplate=None,
@@ -765,7 +765,7 @@ def bar_chart_race_plotly(df, filename=None, orientation='h', sort='desc', n_bar
     bcr = _BarChartRace(df, filename, orientation, sort, n_bars, fixed_order, fixed_max,
                         steps_per_period, period_length, interpolate_period, period_label, 
                         period_fmt, period_summary_func, perpendicular_bar_func, colors, title, 
-                        bar_size, textposition, texttemplate, bar_label_font, tick_label_font, 
+                        bar_size, bar_textposition, bar_texttemplate, bar_label_font, tick_label_font, 
                         hovertemplate, slider, scale, bar_kwargs, layout_kwargs, write_html_kwargs,
                         filter_column_colors)
     return bcr.make_animation()
