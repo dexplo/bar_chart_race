@@ -136,7 +136,9 @@ class _BarChartRace:
                         '`plotly.graph_objects.layout.Title` instance')
 
     def get_font(self, font):
-        if isinstance(font, (int, float)):
+        if font is None:
+            font = {'size': 12}
+        elif isinstance(font, (int, float)):
             font = {'size': font}
         elif not isinstance(font, dict):
             raise TypeError('`font` must be a number or dictionary of font properties')
@@ -258,7 +260,6 @@ class _BarChartRace:
             self.xlimit = label_limit
             self.ylimit = value_limit
         
-
     def set_value_limit(self, bar_vals):
         min_val = 1 if self.scale == 'log' else 0
         if not self.fixed_max:
@@ -293,7 +294,7 @@ class _BarChartRace:
             if self.orientation == 'v':
                 label_axis['tickangle'] = -90
 
-            value_axis = dict(showgrid=True, type=self.scale)
+            value_axis = dict(showgrid=True, type=self.scale)#, tickformat=',.0f')
             value_axis['range'] = self.xlimit if self.orientation == 'h' else self.ylimit
 
             bar = go.Bar(x=x, y=y, width=self.bar_size, textposition=self.bar_textposition,
@@ -455,7 +456,6 @@ def bar_chart_race_plotly(df, filename=None, orientation='h', sort='desc', n_bar
 
     If no `filename` is given, a plotly figure is returned that is embedded
     into the notebook.
-
 
     Parameters
     ----------
@@ -628,21 +628,11 @@ def bar_chart_race_plotly(df, filename=None, orientation='h', sort='desc', n_bar
         the bars. Variables are inserted using %{variable},
         for example "y: %{y}". Numbers are formatted using
         d3-format's syntax %{variable:d3-format}, for example
-        "Price: %{y:$.2f}". https://github.com/d3/d3-3.x-api-
-        reference/blob/master/Formatting.md#d3_format for
-        details on the formatting syntax. Dates are formatted
-        using d3-time-format's syntax %{variable|d3-time-
-        format}, for example "Day: %{2019-01-01|%A}".
-        https://github.com/d3/d3-3.x-api-
-        reference/blob/master/Time-Formatting.md#format for
-        details on the date formatting syntax. Every attributes
-        that can be specified per-point (the ones that are
-        `arrayOk: true`) are available. variables `value` and
-        `label`.
+        "Price: %{y:$.2f}".
 
     bar_label_font : number or dict, None
-        Font size of numeric bar labels. Use a dictionary to supply 
-        several font properties.
+        Font size of numeric bar labels. When None, font size is 12. 
+        Use a dictionary to supply several font properties.
         Example:
         {
             'size': 12,
@@ -651,8 +641,8 @@ def bar_chart_race_plotly(df, filename=None, orientation='h', sort='desc', n_bar
         }
 
     tick_label_font : number or dict, None
-        Font size of tick labels. Use a dictionary to supply 
-        several font properties.
+        Font size of tick labels.When None, font size is 12. 
+        Use a dictionary to supply several font properties.
 
     hovertemplate : str, default None
         Template string used for rendering the information that appear 
@@ -716,20 +706,18 @@ def bar_chart_race_plotly(df, filename=None, orientation='h', sort='desc', n_bar
         This parameter is experimental and may be changed/removed
         in a later version.
 
-
     Returns
     -------
     When `filename` is left as `None`, a plotly figure is returned and
     embedded into the notebook. Otherwise, a file of the HTML is 
     saved and `None` is returned.
 
-    Notes
+    References
     -----
-    It is possible for some bars to be out of order momentarily during a 
-    transition since both height and location change linearly and not 
-    directly with respect to their current value. This keeps all the 
-    transitions identical.
-
+    Plotly Figure - https://plotly.com/python/reference
+    Plotly API - https://plotly.com/python-api-reference
+    d3 formatting - https://github.com/d3/d3-3.x-api-reference/blob/master/Formatting.md
+    
     Examples
     --------
     Use the `load_data` function to get an example dataset to 
