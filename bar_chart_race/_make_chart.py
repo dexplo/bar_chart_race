@@ -3,8 +3,9 @@ import warnings
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import ticker
 from matplotlib.animation import FuncAnimation
-from matplotlib import ticker, colors
+from matplotlib.colors import Colormap
 
 from ._utils import prepare_wide_data
 
@@ -14,8 +15,8 @@ class _BarChartRace:
                  steps_per_period, period_length, end_period_pause, interpolate_period, 
                  period_label, period_template, period_summary_func, perpendicular_bar_func, 
                  colors, title, bar_size, bar_textposition, bar_texttemplate, bar_label_font, 
-                 tick_label_font, figsize, shared_fontdict, scale, figsize, dpi, fig, writer, 
-                 bar_kwargs, filter_column_colors):
+                 tick_label_font, tick_template, shared_fontdict, scale, figsize, dpi, fig, 
+                 writer, bar_kwargs, filter_column_colors):
         self.filename = filename
         self.extension = self.get_extension()
         self.orientation = orientation
@@ -23,6 +24,7 @@ class _BarChartRace:
         self.n_bars = n_bars or df.shape[1]
         self.fixed_order = fixed_order
         self.fixed_max = fixed_max
+        self.dpi = dpi # used in calculation of font size
         self.steps_per_period = steps_per_period
         self.period_length = period_length
         self.end_period_pause = end_period_pause
@@ -37,10 +39,10 @@ class _BarChartRace:
         self.bar_texttemplate = bar_texttemplate
         self.bar_label_font = self.get_font(bar_label_font)
         self.tick_label_font = self.get_font(tick_label_font, True)
+        self.tick_template = self.get_tick_template(tick_template)
         self.figsize = figsize
         self.orig_rcParams = self.set_shared_fontdict(shared_fontdict)
         self.scale = scale
-        self.dpi = dpi
         self.fps = 1000 / self.period_length * steps_per_period
         self.writer = self.get_writer(writer)
         self.filter_column_colors = filter_column_colors
@@ -147,13 +149,21 @@ class _BarChartRace:
                 if self.bar_textposition == 'inside':
                     default_font_dict['va'] = 'top'
 
-        if isinstance(font, (int, float, str)):
+        if font is None:
+            font = default_font_dict
+        elif isinstance(font, (int, float, str)):
             font = {**default_font_dict, 'size': font}
         elif not isinstance(font, dict):
             raise TypeError('`font` must be a number or dictionary of font properties')
         else:
             font = {**default_font_dict, **font}
         return font
+
+    def get_tick_template(self, tick_template):
+        if isinstance(tick_template, str):
+            return ticker.StrMethodFormatter(tick_template)
+        elif callable(tick_template):
+            return ticker.FuncFormatter(tick_template)
 
     def set_shared_fontdict(self, shared_fontdict):
         orig_rcParams = plt.rcParams.copy()
@@ -242,15 +252,16 @@ class _BarChartRace:
             colors = 'dark12'
             if self.df_values.shape[1] > 10:
                 colors = 'dark24'
-            
+
         if isinstance(colors, str):
             from ._colormaps import colormaps
+            
             try:
                 bar_colors = colormaps[colors.lower()]
             except KeyError:
                 raise KeyError(f'Colormap {colors} does not exist. Here are the '
                                f'possible colormaps: {colormaps.keys()}')
-        elif isinstance(colors, colors.Colormap):
+        elif isinstance(colors, Colormap):
             bar_colors = colors(range(colors.N)).tolist()
         elif isinstance(colors, list):
             bar_colors = colors
@@ -290,7 +301,8 @@ class _BarChartRace:
     def prepare_axes(self, ax):
         value_axis = ax.xaxis if self.orientation == 'h' else ax.yaxis
         value_axis.grid(True, color='white')
-        value_axis.set_major_formatter(ticker.StrMethodFormatter('{x:,.0f}'))
+        if self.tick_template:
+            value_axis.set_major_formatter(self.tick_template)
         ax.tick_params(labelsize=self.tick_label_font['size'], length=0, pad=2)
         ax.minorticks_off()
         ax.set_axisbelow(True)
@@ -399,6 +411,11 @@ class _BarChartRace:
         colors = self.bar_colors[top_filt]
         return bar_location, bar_length, cols, colors
 
+    def set_major_formatter(self, ax):
+        if self.tick_template:
+            axis = ax.xaxis if self.orientation == 'h' else ax.yaxis
+            axis.set_major_formatter(self.tick_template)
+
     def plot_bars(self, ax, i):
         bar_location, bar_length, cols, colors = self.get_bar_info(i)
         if self.orientation == 'h':
@@ -419,7 +436,8 @@ class _BarChartRace:
                 new_max_pixels = ax.transData.transform((0, max_bar))[1] + self.extra_pixels
                 new_ymax = ax.transData.inverted().transform((0, new_max_pixels))[1]
                 ax.set_ylim(ax.get_ylim()[0], new_ymax)
-            
+
+        self.set_major_formatter(ax)
         self.add_period_label(ax, i)
         self.add_period_summary(ax, i)
         self.add_bar_labels(ax, bar_location, bar_length)
@@ -526,12 +544,13 @@ class _BarChartRace:
         def frame_generator(n):
             for i in range(n):
                 yield i
-                if i % self.steps_per_period == 0 and i != 0 and i != n - 1:
+                if pause and i % self.steps_per_period == 0 and i != 0 and i != n - 1:
                     for _ in range(pause):
                         yield None
         
         frames = frame_generator(len(self.df_values))
-        anim = FuncAnimation(self.fig, self.anim_func, frames, init_func, interval=interval)
+        anim = FuncAnimation(self.fig, self.anim_func, frames, init_func, interval=interval, 
+                             save_count=len(self.df_values))
 
         try:
             if self.html:
@@ -558,9 +577,9 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
                    period_label=True, period_template=None, period_summary_func=None,
                    perpendicular_bar_func=None, colors=None, title=None, bar_size=.95,
                    bar_textposition='outside', bar_texttemplate='{x:,.0f}',
-                   bar_label_font=None, tick_label_font=None, shared_fontdict=None, 
-                   scale='linear', figsize=(6, 3.5), dpi=144, fig=None, writer=None, 
-                   bar_kwargs=None, filter_column_colors=False):
+                   bar_label_font=None, tick_label_font=None, tick_template='{x:,.0f}',
+                   shared_fontdict=None, scale='linear', figsize=(6, 3.5), dpi=144, 
+                   fig=None, writer=None, bar_kwargs=None, filter_column_colors=False):
     '''
     Create an animated bar chart race using matplotlib. Data must be in 
     'wide' format where each row represents a single time period and each 
@@ -572,8 +591,8 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
     animation is saved to disk.
 
     You must have ffmpeg installed on your machine to save files to disk.
-    Get ffmpeg here: https://www.ffmpeg.org/download.html To save .gif 
-    files you'll need to install ImageMagick.
+    Get ffmpeg here: https://www.ffmpeg.org/download.html. To save .gif 
+    files, install ImageMagick.
 
     Parameters
     ----------
@@ -658,7 +677,6 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
 
         Use a dictionary to supply any valid parameters of the 
         matplotlib `text` method.
-
         Example:
         {
             'x': .99,
@@ -676,22 +694,21 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         * v, asc -> x=.05, y=.85, ha='left', va='center'
 
     period_template : str, default `None`
-        Either a string with date directives or 
-        a new-style (Python 3.6+) formatted string
+        Either a string with date directives or a new-style (Python 3.6+) 
+        formatted string. Date directives will only be used for 
+        datetime indexes.
 
-        For a string with a date directive, find the complete list here
+        Date directive reference:
         https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
         
         Example of string with date directives
             '%B %d, %Y'
-        Will change 2020/03/29 to March 29, 2020
+        Changes 2020/03/29 to March 29, 2020
         
         For new-style formatted string. Use curly braces and the variable `x`, 
-        which will be passed the current period's index value.
+        which will be passed the current period's index value. 
         Example:
             'Period {x:10.2f}'
-
-        Date directives will only be used for datetime indexes.
 
     period_summary_func : function, default None
         Custom text added to the axes each period.
@@ -733,10 +750,8 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         i.e. "dark12_r"
 
     title : str or dict, default None
-        Title of plot as a string.
-        Use a dictionary to supply several title parameters. You must use the
-        key 'label' for the title.
-        
+        Title of plot as a string. Use a dictionary to supply several title 
+        parameters. You must use the key 'label' for the title.
         Example:
         {
             'label': 'My Bar Chart Race Title',
@@ -768,9 +783,9 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
             new_val = int(round(val, -3))
             return f'{new_val:,.0f}'
 
-    bar_label_font : number or dict, default 7
-        Font size of numeric bar labels. Use a dictionary to supply 
-        several font properties.
+    bar_label_font : number, str, or dict, default None
+        Font size of numeric bar labels. When None, defaults to 7.
+        Use a dictionary to supply several font properties.
         Example:
         {
             'size': 12,
@@ -778,9 +793,20 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
             'color': '#7f7f7f'
         }
 
-    tick_label_font : number or dict, default 7
-        Font size of tick labels. Use a dictionary to supply 
-        several font properties.
+    tick_label_font : number or dict, default None
+        Font size of tick labels. When None, defaults to 7.
+        Use a dictionary to supply several font properties.
+
+    tick_template : str or function, default '{x:,.0f}'
+        Formats the ticks on the axis with numeric values 
+        (x-axis when horizontal and y-axis when vertical). If given a string,
+        pass it to the ticker.StrMethodFormatter matplotlib function. 
+        Use 'x' as the variable
+        Example: '{x:10.2f}'
+
+        If given a function, its passed to ticker.FuncFormatter, which
+        implicitly passes it two variables `x` and `pos` and must return
+        a string.
 
     shared_fontdict : dict, default None
         Dictionary of font properties shared across the tick labels, 
@@ -899,6 +925,7 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         bar_texttemplate=True, 
         bar_label_font=7, 
         tick_label_font=7, 
+        tick_template='{x:,.0f}'
         shared_fontdict={'family' : 'Helvetica', 'weight' : 'bold', 'color' : '.1'}, 
         scale='linear', 
         figsize=(5, 3), 
@@ -918,6 +945,6 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
                         steps_per_period, period_length, end_period_pause, interpolate_period, 
                         period_label, period_template, period_summary_func, perpendicular_bar_func,
                         colors, title, bar_size, bar_textposition, bar_texttemplate, 
-                        bar_label_font, tick_label_font, shared_fontdict, scale, figsize, dpi,
-                        fig, writer, bar_kwargs, filter_column_colors)
+                        bar_label_font, tick_label_font, tick_template, shared_fontdict, scale, 
+                        figsize, dpi, fig, writer, bar_kwargs, filter_column_colors)
     return bcr.make_animation()
