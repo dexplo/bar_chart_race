@@ -11,10 +11,10 @@ from ._make_chart import prepare_wide_data
 class _BarChartRace:
     
     def __init__(self, df, filename, orientation, sort, n_bars, fixed_order, fixed_max,
-                 steps_per_period, period_length, interpolate_period, period_label, 
-                 period_fmt, period_summary_func, perpendicular_bar_func, colors, title, 
-                 bar_size, bar_textposition, bar_texttemplate, bar_label_font, tick_label_font, 
-                 hovertemplate, slider, scale, bar_kwargs, layout_kwargs, 
+                 steps_per_period, period_length, end_period_pause, interpolate_period, 
+                 period_label, period_template, period_summary_func, perpendicular_bar_func, 
+                 colors, title, bar_size, bar_textposition, bar_texttemplate, bar_label_font, 
+                 tick_label_font, hovertemplate, slider, scale, bar_kwargs, layout_kwargs, 
                  write_html_kwargs, filter_column_colors):
         self.filename = filename
         self.extension = self.get_extension()
@@ -24,18 +24,19 @@ class _BarChartRace:
         self.fixed_order = fixed_order
         self.fixed_max = fixed_max
         self.steps_per_period = steps_per_period
+        self.period_length = period_length
+        self.end_period_pause = end_period_pause
         self.interpolate_period = interpolate_period
+        self.period_label = self.get_period_label(period_label)
+        self.period_template = period_template
+        self.period_summary_func = period_summary_func
+        self.perpendicular_bar_func = perpendicular_bar_func
+        self.title = self.get_title(title)
         self.bar_size = bar_size
         self.bar_textposition = bar_textposition
         self.bar_texttemplate = self.get_bar_texttemplate(bar_texttemplate)
-        self.period_label = self.get_period_label(period_label)
-        self.period_fmt = period_fmt
-        self.period_summary_func = period_summary_func
-        self.perpendicular_bar_func = perpendicular_bar_func
-        self.period_length = period_length
-        self.title = self.get_title(title)
         self.bar_label_font = self.get_font(bar_label_font)
-        self.tick_label_font = self.get_font(tick_label_font, True)
+        self.tick_label_font = self.get_font(tick_label_font)
         self.hovertemplate = self.get_hovertemplate(hovertemplate)
         self.slider = slider
         self.scale = scale
@@ -134,7 +135,7 @@ class _BarChartRace:
         raise TypeError('`title` must be a string, dictionary, or '
                         '`plotly.graph_objects.layout.Title` instance')
 
-    def get_font(self, font, rotate=False):
+    def get_font(self, font):
         if isinstance(font, (int, float)):
             font = {'size': font}
         elif not isinstance(font, dict):
@@ -326,12 +327,12 @@ class _BarChartRace:
         return frames, slider_steps
 
     def get_period_label_text(self, i):
-        if self.period_fmt:
+        if self.period_template:
             idx_val = self.df_values.index[i]
             if self.df_values.index.dtype.kind == 'M':
-                s = idx_val.strftime(self.period_fmt)
+                s = idx_val.strftime(self.period_template)
             else:
-                s = self.period_fmt.format(x=idx_val)
+                s = self.period_template.format(x=idx_val)
         else:
             s = self.str_index[i]
         return s
@@ -432,12 +433,13 @@ class _BarChartRace:
 
 def bar_chart_race_plotly(df, filename=None, orientation='h', sort='desc', n_bars=None, 
                           fixed_order=False, fixed_max=False, steps_per_period=10, 
-                          period_length=500, interpolate_period=False, period_label=True, 
-                          period_fmt=None, period_summary_func=None, perpendicular_bar_func=None,
-                          colors=None, title=None, bar_size=.95, bar_textposition='outside', 
-                          bar_texttemplate=None, bar_label_font=12, tick_label_font=12, 
-                          hovertemplate=None, slider=True, scale='linear', bar_kwargs=None, 
-                          layout_kwargs=None, write_html_kwargs=None, filter_column_colors=False):
+                          period_length=500, end_period_pause=0, interpolate_period=False, 
+                          period_label=True, period_template=None, period_summary_func=None, 
+                          perpendicular_bar_func=None, colors=None, title=None, bar_size=.95, 
+                          bar_textposition='outside', bar_texttemplate=None, bar_label_font=None, 
+                          tick_label_font=None, hovertemplate=None, slider=True, scale='linear', 
+                          bar_kwargs=None, layout_kwargs=None, write_html_kwargs=None, 
+                          filter_column_colors=False):
     '''
     Create an animated bar chart race using Plotly. Data must be in 
     'wide' format where each row represents a single time period and each 
@@ -505,6 +507,10 @@ def bar_chart_race_plotly(df, filename=None, orientation='h', sort='desc', n_bar
         Number of milliseconds to animate each period (row). 
         Default is 500ms (half of a second)
 
+    end_period_pause : int, default 0
+        Number of milliseconds to pause the animation at the end of
+        each period.
+
     interpolate_period : bool, default `False`
         Whether to interpolate the period. Only valid for datetime or
         numeric indexes. When set to `True`, for example, 
@@ -539,7 +545,7 @@ def bar_chart_race_plotly(df, filename=None, orientation='h', sort='desc', n_bar
         * v, desc -> x=.95, y=.85
         * v, asc -> x=.05, y=.85
 
-    period_fmt : str, default `None`
+    period_template : str, default `None`
         Either a string with date directives or 
         a new-style (Python 3.6+) formatted string
 
@@ -634,9 +640,9 @@ def bar_chart_race_plotly(df, filename=None, orientation='h', sort='desc', n_bar
         `arrayOk: true`) are available. variables `value` and
         `label`.
 
-    bar_label_font : number or dict, default 12
-        Font size of numeric labels inside/outside of the bars
-        Use a dictionary to supply several font properties
+    bar_label_font : number or dict, None
+        Font size of numeric bar labels. Use a dictionary to supply 
+        several font properties.
         Example:
         {
             'size': 12,
@@ -644,8 +650,9 @@ def bar_chart_race_plotly(df, filename=None, orientation='h', sort='desc', n_bar
             'color': '#7f7f7f'
         }
 
-    tick_label_font : number or dict, default 12
-        Font size of tick labels.
+    tick_label_font : number or dict, None
+        Font size of tick labels. Use a dictionary to supply 
+        several font properties.
 
     hovertemplate : str, default None
         Template string used for rendering the information that appear 
@@ -678,16 +685,13 @@ def bar_chart_race_plotly(df, filename=None, orientation='h', sort='desc', n_bar
     write_html_kwargs : dict, default None
         Arguments passed to the write_html plotly go.Figure method.
         Example:
-
         {
             'auto_play': False,
             'include_plotlyjs': 'cdn',
             'full_html': False=
         }
-
         Reference: https://plotly.github.io/plotly.py-docs/generated/plotly.io.write_html.html
                    
-        
     filter_column_colors : bool, default `False`
         When setting n_bars, it's possible that some columns never 
         appear in the animation. Regardless, all columns get assigned
@@ -744,7 +748,7 @@ def bar_chart_race_plotly(df, filename=None, orientation='h', sort='desc', n_bar
         period_length=500, 
         interpolate_period=False, 
         period_label={'x': .99, 'y': .8, 'font': {'size': 25, 'color': 'blue'}}, 
-        period_fmt='%B %d, %Y', 
+        period_template='%B %d, %Y', 
         period_summary_func=lambda v, r: {'x': .85, 'y': .2, 
                                           's': f'Total deaths: {v.sum()}', 
                                           'size': 11}, 
@@ -763,9 +767,9 @@ def bar_chart_race_plotly(df, filename=None, orientation='h', sort='desc', n_bar
         filter_column_colors=False)        
     '''
     bcr = _BarChartRace(df, filename, orientation, sort, n_bars, fixed_order, fixed_max,
-                        steps_per_period, period_length, interpolate_period, period_label, 
-                        period_fmt, period_summary_func, perpendicular_bar_func, colors, title, 
-                        bar_size, bar_textposition, bar_texttemplate, bar_label_font, tick_label_font, 
-                        hovertemplate, slider, scale, bar_kwargs, layout_kwargs, write_html_kwargs,
-                        filter_column_colors)
+                        steps_per_period, period_length, end_period_pause, interpolate_period, 
+                        period_label, period_template, period_summary_func, perpendicular_bar_func, 
+                        colors, title, bar_size, bar_textposition, bar_texttemplate, bar_label_font, 
+                        tick_label_font, hovertemplate, slider, scale, bar_kwargs, layout_kwargs, 
+                        write_html_kwargs, filter_column_colors)
     return bcr.make_animation()
