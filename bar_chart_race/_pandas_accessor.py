@@ -4,6 +4,7 @@ import pandas as pd
 
 from ._make_chart import bar_chart_race as bcr
 from ._make_chart_plotly import bar_chart_race_plotly as bcrp
+from ._utils import prepare_wide_data as pwd, prepare_long_data as pld
 
 
 @pd.api.extensions.register_dataframe_accessor("bcr")
@@ -45,6 +46,19 @@ class _BCR:
                     hovertemplate, slider, scale, bar_kwargs, layout_kwargs, write_html_kwargs,
                     filter_column_colors)
 
+    def prepare_wide_data(self, orientation='h', sort='desc', n_bars=None, interpolate_period=False, 
+                          steps_per_period=10, compute_ranks=True):
+        return pwd(self._df, orientation, sort, n_bars, interpolate_period,
+                                 steps_per_period, compute_ranks)
 
-_BCR.bcr.__doc__ = re.sub('df : .*(?=filename :)', '',  bcr.__doc__, flags=re.S)
-_BCR.bcrp.__doc__ = re.sub('df : .*(?=filename :)', '',  bcrp.__doc__, flags=re.S)
+    def prepare_long_data(self, index, columns, values, aggfunc='sum', orientation='h', 
+                          sort='desc', n_bars=None, interpolate_period=False, 
+                          steps_per_period=10, compute_ranks=True):
+        return pld(self._df, index, columns, values, aggfunc, orientation, 
+                   sort, n_bars, interpolate_period, steps_per_period, compute_ranks)
+
+
+_BCR.bar_chart_race.__doc__ = re.sub('df : .*(?=filename :)', '',  bcr.__doc__, flags=re.S)
+_BCR.bar_chart_race_plotly.__doc__ = re.sub('df : .*(?=filename :)', '',  bcrp.__doc__, flags=re.S)
+_BCR.prepare_wide_data.__doc__ = re.sub('df : .*(?=filename :)', '',  pwd.__doc__, flags=re.S)
+_BCR.prepare_long_data.__doc__ = re.sub('df : .*(?=filename :)', '',  pld.__doc__, flags=re.S)
