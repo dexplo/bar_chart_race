@@ -12,7 +12,7 @@ class _BarChartRace:
     
     def __init__(self, df, filename, orientation, sort, n_bars, fixed_order, fixed_max,
                  steps_per_period, period_length, end_period_pause, interpolate_period, 
-                 bar_label_position, bar_label_fmt, bar_size, period_label, period_fmt, 
+                 bar_textposition, bar_texttemplate, bar_size, period_label, period_template, 
                  period_summary_func, perpendicular_bar_func, figsize, cmap, title, 
                  bar_label_size, tick_label_size, shared_fontdict, scale, writer, fig, 
                  dpi, bar_kwargs, filter_column_colors):
@@ -25,11 +25,11 @@ class _BarChartRace:
         self.fixed_max = fixed_max
         self.steps_per_period = steps_per_period
         self.interpolate_period = interpolate_period
-        self.bar_label_position = bar_label_position
-        self.bar_label_fmt = bar_label_fmt
+        self.bar_textposition = bar_textposition
+        self.bar_texttemplate = bar_texttemplate
         self.bar_size = bar_size
         self.period_label = self.get_period_label(period_label)
-        self.period_fmt = period_fmt
+        self.period_template = period_template
         self.period_summary_func = period_summary_func
         self.perpendicular_bar_func = perpendicular_bar_func
         self.period_length = period_length
@@ -74,8 +74,8 @@ class _BarChartRace:
         if self.orientation not in ('h', 'v'):
             raise ValueError('`orientation` must be "h" or "v"')
 
-        if self.bar_label_position not in ('outside', 'inside', None):
-            raise ValueError('`bar_label_position` must be one of "outside", "inside" or None')
+        if self.bar_textposition not in ('outside', 'inside', None):
+            raise ValueError('`bar_textposition` must be one of "outside", "inside" or None')
 
     def get_bar_kwargs(self, bar_kwargs):
         bar_kwargs = bar_kwargs or {}
@@ -312,7 +312,7 @@ class _BarChartRace:
             else:
                 self.fixed_max_value = ax.get_ylim()[1]
 
-        if self.bar_label_position == 'outside':
+        if self.bar_textposition == 'outside':
             max_bar = max(bar_length)
             if self.orientation == 'h':
                 max_bar_pixels = ax.transData.transform((max_bar, 0))[0]
@@ -379,7 +379,7 @@ class _BarChartRace:
         if self.orientation == 'h':
             ax.barh(bar_location, bar_length, tick_label=cols, 
                     color=colors, **self.bar_kwargs)
-            if not self.fixed_max and self.bar_label_position == 'outside':
+            if not self.fixed_max and self.bar_textposition == 'outside':
                 max_bar = bar_length.max()
                 new_max_pixels = ax.transData.transform((max_bar, 0))[0] + self.extra_pixels
                 new_xmax = ax.transData.inverted().transform((new_max_pixels, 0))[0]
@@ -388,7 +388,7 @@ class _BarChartRace:
             ax.bar(bar_location, bar_length, tick_label=cols, 
                    color=colors, **self.bar_kwargs)
             ax.set_xticklabels(ax.get_xticklabels(), ha='right')
-            if not self.fixed_max and self.bar_label_position == 'outside':
+            if not self.fixed_max and self.bar_textposition == 'outside':
                 max_bar = bar_length.max()
                 new_max_pixels = ax.transData.transform((0, max_bar))[1] + self.extra_pixels
                 new_ymax = ax.transData.inverted().transform((0, new_max_pixels))[1]
@@ -401,12 +401,12 @@ class _BarChartRace:
 
     def add_period_label(self, ax, i):
         if self.period_label:
-            if self.period_fmt:
+            if self.period_template:
                 idx_val = self.df_values.index[i]
                 if self.df_values.index.dtype.kind == 'M':
-                    s = idx_val.strftime(self.period_fmt)
+                    s = idx_val.strftime(self.period_template)
                 else:
-                    s = self.period_fmt.format(x=idx_val)
+                    s = self.period_template.format(x=idx_val)
             else:
                 s = self.str_index[i]
 
@@ -428,7 +428,7 @@ class _BarChartRace:
             ax.text(transform=ax.transAxes, **text_dict)
 
     def add_bar_labels(self, ax, bar_location, bar_length):
-        if self.bar_label_position:
+        if self.bar_textposition:
             if self.orientation == 'h':
                 zipped = zip(bar_length, bar_location)
             else:
@@ -439,7 +439,7 @@ class _BarChartRace:
                 ha = 'left'
                 va = 'center'
                 delta = .01
-                if self.bar_label_position == 'inside':
+                if self.bar_textposition == 'inside':
                     delta = -.01
                     ha = 'right'
             else:
@@ -447,7 +447,7 @@ class _BarChartRace:
                 ha = 'center'
                 va = 'bottom'
                 delta = .01
-                if self.bar_label_position == 'inside':
+                if self.bar_textposition == 'inside':
                     delta = -.01
                     va = 'top'
 
@@ -461,10 +461,10 @@ class _BarChartRace:
                     ytext += delta
                     val = y1
 
-                if callable(self.bar_label_fmt):
-                    text = self.bar_label_fmt(val)
+                if callable(self.bar_texttemplate):
+                    text = self.bar_texttemplate(val)
                 else:
-                    text = self.bar_label_fmt.format(x=val)
+                    text = self.bar_texttemplate.format(x=val)
 
                 xtext, ytext = ax.transLimits.inverted().transform((xtext, ytext))
 
@@ -545,8 +545,8 @@ class _BarChartRace:
 def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None, 
                    fixed_order=False, fixed_max=False, steps_per_period=10, 
                    period_length=500, end_period_pause=0, interpolate_period=False, 
-                   bar_label_position='outside', bar_label_fmt='{x:,.0f}',
-                   bar_size=.95, period_label=True, period_fmt=None, 
+                   bar_textposition='outside', bar_texttemplate='{x:,.0f}',
+                   bar_size=.95, period_label=True, period_template=None, 
                    period_summary_func=None, perpendicular_bar_func=None, figsize=(6, 3.5),
                    cmap=None, title=None, bar_label_size=7, tick_label_size=7, 
                    shared_fontdict=None, scale='linear', writer=None, 
@@ -641,11 +641,11 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         2020-03-29 18:00:00
         2020-03-30 00:00:00
 
-    bar_label_position : 'outside', 'inside', or None - default 'outside'
+    bar_textposition : 'outside', 'inside', or None - default 'outside'
         Position where bar label will be placed. Use None when 
         no label is desired.
     
-    bar_label_fmt : str or function, default '{x:,.0f}'
+    bar_texttemplate : str or function, default '{x:,.0f}'
         A new-style formatted string to control the formatting
         of the bar labels. Use `x` as the variable name.
 
@@ -687,7 +687,7 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         * v, desc -> x=.95, y=.85, ha='right', va='center'
         * v, asc -> x=.05, y=.85, ha='left', va='center'
 
-    period_fmt : str, default `None`
+    period_template : str, default `None`
         Either a string with date directives or 
         a new-style (Python 3.6+) formatted string
 
@@ -869,10 +869,10 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         steps_per_period=10, 
         period_length=500, 
         interpolate_period=False, 
-        bar_label_fmt=True, 
+        bar_texttemplate=True, 
         bar_size=.95, 
         period_label={'x': .99, 'y': .8, 'ha': 'right', 'va': 'center'}, 
-        period_fmt='%B %d, %Y', 
+        period_template='%B %d, %Y', 
         period_summary_func=lambda v, r: {'x': .85, 'y': .2, 
                                           's': f'Total deaths: {v.sum()}', 
                                           'ha': 'right', 'size': 11}, 
@@ -898,7 +898,7 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
     '''
     bcr = _BarChartRace(df, filename, orientation, sort, n_bars, fixed_order, fixed_max,
                         steps_per_period, period_length, end_period_pause, interpolate_period, 
-                        bar_label_position, bar_label_fmt, bar_size, period_label, period_fmt, 
+                        bar_textposition, bar_texttemplate, bar_size, period_label, period_template, 
                         period_summary_func, perpendicular_bar_func, figsize, cmap, title, 
                         bar_label_size, tick_label_size, shared_fontdict, scale, writer, fig, 
                         dpi, bar_kwargs, filter_column_colors)
