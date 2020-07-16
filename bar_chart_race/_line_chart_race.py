@@ -12,17 +12,21 @@ from ._utils import prepare_wide_data
 class _LineChartRace:
     
     def __init__(self, df, filename, n_lines, steps_per_period, period_length, 
-                 end_period_pause, period_summary_func, agg_line_func, colors, title, 
-                 line_label_font, tick_label_font, tick_template, shared_fontdict, scale, 
-                 figsize, dpi, fig, writer, line_kwargs, filter_column_colors):
+                 end_period_pause, period_summary_func, agg_line_func, others_func,
+                 fade, min_fade, colors, title, line_label_font, tick_label_font, tick_template, 
+                 shared_fontdict, scale, figsize, dpi, fig, writer, line_kwargs, 
+                 filter_column_colors):
         self.filename = filename
         self.extension = self.get_extension()
         self.n_lines = n_lines or df.shape[1]
         self.steps_per_period = steps_per_period
-        self.period_summary_func = period_summary_func
-        self.agg_line_func = agg_line_func
         self.period_length = period_length
         self.end_period_pause = end_period_pause
+        self.period_summary_func = period_summary_func
+        self.agg_line_func = agg_line_func
+        self.others_func = others_func
+        self.fade = fade
+        self.min_fade = min_fade
         self.figsize = figsize
         self.title = self.get_title(title)
         self.line_label_font = self.get_font(line_label_font)
@@ -38,11 +42,17 @@ class _LineChartRace:
 
         self.line_kwargs = self.get_line_kwargs(line_kwargs)
         self.html = self.filename is None
-        self.df_values = self.prepare_data(df)
+        self.df_values, self.df_ranks = self.prepare_data(df)
+        self.is_x_date = self.df_values.index.dtype.kind == 'M'
         self.colors = self.get_colors(colors)
         self.str_index = self.df_values.index.astype('str')
         self.subplots_adjust = self.get_subplots_adjust()
         self.fig = self.get_fig(fig)
+        self.OTHERS_COLOR = .7, .7, .7, .6
+        self.collections = {}
+        self.texts = {}
+        self.others_visible = self.others_func is True
+        self.aggregate_others = isinstance(self.others_func, str) or callable(self.others_func)
         
     def get_extension(self):
         if self.filename:
@@ -129,12 +139,14 @@ class _LineChartRace:
         return writer
 
     def prepare_data(self, df):
-        compute_ranks = sort = False
+        sort = 'desc'
         interpolate_period = True
+        compute_ranks = sort = True
         orientation = 'h'
-        return prepare_wide_data(df, orientation, sort, self.n_lines,
-                                 interpolate_period, self.steps_per_period, compute_ranks)
-        
+        values, ranks =  prepare_wide_data(df, orientation, sort, self.n_lines,
+                                    interpolate_period, self.steps_per_period, compute_ranks)
+        return values, ranks
+
     def get_colors(self, colors):
         if colors is None:
             colors = 'dark12'
@@ -167,7 +179,7 @@ class _LineChartRace:
 
         colors = mcolors.to_rgba_array(colors)
         colors = colors[:self.df_values.shape[1]]
-        return colors
+        return dict(zip(self.df_values.columns, colors))
 
     def prepare_axes(self, ax):
         ax.grid(True, color='white')
@@ -194,8 +206,9 @@ class _LineChartRace:
         delta = (ymax - ymin) * .05
         ax.set_ylim(ymin - delta, ymax + delta)
 
-        ax.xaxis_date()
-        ax.xaxis.set_major_formatter(mdates.DateFormatter('%-m/%-d'))
+        if self.is_x_date:
+            ax.xaxis_date()
+            ax.xaxis.set_major_formatter(mdates.DateFormatter('%-m/%-d'))
 
     def get_subplots_adjust(self):
         import io
@@ -234,47 +247,160 @@ class _LineChartRace:
         self.prepare_axes(ax)
         return fig
 
+    def get_visible(self, i):
+        return (self.df_ranks.iloc[i] <= self.n_lines + .5).to_dict()
+
+    def add_period_summary(self, ax, s):
+        if self.period_summary_func:
+            text_dict = self.period_summary_func(s)
+            if 'x' not in text_dict or 'y' not in text_dict or 's' not in text_dict:
+                name = self.period_summary_func.__name__
+                raise ValueError(f'The dictionary returned from `{name}` must contain '
+                                  '"x", "y", and "s"')
+            return text_dict
+
+    def get_agg_func_value(self, s):
+        if isinstance(self.agg_line_func, str):
+            val = s.agg(self.agg_line_func)
+            name = self.agg_line_func
+        elif callable(self.agg_line_func):
+            val = self.agg_line_func(s)
+            name = self.agg_line_func.__name__
+        else:
+            raise TypeError('`agg_line_func` must be either a string or function')
+        return val, name
+
+    def get_others_func_value(self, s, visible):
+        cols = set(col for col, vis in visible.items() if not vis)
+        cols = cols & set(self.df_values.columns.tolist())
+        s = s.loc[cols]
+        if isinstance(self.others_func, str):
+            val = s.agg(self.others_func)
+        elif callable(self.others_func):
+            val = self.others_func(s)
+        else:
+            raise TypeError('`others_func` must be either a string or function')
+        return val
+
     def anim_func(self, i):
+        if i is None:
+            return
         ax = self.fig.axes[0]
-        df_cur = self.df_values.iloc[i]
-        x, y = df_cur.name, df_cur.values
-        x = mdates.date2num(x)
-        for collection, text, val, color in zip(ax.collections, ax.texts, y, self.colors):
+        s = self.df_values.iloc[i]
+        x, y = s.name, s.to_dict()
+        if self.is_x_date:
+            x = mdates.date2num(x)
+
+        visible = self.get_visible(i)
+        columns = self.df_values.columns
+
+        if self.agg_line_func:
+            val, name = self.get_agg_func_value(s)
+            y[name] = val
+            visible[name] = True
+
+        if self.aggregate_others:
+            val = self.get_others_func_value(s, visible)
+            y['All Others'] = val
+            visible['All Others'] = True
+
+        for col in self.collections:
+            collection = self.collections[col]
+            text = self.texts[col]
+            val = y[col]
+            color = self.colors[col]
+            vis = visible[col]
+
             seg = collection.get_segments()
             last = seg[-1][-1]
             new_seg = np.row_stack((last, [x, val]))
             seg.append(new_seg)
             collection.set_segments(seg)
             color_arr = collection.get_colors()
+            if not vis:
+                color = self.OTHERS_COLOR
+
             color_arr = np.append(color_arr, [color], axis=0)
-            color_arr[:, -1] *= .985
+            color_arr[:, -1] = np.clip(color_arr[:, -1] * self.fade, self.min_fade, None)
             collection.set_color(color_arr)
             text.set_position((x, val))
+
+            text.set_visible(vis)
+            collection.set_visible(vis)
+
+        if self.period_summary_func:
+            text_dict = self.add_period_summary(ax, s)
+            text = self.texts['__period_summary_func__']
+            x, y, text_val = text_dict.pop('x'), text_dict.pop('y'), text_dict.pop('s')
+            text.set_position((x, y))
+            text.set_text(text_val)
+
+        if self.tick_template:
+            ax.yaxis.set_major_formatter(self.tick_template)
 
     def make_animation(self):
         def init_func():
             ax = self.fig.axes[0]
-            df_cur = self.df_values.iloc[0]
-            x, y = df_cur.name, df_cur.values
-            x = mdates.date2num(x)
+            s = self.df_values.iloc[0] # current Series
+            x, y = s.name, s.to_dict()
+            if self.is_x_date:
+                x = mdates.date2num(x)
+            visible = self.get_visible(0)
+            columns = self.df_values.columns
 
-            for col, val, color in zip(self.df_values.columns, y, self.colors):
-                ax.text(x, val, col, ha='center', va='bottom', size='smaller')
-                ax.add_collection(LineCollection([[(x, val)]], colors=[color]))
+            for col in columns:
+                val = y[col]
+                vis = visible[col]
+                color = self.colors[col]
+                text = ax.text(x, val, col, ha='center', va='bottom', size='smaller', visible=vis)
+                if not vis:
+                    color = self.OTHERS_COLOR
+                if self.others_visible:
+                    vis = True
+                collection = ax.add_collection(LineCollection([[(x, val)]], colors=[color], visible=vis))
+                self.texts[col] = text
+                self.collections[col] = collection
+
+            if self.agg_line_func:
+                color = 0, 0, 0, 1
+                val, name = self.get_agg_func_value(s)
+                collection = ax.add_collection(LineCollection([[(x, val)]], colors=[color]))
+                text = ax.text(x, val, name, ha='center', va='bottom', size='smaller')
+                self.collections[name] = collection
+                self.texts[name] = text
+                self.colors[name] = color
+
+            if self.aggregate_others:
+                color = self.OTHERS_COLOR
+                val = self.get_others_func_value(s, visible)
+                name = "All Others"
+                collection = ax.add_collection(LineCollection([[(x, val)]], colors=[color]))
+                text = ax.text(x, val, name, ha='center', va='bottom', size='smaller')
+                self.collections[name] = collection
+                self.texts[name] = text
+                self.colors[name] = color
+
+            if self.period_summary_func:
+                text_dict = self.add_period_summary(ax, s)
+                text = ax.text(transform=ax.transAxes, **text_dict)
+                self.texts['__period_summary_func__'] = text
+
 
         interval = self.period_length / self.steps_per_period
         pause = int(self.end_period_pause // interval)
 
         def frame_generator(n):
+            frames = []
             for i in range(1, n):
-                yield i
+                frames.append(i)
                 if pause and i % self.steps_per_period == 0 and i != 0 and i != n - 1:
                     for _ in range(pause):
-                        yield None
+                        frames.append(None)
+            return frames
         
         frames = frame_generator(len(self.df_values))
         anim = FuncAnimation(self.fig, self.anim_func, frames, init_func, 
-                             interval=interval, save_count=len(self.df_values) - 1)
+                             interval=interval)
 
         try:
             if self.html:
@@ -294,12 +420,14 @@ class _LineChartRace:
 
         return ret_val
 
+
 def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10, 
                     period_length=500, end_period_pause=0, period_summary_func=None, 
-                    agg_line_func=None, colors=None, title=None, line_label_font=None, 
-                    tick_label_font=None, tick_template='{x:,.0f}', shared_fontdict=None, 
-                    scale='linear', figsize=(6, 3.5), dpi=144, fig=None, writer=None, 
-                    line_kwargs=None, filter_column_colors=False):
+                    agg_line_func=None, others_func=True, fade=1, min_fade=.3, 
+                    colors=None, title=None, line_label_font=None, tick_label_font=None, 
+                    tick_template='{x:,.0f}', shared_fontdict=None, scale='linear', 
+                    figsize=(6, 3.5), dpi=144, fig=None, writer=None, line_kwargs=None, 
+                    filter_column_colors=False):
     '''
     Create an animated line chart race using matplotlib. Data must be in 
     'wide' format where each row represents a single time period and each 
@@ -372,12 +500,35 @@ def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10,
         DataFrame strings - 'mean', 'median', 'max', 'min', etc..
 
         The function will be passed all values of the current period as a Series. 
-        Return a single value or a dictionary using the key 'value' to contain the 
-        aggregated value with the other keys providing Line2D properties. 
+        Return a single value that summarizes the current period.
+
+    others_func : bool, str, or function, default True
+        When there are more columns than n_lines, use this parameter to 
+        aggregate the value of all the other columns. When set to True (default),
+        the top `n_lines` columns will be colored and labeled. All the other
+        lines will be unlabeled and light gray.
+
+        When False, don't show any lines outside of the top `n_lines`
+
+        Use a pandas aggregation function as a string or a custom function 
+        to summarize any values not in the top `n_lines`. This function is 
+        passed a pandas Series of the current period.
         Example:
-        def agg_func(vals):
-            value = vals.mean()
-            return {'value': value, 'color': red, 'lw': 2, 'ls': '--', 'alpha': .8}
+        def my_others_func(s):
+            return s.median()
+
+    fade : float, default 1
+        Used to slowly fade historical values of the line, i.e. decrease the 
+        opacity (alpha). This number multiplies the current alpha of the line 
+        each time period.
+        
+        Choose a number between 0 and 1. When 1, no fading occurs. 
+        This number will likely need to be very close to 1, as alpha will
+        quickly go to zero
+        
+    min_fade : float, default .3
+        Minimum value of alpha for each line. Choose a number between 0 and 1.
+        Use 0 to have the line eventually become completely transparent.
 
     colors : str, matplotlib colormap instance, or list of colors, default 'dark12'
         Colors to be used for the lines. All matplotlib and plotly 
@@ -514,6 +665,9 @@ def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10,
                                           's': f'Total deaths: {v.sum()}', 
                                           'ha': 'right', 'size': 11}, 
         agg_line_func='median', 
+        others_func=None,
+        fade=.99,
+        min_fade=.5,
         colors='dark12', 
         title='COVID-19 Deaths by Country', 
         line_label_font=7, 
@@ -536,9 +690,10 @@ def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10,
     '''
 
     lcr = _LineChartRace(df, filename, n_lines, steps_per_period, period_length, 
-                         end_period_pause, period_summary_func, agg_line_func, colors, title, 
-                         line_label_font, tick_label_font, tick_template, shared_fontdict, 
-                         scale, figsize, dpi, fig, writer, line_kwargs, filter_column_colors)
+                         end_period_pause, period_summary_func, agg_line_func, others_func, 
+                         fade, min_fade, colors, title, line_label_font, tick_label_font, 
+                         tick_template, shared_fontdict, scale, figsize, dpi, fig, writer, 
+                         line_kwargs, filter_column_colors)
     return lcr.make_animation()
     
 
