@@ -11,42 +11,39 @@ from ._utils import prepare_wide_data
 
 class _LineChartRace:
     
-    def __init__(self, df, filename, orientation, sort, n_lines, fixed_max,
-                 steps_per_period, period_length, interpolate_period, period_label, 
-                 period_fmt, period_summary_func, agg_line_func, figsize, cmap, title, 
-                 tick_label_size, shared_fontdict, scale, writer, fig, dpi, 
-                 line_kwargs, filter_column_colors):
+    def __init__(self, df, filename, n_lines, steps_per_period, period_length, 
+                 end_period_pause, period_summary_func, agg_line_func, colors, title, 
+                 line_label_font, tick_label_font, tick_template, shared_fontdict, scale, 
+                 figsize, dpi, fig, writer, line_kwargs, filter_column_colors):
         self.filename = filename
         self.extension = self.get_extension()
-        self.orientation = orientation
-        self.sort = sort
         self.n_lines = n_lines or df.shape[1]
-        self.fixed_max = fixed_max
         self.steps_per_period = steps_per_period
-        self.interpolate_period = interpolate_period
-        self.period_label = self.get_period_label(period_label)
-        self.period_fmt = period_fmt
         self.period_summary_func = period_summary_func
         self.agg_line_func = agg_line_func
         self.period_length = period_length
+        self.end_period_pause = end_period_pause
         self.figsize = figsize
         self.title = self.get_title(title)
-        self.tick_label_size = tick_label_size
+        self.line_label_font = self.get_font(line_label_font)
+        self.tick_label_font = self.get_font(tick_label_font, True)
+        self.tick_template = self.get_tick_template(tick_template)
         self.orig_rcParams = self.set_shared_fontdict(shared_fontdict)
         self.scale = scale
+        self.dpi = dpi
         self.writer = self.get_writer(writer)
         self.fps = 1000 / self.period_length * steps_per_period
         self.filter_column_colors = filter_column_colors
-        
         self.validate_params()
+
         self.line_kwargs = self.get_line_kwargs(line_kwargs)
         self.html = self.filename is None
         self.df_values = self.prepare_data(df)
-        self.fig, self.ax = self.get_fig(fig, dpi)
-        self.colors = self.get_colors(cmap)
+        self.colors = self.get_colors(colors)
         self.str_index = self.df_values.index.astype('str')
+        self.subplots_adjust = self.get_subplots_adjust()
+        self.fig = self.get_fig(fig)
         
-
     def get_extension(self):
         if self.filename:
             return self.filename.split('.')[-1]
@@ -57,40 +54,12 @@ class _LineChartRace:
                 raise ValueError('`filename` must have an extension')
         elif self.filename is not None:
             raise TypeError('`filename` must be None or a string')
-            
-        if self.sort not in ('asc', 'desc'):
-            raise ValueError('`sort` must be "asc" or "desc"')
-
-        if self.orientation not in ('h', 'v'):
-            raise ValueError('`orientation` must be "h" or "v"')
 
     def get_line_kwargs(self, line_kwargs):
         line_kwargs = line_kwargs or {}
         if 'alpha' not in line_kwargs:
             line_kwargs['alpha'] = .8
-        if 'ec' not in line_kwargs:
-            line_kwargs['ec'] = 'white'
         return line_kwargs
-
-    def get_period_label(self, period_label):
-        if not period_label:
-            return False
-        elif period_label is True:
-            period_label = {'size': 12}
-            if self.orientation == 'h':
-                period_label['x'] = .95
-                period_label['y'] = .15 if self.sort == 'desc' else .85
-                period_label['ha'] = 'right'
-                period_label['va'] = 'center'
-            else:
-                period_label['x'] = .95 if self.sort == 'desc' else .05
-                period_label['y'] = .85
-                period_label['ha'] = 'right' if self.sort == 'desc' else 'left'
-                period_label['va'] = 'center'
-        else:
-            if 'x' not in period_label or 'y' not in period_label:
-                raise ValueError('`period_label` dictionary must have keys for "x" and "y"')
-        return period_label
 
     def get_title(self, title):
         if isinstance(title, str):
@@ -99,12 +68,32 @@ class _LineChartRace:
             if 'label' not in title:
                 raise ValueError('You must use the key "label" in the `title` dictionary '
                                  'to supply the name of the title')
-        elif title is None:
-            title = {'label': None}
-        else:
+        elif title is not None:
             raise TypeError('`title` must be either a string or dictionary')
-
+        else:
+            return {'label': None}
         return title
+
+    def get_font(self, font, ticks=False):
+        default_font_dict = {'size': 7}
+        if ticks:
+            default_font_dict['ha'] = 'right'
+
+        if font is None:
+            font = default_font_dict
+        elif isinstance(font, (int, float, str)):
+            font = {**default_font_dict, 'size': font}
+        elif not isinstance(font, dict):
+            raise TypeError('`font` must be a number or dictionary of font properties')
+        else:
+            font = {**default_font_dict, **font}
+        return font
+
+    def get_tick_template(self, tick_template):
+        if isinstance(tick_template, str):
+            return ticker.StrMethodFormatter(tick_template)
+        elif callable(tick_template):
+            return ticker.FuncFormatter(tick_template)
 
     def set_shared_fontdict(self, shared_fontdict):
         orig_rcParams = plt.rcParams.copy()
@@ -125,9 +114,8 @@ class _LineChartRace:
                 except KeyError:
                     raise KeyError(f"{k} is not a valid key in `sharedfont_dict`"
                                     "It must be one of "
-                                    "'cursive', 'family', 'fantasy', 'monospace',"
-                                    "sans-serif', 'serif',"
-                                    "'stretch', 'style', 'variant', 'weight'")
+                                    "'cursive', 'family', 'fantasy', 'monospace', 'sans-serif',"
+                                    "'serif', 'stretch','style', 'variant', 'weight'")
         return orig_rcParams
 
     def get_writer(self, writer):
@@ -141,34 +129,35 @@ class _LineChartRace:
         return writer
 
     def prepare_data(self, df):
-        compute_ranks = False
-        return prepare_wide_data(df, self.orientation, self.sort, self.n_lines,
-                                True, self.steps_per_period,
-                                compute_ranks)
+        compute_ranks = sort = False
+        interpolate_period = True
+        orientation = 'h'
+        return prepare_wide_data(df, orientation, sort, self.n_lines,
+                                 interpolate_period, self.steps_per_period, compute_ranks)
         
-    def get_colors(self, cmap):
-        if cmap is None:
-            cmap = 'dark12'
+    def get_colors(self, colors):
+        if colors is None:
+            colors = 'dark12'
             if self.df_values.shape[1] > 10:
-                cmap = 'dark24'
+                colors = 'dark24'
             
-        if isinstance(cmap, str):
+        if isinstance(colors, str):
             from ._colormaps import colormaps
             try:
-                colors = colormaps[cmap.lower()]
+                colors = colormaps[colors.lower()]
             except KeyError:
-                raise KeyError(f'Colormap {cmap} does not exist. Here are the '
+                raise KeyError(f'Colormap {colors} does not exist. Here are the '
                                f'possible colormaps: {colormaps.keys()}')
-        elif isinstance(cmap, mcolors.Colormap):
-            colors = cmap(range(cmap.N)).tolist()
-        elif isinstance(cmap, list):
-            colors = cmap
-        elif isinstance(cmap, tuple):
-            colors = list(cmap)
-        elif hasattr(cmap, 'tolist'):
-            colors = cmap.tolist()
+        elif isinstance(colors, mcolors.Colormap):
+            colors = colors(range(colors.N)).tolist()
+        elif isinstance(colors, list):
+            colors = colors
+        elif isinstance(colors, tuple):
+            colors = list(colors)
+        elif hasattr(colors, 'tolist'):
+            colors = colors.tolist()
         else:
-            raise TypeError('`cmap` must be a string name of a colormap, a matplotlib colormap '
+            raise TypeError('`colors` must be a string name of a colormap, a matplotlib colormap '
                             'instance, list, or tuple of colors')
 
         # colors is a list
@@ -180,7 +169,52 @@ class _LineChartRace:
         colors = colors[:self.df_values.shape[1]]
         return colors
 
-    def get_fig(self, fig, dpi):
+    def prepare_axes(self, ax):
+        ax.grid(True, color='white')
+        if self.tick_template:
+            ax.yaxis.set_major_formatter(self.tick_template)
+        ax.tick_params(labelsize=self.tick_label_font['size'], length=0, pad=2)
+        ax.minorticks_off()
+        ax.set_axisbelow(True)
+        ax.set_facecolor('.9')
+        ax.set_title(**self.title)
+        min_val = 1 if self.scale == 'log' else self.df_values.min().min()
+        ax.set_yscale(self.scale)
+
+        for spine in ax.spines.values():
+            spine.set_visible(False)
+
+        ax.set_xlim(self.df_values.index[0], self.df_values.index[-1])
+        ax.set_ylim(min_val, self.df_values.max().max())
+        xmin, xmax = ax.get_xlim()
+        delta = (xmax - xmin) * .05
+        ax.set_xlim(xmin - delta, xmax + delta)
+
+        ymin, ymax = ax.get_ylim()
+        delta = (ymax - ymin) * .05
+        ax.set_ylim(ymin - delta, ymax + delta)
+
+        ax.xaxis_date()
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%-m/%-d'))
+
+    def get_subplots_adjust(self):
+        import io
+        fig = plt.Figure(figsize=self.figsize, dpi=self.dpi)
+        ax = fig.add_subplot()
+        ax.plot(self.df_values)
+                
+        self.prepare_axes(ax)
+        fig.canvas.print_figure(io.BytesIO(), format='png')
+        xmin = min(label.get_window_extent().x0 for label in ax.get_yticklabels()) 
+        xmin /= (self.dpi * fig.get_figwidth())
+        left = ax.get_position().x0 - xmin + .01
+
+        ymin = min(label.get_window_extent().y0 for label in ax.get_xticklabels()) 
+        ymin /= (self.dpi * fig.get_figheight())
+        bottom = ax.get_position().y0 - ymin + .01
+        return left, bottom
+
+    def get_fig(self, fig):
         if fig is not None and not isinstance(fig, plt.Figure):
             raise TypeError('`fig` must be a matplotlib Figure instance')
         if fig is not None:
@@ -189,48 +223,23 @@ class _LineChartRace:
             ax = fig.axes[0]
             self.figsize = fig.get_size_inches()
         else:
-            fig, ax = self.create_figure(dpi)
-        return fig, ax
+            fig = self.create_figure()
+        return fig
 
-    def create_figure(self, dpi):
-        fig = plt.Figure(figsize=self.figsize, dpi=dpi)
-        ax = fig.subplots()
-        ax.set_title(**self.title)
-        return fig, ax
-       
-    def init_func(self):
-        self.ax.set_xlim(self.df_values.index[0], self.df_values.index[-1])
-        self.ax.set_ylim(self.df_values.min().min(), self.df_values.max().max())
-        xmin, xmax = self.ax.get_xlim()
-        delta = (xmax - xmin) * .05
-        self.ax.set_xlim(xmin - delta, xmax + delta)
-
-        ymin, ymax = self.ax.get_ylim()
-        delta = (ymax - ymin) * .05
-        self.ax.set_ylim(ymin - delta, ymax + delta)
-
-        for spine in self.ax.spines.values():
-            spine.set_visible(False)
-
-        self.ax.tick_params(length=0, labelsize=self.tick_label_size)
-        self.ax.set_facecolor('.9')
-        self.ax.grid(True)
-        self.ax.xaxis_date()
-        self.ax.xaxis.set_major_formatter(mdates.DateFormatter('%-m/%-d'))
-        self.ax.yaxis.set_major_formatter(ticker.StrMethodFormatter('{x:,.0f}'))
-        
-        df_cur = self.df_values.iloc[0]
-        x, y = df_cur.name, df_cur.values
-        x = mdates.date2num(x)
-        for col, val, color in zip(self.df_values.columns, y, self.colors):
-            self.ax.text(x, val, col, ha='center', va='bottom', size='smaller')
-            self.ax.add_collection(LineCollection([[(x, val)]], colors=[color]))
+    def create_figure(self):
+        fig = plt.Figure(figsize=self.figsize, dpi=self.dpi)
+        ax = fig.add_subplot()
+        left, bottom = self.subplots_adjust
+        fig.subplots_adjust(left=left, bottom=bottom)
+        self.prepare_axes(ax)
+        return fig
 
     def anim_func(self, i):
+        ax = self.fig.axes[0]
         df_cur = self.df_values.iloc[i]
         x, y = df_cur.name, df_cur.values
         x = mdates.date2num(x)
-        for collection, text, val, color in zip(self.ax.collections, self.ax.texts, y, self.colors):
+        for collection, text, val, color in zip(ax.collections, ax.texts, y, self.colors):
             seg = collection.get_segments()
             last = seg[-1][-1]
             new_seg = np.row_stack((last, [x, val]))
@@ -241,11 +250,32 @@ class _LineChartRace:
             color_arr[:, -1] *= .985
             collection.set_color(color_arr)
             text.set_position((x, val))
-        
-    def make_animation(self):        
+
+    def make_animation(self):
+        def init_func():
+            ax = self.fig.axes[0]
+            df_cur = self.df_values.iloc[0]
+            x, y = df_cur.name, df_cur.values
+            x = mdates.date2num(x)
+
+            for col, val, color in zip(self.df_values.columns, y, self.colors):
+                ax.text(x, val, col, ha='center', va='bottom', size='smaller')
+                ax.add_collection(LineCollection([[(x, val)]], colors=[color]))
+
         interval = self.period_length / self.steps_per_period
-        anim = FuncAnimation(self.fig, self.anim_func, range(1, len(self.df_values)), 
-                             self.init_func, interval=interval)
+        pause = int(self.end_period_pause // interval)
+
+        def frame_generator(n):
+            for i in range(1, n):
+                yield i
+                if pause and i % self.steps_per_period == 0 and i != 0 and i != n - 1:
+                    for _ in range(pause):
+                        yield None
+        
+        frames = frame_generator(len(self.df_values))
+        anim = FuncAnimation(self.fig, self.anim_func, frames, init_func, 
+                             interval=interval, save_count=len(self.df_values) - 1)
+
         try:
             if self.html:
                 ret_val = anim.to_html5_video()
@@ -264,17 +294,251 @@ class _LineChartRace:
 
         return ret_val
 
-def line_chart_race(df, filename=None, orientation='h', sort='desc', n_lines=None, 
-                    fixed_max=True, steps_per_period=10, period_length=500, 
-                    interpolate_period=False, period_label=True, period_fmt=None, 
-                    period_summary_func=None, agg_line_func=None, figsize=(6, 3.5),
-                    cmap=None, title=None, tick_label_size=7, shared_fontdict=None, 
-                    scale='linear', writer=None, fig=None, dpi=144, line_kwargs=None, 
-                    filter_column_colors=False):
-    lcr = _LineChartRace(df, filename, orientation, sort, n_lines, fixed_max,
-                         steps_per_period, period_length, interpolate_period, period_label, 
-                         period_fmt, period_summary_func, agg_line_func, figsize, cmap, title, 
-                         tick_label_size, shared_fontdict, scale, writer, fig, dpi, line_kwargs, 
-                         filter_column_colors)
+def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10, 
+                    period_length=500, end_period_pause=0, period_summary_func=None, 
+                    agg_line_func=None, colors=None, title=None, line_label_font=None, 
+                    tick_label_font=None, tick_template='{x:,.0f}', shared_fontdict=None, 
+                    scale='linear', figsize=(6, 3.5), dpi=144, fig=None, writer=None, 
+                    line_kwargs=None, filter_column_colors=False):
+    '''
+    Create an animated line chart race using matplotlib. Data must be in 
+    'wide' format where each row represents a single time period and each 
+    column represents a distinct category. Optionally, the index can label 
+    the time period.
+
+    If no `filename` is given, an HTML string is returned, otherwise the 
+    animation is saved to disk.
+
+    You must have ffmpeg installed on your machine to save files to disk.
+    Get ffmpeg here: https://www.ffmpeg.org/download.html. To save .gif 
+    files, install ImageMagick.
+
+    Parameters
+    ----------
+    df : pandas DataFrame
+        Must be a 'wide' DataFrame where each row represents a single period 
+        of time. Each column contains the values of the lines for that 
+        category. Optionally, use the index to label each time period.
+        The index can be of any type.
+
+    filename : `None` or str, default None
+        If `None` return animation as an HTML5 string.
+        If a string, save animation to that filename location. 
+        Use .mp4, .gif, .html, .mpeg, .mov and any other extensions supported
+        by ffmpeg or ImageMagick.
+
+    n_lines : int, default None
+        Choose the maximum number of lines to display on the graph. 
+        By default, use all lines.
+
+    steps_per_period : int, default 10
+        The number of steps to go from one time period to the next. 
+
+    period_length : int, default 500
+        Number of milliseconds to animate each period (row). 
+        Default is 500ms (half of a second)
+
+    end_period_pause : int, default 0
+        Number of milliseconds to pause the animation at the end of
+        each period. This number must be greater than or equal to 
+        period_length / steps_per_period or there will be no pause.
+        This is due to all frames having the same time interval.
+
+        By default, each frame is 500 / 10 or 50 milliseconds,
+        therefore end_period_pause must be at least 50 for there
+        to be a pause. The pause will be in increments of this
+        calculated interval and not exact. For example, setting the
+        end_period_pause to 725 will produce a pause of 700 
+        milliseconds (by default).
+
+    period_summary_func : function, default None
+        Custom text added to the axes each period.
+        Create a user-defined function that accepts one pandas Series of the 
+        current time period's values. It must return a dictionary 
+        containing at a minimum the keys "x", "y", and "s" which will be 
+        passed to the matplotlib `text` method.
+
+        Example:
+        def func(values):
+            total = values.sum()
+            s = f'Worldwide deaths: {total}'
+            return {'x': .85, 'y': .2, 's': s, 'ha': 'right', 'size': 11}
+
+    agg_line_func : function or str, default None
+        Create an additional line to summarize all of the data. Pass it either 
+        a string that the DataFrame `agg` method understands or a user-defined 
+        function.
+
+        DataFrame strings - 'mean', 'median', 'max', 'min', etc..
+
+        The function will be passed all values of the current period as a Series. 
+        Return a single value or a dictionary using the key 'value' to contain the 
+        aggregated value with the other keys providing Line2D properties. 
+        Example:
+        def agg_func(vals):
+            value = vals.mean()
+            return {'value': value, 'color': red, 'lw': 2, 'ls': '--', 'alpha': .8}
+
+    colors : str, matplotlib colormap instance, or list of colors, default 'dark12'
+        Colors to be used for the lines. All matplotlib and plotly 
+        colormaps are available by string name. Colors will repeat 
+        if there are more lines than colors.
+
+        'dark12' is a discrete colormap. If there are more than 12 columns, 
+        then the default colormap will be 'dark24'
+
+        Append "_r" to the colormap name to use the reverse of the colormap.
+        i.e. "dark12_r"
+
+    title : str or dict, default None
+        Title of plot as a string. Use a dictionary to supply several title 
+        parameters. You must use the key 'label' for the title.
+        Example:
+        {
+            'label': 'My Line Chart Race Title',
+            'size': 18,
+            'color': 'red',
+            'loc': 'right',
+            'pad': 12
+        }
+
+    tick_label_font : number or dict, default None
+        Font size of tick labels. When None, defaults to 7.
+        Use a dictionary to supply several font properties.
+
+    tick_template : str or function, default '{x:,.0f}'
+        Formats the ticks on the axis with numeric values 
+        (x-axis when horizontal and y-axis when vertical). If given a string,
+        pass it to the ticker.StrMethodFormatter matplotlib function. 
+        Use 'x' as the variable
+        Example: '{x:10.2f}'
+
+        If given a function, its passed to ticker.FuncFormatter, which
+        implicitly passes it two variables `x` and `pos` and must return
+        a string.
+
+    shared_fontdict : dict, default None
+        Dictionary of font properties shared across the tick labels, 
+        line labels, and title. The only property not shared is `size`. 
+        It will be ignored if you try to set it.
+
+        Possible keys are:
+            'family', 'weight', 'color', 'style', 'stretch', 'weight', 'variant'
+        Example:
+        {
+            'family' : 'Helvetica',
+            'weight' : 'bold',
+            'color' : 'rebeccapurple'
+        }
+
+    scale : 'linear' or 'log', default 'linear'
+        Type of scaling to use for the axis containing the values
+
+    figsize : two-item tuple of numbers, default (6, 3.5)
+        matplotlib figure size in inches. Will be overridden if figure 
+        supplied to `fig`.
+
+    dpi : int, default 144
+        Dots per Inch of the matplotlib figure
+
+    fig : matplotlib Figure, default None
+        For greater control over the aesthetics, supply your own figure.
+
+    writer : str or matplotlib Writer instance
+        This argument is passed to the matplotlib FuncAnimation.save method.
+
+        By default, the writer will be 'ffmpeg' unless creating a gif,
+        then it will be 'imagemagick', or an html file, then it 
+        will be 'html'. 
+            
+        Find all of the availabe Writers:
+        >>> from matplotlib import animation
+        >>> animation.writers.list()
+
+        You must have ffmpeg or ImageMagick installed in order
+
+    line_kwargs : dict, default `None` (alpha=.8)
+        Other keyword arguments (within a dictionary) forwarded to the 
+        matplotlib Line2D function. If no value for 'alpha' is given,
+        then it is set to .8 by default.
+        Sample properties:
+            `lw` - Line width, default is 1.5
+            'ls' - Line style, '-', '--', '-.', ':'
+            `alpha` - opacity of line, 0 to 1
+            'ms' - marker style
+
+    filter_column_colors : bool, default `False`
+        When setting n_lines, it's possible that some columns never 
+        appear in the animation. Regardless, all columns get assigned
+        a color by default. 
+        
+        For instance, suppose you have 100 columns 
+        in your DataFrame, set n_lines to 10, and 15 different columns 
+        make at least one appearance in the animation. Even if your 
+        colormap has at least 15 colors, it's possible that many 
+        lines will be the same color, since each of the 100 columns is
+        assigned of the colormaps colors.
+
+        Setting this to `True` will map your colormap to just those 
+        columns that make an appearance in the animation, helping
+        avoid duplication of colors.
+
+        Setting this to `True` will also have the (possibly unintended)
+        consequence of changing the colors of each color every time a 
+        new integer for n_lines is used.
+
+        EXPERIMENTAL
+        This parameter is experimental and may be changed/removed
+        in a later version.
+
+
+    Returns
+    -------
+    When `filename` is left as `None`, an HTML5 video is returned as a string.
+    Otherwise, a file of the animation is saved and `None` is returned.
+
+    Examples
+    --------
+    Use the `load_data` function to get an example dataset to 
+    create an animation.
+
+    df = bcr.load_dataset('covid19')
+    bcr.line_chart_race(
+        df=df, 
+        filename='covid19_line_race.mp4', 
+        n_lines=5, 
+        steps_per_period=10, 
+        period_length=500, 
+        end_period_pause=300,
+        period_summary_func=lambda v, r: {'x': .85, 'y': .2, 
+                                          's': f'Total deaths: {v.sum()}', 
+                                          'ha': 'right', 'size': 11}, 
+        agg_line_func='median', 
+        colors='dark12', 
+        title='COVID-19 Deaths by Country', 
+        line_label_font=7, 
+        tick_label_font=7, 
+        tick_template='{x:,.0f}'
+        shared_fontdict={'family' : 'Helvetica', 'weight' : 'bold', 'color' : '.1'}, 
+        scale='linear', 
+        figsize=(5, 3), 
+        dpi=144,
+        fig=None, 
+        writer=None, 
+        line_kwargs={'alpha': .7},
+        filter_column_colors=False)        
+
+    Font Help
+    ---------
+    Font size can also be a string - 'xx-small', 'x-small', 'small',  
+        'medium', 'large', 'x-large', 'xx-large', 'smaller', 'larger'
+    These sizes are relative to plt.rcParams['font.size'].
+    '''
+
+    lcr = _LineChartRace(df, filename, n_lines, steps_per_period, period_length, 
+                         end_period_pause, period_summary_func, agg_line_func, colors, title, 
+                         line_label_font, tick_label_font, tick_template, shared_fontdict, 
+                         scale, figsize, dpi, fig, writer, line_kwargs, filter_column_colors)
     return lcr.make_animation()
     
+
