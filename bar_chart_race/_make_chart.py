@@ -211,8 +211,7 @@ class _BarChartRace:
             
         compute_ranks = self.fixed_order is False
         dfs = prepare_wide_data(df, self.orientation, self.sort, self.n_bars,
-                                self.interpolate_period, self.steps_per_period,
-                                compute_ranks)
+                                self.interpolate_period, self.steps_per_period, compute_ranks)
         if isinstance(dfs, tuple):
             df_values, df_ranks = dfs
         else:
@@ -308,7 +307,7 @@ class _BarChartRace:
         ax.set_axisbelow(True)
         ax.set_facecolor('.9')
         ax.set_title(**self.title)
-        min_val = 1 if self.scale == 'log' else 0
+        # min_val = 1 if self.scale == 'log' else 0
 
         for spine in ax.spines.values():
             spine.set_visible(False)
@@ -333,7 +332,6 @@ class _BarChartRace:
         self.prepare_axes(ax)
         texts = self.add_bar_labels(ax, bar_location, bar_length)
 
-        min_val = 1 if self.scale == 'log' else 0
         fig.canvas.print_figure(io.BytesIO(), format='png')
         xmin = min(label.get_window_extent().x0 for label in ax.get_yticklabels()) 
         xmin /= (self.dpi * fig.get_figwidth())
@@ -542,15 +540,16 @@ class _BarChartRace:
         pause = int(self.end_period_pause // interval)
 
         def frame_generator(n):
+            frames = []
             for i in range(n):
-                yield i
+                frames.append(i)
                 if pause and i % self.steps_per_period == 0 and i != 0 and i != n - 1:
                     for _ in range(pause):
-                        yield None
+                        frames.append(None)
+            return frames
         
         frames = frame_generator(len(self.df_values))
-        anim = FuncAnimation(self.fig, self.anim_func, frames, init_func, interval=interval, 
-                             save_count=len(self.df_values))
+        anim = FuncAnimation(self.fig, self.anim_func, frames, init_func, interval=interval)
 
         try:
             if self.html:
@@ -725,10 +724,8 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
 
     perpendicular_bar_func : function or str, default None
         Creates a single bar perpendicular to the main bars that spans the 
-        length of the axis. 
-        
-        Use either a string that the DataFrame `agg` method understands or a 
-        user-defined function.
+        length of the axis. Use either a string that the DataFrame `agg` 
+        method understands or a user-defined function.
             
         DataFrame strings - 'mean', 'median', 'max', 'min', etc..
 
@@ -815,7 +812,7 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
 
         Possible keys are:
             'family', 'weight', 'color', 'style', 'stretch', 'weight', 'variant'
-        Here is an example dictionary:
+        Example:
         {
             'family' : 'Helvetica',
             'weight' : 'bold',
@@ -881,18 +878,10 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         This parameter is experimental and may be changed/removed
         in a later version.
 
-
     Returns
     -------
     When `filename` is left as `None`, an HTML5 video is returned as a string.
     Otherwise, a file of the animation is saved and `None` is returned.
-
-    Notes
-    -----
-    It is possible for some bars to be out of order momentarily during a 
-    transition since both height and location change linearly and not 
-    directly with respect to their current value. This keeps all the 
-    transitions identical.
 
     Examples
     --------
