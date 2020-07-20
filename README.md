@@ -5,7 +5,7 @@
 
 Make animated bar chart races in Python with matplotlib.
 
-![img](docs/images/covid19_horiz.gif)
+![img](https://github.com/dexplo/bar_chart_race/raw/gh-pages/images/covid19_horiz.gif)
 
 ## Official Documentation
 
@@ -28,7 +28,7 @@ Must begin with a pandas DataFrame containing 'wide' data where:
   
 The data below is an example of properly formatted data. It shows total deaths from COVID-19 for several countries by date.
 
-![img](docs/images/wide_data.png)
+![img](https://github.com/dexplo/bar_chart_race/raw/gh-pages/images/wide_data.png)
 
 ### Main function - `bar_chart_race`
 
@@ -79,7 +79,7 @@ Leave the `filename` parameter as `None` to return the animation as HTML. If you
 bcr.bar_chart_race(df=df, filename=None)
 ```
 
-![img](docs/images/bcr_notebook.png)
+![img](https://github.com/dexplo/bar_chart_race/raw/gh-pages/images/bcr_notebook.png)
 
 ### Customization
 
@@ -99,4 +99,4 @@ bcr.bar_chart_race(df_baseball, period_length=1000,
                    title='Top 10 Home Run Hitters by Season Played')
 ```
 
-![img](docs/images/prepare_long.png)
+![img](https://github.com/dexplo/bar_chart_race/raw/gh-pages/images/prepare_long.png)
