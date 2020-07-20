@@ -29,7 +29,7 @@ class _LineChartRace:
         self.period_summary_func = period_summary_func
         self.agg_line_func = agg_line_func
         self.others_func = others_func
-        self.line_width_data = line_width_data
+        self.line_width_data = self.get_line_width_data(line_width_data)
         self.fade = fade
         self.min_fade = min_fade
         self.figsize = figsize
@@ -64,6 +64,17 @@ class _LineChartRace:
     def get_extension(self):
         if self.filename:
             return self.filename.split('.')[-1]
+
+    def get_line_width_data(self, line_width_data):
+        if line_width_data is None:
+            return
+        df = line_width_data.copy()
+        min_val = df.min().min()
+        df = df - min_val
+        max_val = df.max().max()
+        df = df / max_val
+        df = df * 6 + 1
+        return df
 
     def validate_params(self):
         if isinstance(self.filename, str):
@@ -355,8 +366,14 @@ class _LineChartRace:
             color_arr = np.append(color_arr, [color], axis=0)
             color_arr[:, -1] = np.clip(color_arr[:, -1] * self.fade, self.min_fade, None)
             collection.set_color(color_arr)
-            text.set_position((x + x_extra, val))
 
+            if self.line_width_data is not None and col != 'All Others':
+                lw = self.line_width_data.iloc[i // self.steps_per_period][col]
+                lw_arr = collection.get_linewidths()
+                lw_arr = np.append(lw_arr, [lw], axis=0)
+                collection.set_linewidths(lw_arr)
+
+            text.set_position((x + x_extra, val))
             text.set_visible(vis)
             collection.set_visible(vis)
 
@@ -409,7 +426,10 @@ class _LineChartRace:
                     color = self.OTHERS_COLOR
                 if self.others_visible:
                     vis = True
-                collection = ax.add_collection(LineCollection([[(x, val)]], colors=[color], visible=vis))
+                lw = 1.5
+                if self.line_width_data is not None:
+                    lw = self.line_width_data.iloc[0][col]
+                collection = ax.add_collection(LineCollection([[(x, val)]], colors=[color], visible=vis, linewidths=[lw]))
                 self.texts[col] = text
                 self.collections[col] = collection
 
