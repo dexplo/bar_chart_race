@@ -9,10 +9,6 @@ with open('bar_chart_race/__init__.py', 'r') as f:
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-pat = r'!\[img\]\('
-repl = r'![img](https://raw.githubusercontent.com/dexplo/bar_chart_race/master/'
-long_description = re.sub(pat, repl, long_description)
-
 setuptools.setup(
     name="bar_chart_race",
     version=version,
