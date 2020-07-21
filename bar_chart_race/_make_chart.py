@@ -15,8 +15,8 @@ class _BarChartRace:
                  steps_per_period, period_length, end_period_pause, interpolate_period, 
                  period_label, period_template, period_summary_func, perpendicular_bar_func, 
                  colors, title, bar_size, bar_textposition, bar_texttemplate, bar_label_font, 
-                 tick_label_font, tick_template, shared_fontdict, scale, figsize, dpi, fig, 
-                 writer, bar_kwargs, filter_column_colors):
+                 tick_label_font, tick_template, shared_fontdict, scale, fig, writer, 
+                 bar_kwargs, fig_kwargs, filter_column_colors):
         self.filename = filename
         self.extension = self.get_extension()
         self.orientation = orientation
@@ -24,7 +24,6 @@ class _BarChartRace:
         self.n_bars = n_bars or df.shape[1]
         self.fixed_order = fixed_order
         self.fixed_max = fixed_max
-        self.dpi = dpi # used in calculation of font size
         self.steps_per_period = steps_per_period
         self.period_length = period_length
         self.end_period_pause = end_period_pause
@@ -40,7 +39,6 @@ class _BarChartRace:
         self.bar_label_font = self.get_font(bar_label_font)
         self.tick_label_font = self.get_font(tick_label_font, True)
         self.tick_template = self.get_tick_template(tick_template)
-        self.figsize = figsize
         self.orig_rcParams = self.set_shared_fontdict(shared_fontdict)
         self.scale = scale
         self.fps = 1000 / self.period_length * steps_per_period
@@ -55,6 +53,7 @@ class _BarChartRace:
         self.col_filt = self.get_col_filt()
         self.bar_colors = self.get_bar_colors(colors)
         self.str_index = self.df_values.index.astype('str')
+        self.fig_kwargs = self.get_fig_kwargs(fig_kwargs)
         self.subplots_adjust = self.get_subplots_adjust()
         self.fig = self.get_fig(fig)
         
@@ -290,6 +289,16 @@ class _BarChartRace:
                                     "To reduce color repetition, set `filter_column_colors` to `True`")
         return bar_colors
 
+    def get_fig_kwargs(self, fig_kwargs):
+        default_fig_kwargs = {'figsize': (6, 3.5), 'dpi': 144}
+        if fig_kwargs is None:
+            return default_fig_kwargs
+        if isinstance(fig_kwargs, dict):
+            fig_kwargs = {**default_fig_kwargs, **fig_kwargs}
+        else:
+            raise TypeError('fig_kwargs must be a dict or None')
+        return fig_kwargs
+
     def get_max_plotted_value(self):
         plotted_values = []
         for i in range(len(self.df_values)):
@@ -323,7 +332,7 @@ class _BarChartRace:
 
     def get_subplots_adjust(self):
         import io
-        fig = plt.Figure(figsize=self.figsize, dpi=self.dpi)
+        fig = plt.Figure(**self.fig_kwargs)
         ax = fig.add_subplot()
         plot_func = ax.barh if self.orientation == 'h' else ax.bar
         bar_location, bar_length, cols, _ = self.get_bar_info(-1)
@@ -334,11 +343,11 @@ class _BarChartRace:
 
         fig.canvas.print_figure(io.BytesIO(), format='png')
         xmin = min(label.get_window_extent().x0 for label in ax.get_yticklabels()) 
-        xmin /= (self.dpi * fig.get_figwidth())
+        xmin /= (fig.dpi * fig.get_figwidth())
         left = ax.get_position().x0 - xmin + .01
 
         ymin = min(label.get_window_extent().y0 for label in ax.get_xticklabels()) 
-        ymin /= (self.dpi * fig.get_figheight())
+        ymin /= (fig.dpi * fig.get_figheight())
         bottom = ax.get_position().y0 - ymin + .01
 
         if self.fixed_max:
@@ -386,13 +395,12 @@ class _BarChartRace:
             if not fig.axes:
                 raise ValueError('The figure passed to `fig` must have an axes')
             ax = fig.axes[0]
-            self.figsize = fig.get_size_inches()
         else:
             fig = self.create_figure()
         return fig
 
     def create_figure(self):
-        fig = plt.Figure(figsize=self.figsize, dpi=self.dpi)
+        fig = plt.Figure(**self.fig_kwargs)
         ax = fig.add_subplot()
         left, bottom = self.subplots_adjust
         fig.subplots_adjust(left=left, bottom=bottom)
@@ -560,7 +568,12 @@ class _BarChartRace:
                 except ImportError:
                     pass
             else:
-                ret_val = anim.save(self.filename, fps=self.fps, writer=self.writer)
+                fc = self.fig.get_facecolor()
+                print(fc)
+                if fc == (1, 1, 1, 0):
+                    fc = 'white'
+                ret_val = anim.save(self.filename, fps=self.fps, writer=self.writer, 
+                                    savefig_kwargs={'facecolor': fc}) 
         except Exception as e:
             message = str(e)
             raise Exception(message)
@@ -577,8 +590,8 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
                    perpendicular_bar_func=None, colors=None, title=None, bar_size=.95,
                    bar_textposition='outside', bar_texttemplate='{x:,.0f}',
                    bar_label_font=None, tick_label_font=None, tick_template='{x:,.0f}',
-                   shared_fontdict=None, scale='linear', figsize=(6, 3.5), dpi=144, 
-                   fig=None, writer=None, bar_kwargs=None, filter_column_colors=False):
+                   shared_fontdict=None, scale='linear', fig=None, writer=None, bar_kwargs=None, 
+                   fig_kwargs=None, filter_column_colors=False):
     '''
     Create an animated bar chart race using matplotlib. Data must be in 
     'wide' format where each row represents a single time period and each 
@@ -822,13 +835,6 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
     scale : 'linear' or 'log', default 'linear'
         Type of scaling to use for the axis containing the values
 
-    figsize : two-item tuple of numbers, default (6, 3.5)
-        matplotlib figure size in inches. Will be overridden if figure 
-        supplied to `fig`.
-
-    dpi : int, default 144
-        Dots per Inch of the matplotlib figure
-
     fig : matplotlib Figure, default None
         For greater control over the aesthetics, supply your own figure.
 
@@ -845,7 +851,7 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
 
         You must have ffmpeg or ImageMagick installed in order
 
-    bar_kwargs : dict, default `None` (alpha=.8)
+    bar_kwargs : dict, default None
         Other keyword arguments (within a dictionary) forwarded to the 
         matplotlib `barh`/`bar` function. If no value for 'alpha' is given,
         then it is set to .8 by default.
@@ -853,6 +859,17 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
             `ec` - edgecolor - color of edge of bar. Default is 'white'
             `lw` - width of edge in points. Default is 1.5
             `alpha` - opacity of bars, 0 to 1
+
+    fig_kwargs : dict, default None
+        A dictionary of keyword arguments passed to the matplotlib
+        Figure constructor. If not given, figsize is set to (6, 3.5) and 
+        dpi to 144.
+        Example:
+        {
+            'figsize': (8, 3),
+            'dpi': 120,
+            'facecolor': 'red'
+        }
 
     filter_column_colors : bool, default `False`
         When setting n_bars, it's possible that some columns never 
@@ -917,11 +934,10 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         tick_template='{x:,.0f}'
         shared_fontdict={'family' : 'Helvetica', 'weight' : 'bold', 'color' : '.1'}, 
         scale='linear', 
-        figsize=(5, 3), 
-        dpi=144,
         fig=None, 
         writer=None, 
         bar_kwargs={'alpha': .7},
+        fig_kwargs={'figsize': (6, 3.5), 'dpi': 144}
         filter_column_colors=False)        
 
     Font Help
@@ -935,5 +951,5 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
                         period_label, period_template, period_summary_func, perpendicular_bar_func,
                         colors, title, bar_size, bar_textposition, bar_texttemplate, 
                         bar_label_font, tick_label_font, tick_template, shared_fontdict, scale, 
-                        figsize, dpi, fig, writer, bar_kwargs, filter_column_colors)
+                        fig, writer, bar_kwargs, fig_kwargs, filter_column_colors)
     return bcr.make_animation()
