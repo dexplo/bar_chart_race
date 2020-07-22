@@ -653,7 +653,7 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         Create a user-defined function that accepts two pandas Series of the 
         current time period's values and ranks. It must return a dictionary 
         containing at a minimum the keys "x", "y", and "s" which will be 
-        passed to the matplotlib `text` method.
+        passed to the matplotlib axes `text` method.
 
         Example:
         def func(values, ranks):
