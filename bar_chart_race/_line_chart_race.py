@@ -70,9 +70,9 @@ class _LineChartRace(CommonChart):
     def get_extra_line_kwargs(self, kwargs, kind):
         text = None
         if kind == 'agg':
-            defaults = {'color': OTHERS_COLOR, 'lw': 1.5}
+            defaults = {'color': OTHERS_COLOR, 'lw': 1.5, 'ls': '-'}
         else:
-            defaults = {'color': AGG_COLOR, 'lw': 1.5}
+            defaults = {'color': AGG_COLOR, 'lw': 1.5, 'ls': '-'}
         if kwargs is None:
             kwargs = defaults
         elif isinstance(kwargs, dict):
@@ -81,6 +81,14 @@ class _LineChartRace(CommonChart):
                 text = kwargs.pop('s')
         else:
             raise TypeError(f'{kind}_line_kwargs must be a dictionary with line properties')
+        
+        if 'linewidth' in kwargs:
+            kwargs['lw'] = kwargs.pop('linewidth')
+        if 'c' in kwargs:
+            kwargs['color'] = kwargs.pop('c')
+        if 'linestyle' in kwargs:
+            kwargs['ls'] = kwargs.pop('linestyle')
+        
         kwargs['color'] = mcolors.to_rgba(kwargs['color'])
         return kwargs, text
 
@@ -352,7 +360,8 @@ class _LineChartRace(CommonChart):
             color_arr[:, -1] = np.clip(color_arr[:, -1] * self.fade, self.min_fade, None)
             collection.set_color(color_arr)
 
-            if self.line_width_data is not None and col != '___others_line___' and col != agg_line_name:
+            is_other_agg = col in ('___others_line___', '___agg_line___')
+            if self.line_width_data is not None and not is_other_agg:
                 lw = self.line_width_data.iloc[i // self.steps_per_period][col]
                 lw_arr = collection.get_linewidths()
                 lw_arr = np.append(lw_arr, [lw], axis=0)
@@ -430,10 +439,13 @@ class _LineChartRace(CommonChart):
 
         if self.agg_line is not None:
             color = self.agg_line_kwargs['color']
+            lw = self.agg_line_kwargs.get('lw')
+            ls = self.agg_line_kwargs.get('ls')
             label = self.agg_line_label
             val = self.agg_line.iloc[0]
-            collection = ax.add_collection(LineCollection([[(x, val)]], colors=[color]))
-            text = ax.text(x, val, label, ha='center', va='bottom', size='smaller')
+            lc = LineCollection([[(x, val)]], colors=[color], linewidths=[lw], linestyles=[ls])
+            collection = ax.add_collection(lc)
+            text = ax.text(x + x_extra, val, label, ha='left', va='center', size='smaller')
 
             label = '___agg_line___'
             self.collections[label] = collection
@@ -442,10 +454,12 @@ class _LineChartRace(CommonChart):
 
         if isinstance(self.df_others, pd.Series):
             color = self.others_line_kwargs['color']
+            lw = self.others_line_kwargs.get('lw')
+            ls = self.others_line_kwargs.get('ls')
             label = self.others_line_label
             val = self.df_others.iloc[0]
-            
-            collection = ax.add_collection(LineCollection([[(x, val)]], colors=[color]))
+            lc = LineCollection([[(x, val)]], colors=[color], linewidths=[lw], linestyles=[ls])
+            collection = ax.add_collection(lc)
             text = ax.text(x + x_extra, val, label, ha='left', va='center', size='smaller')
 
             label = '___others_line___'
