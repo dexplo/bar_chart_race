@@ -4,22 +4,23 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
+from ._func_animation import FuncAnimation
 from matplotlib.collections import LineCollection
 from matplotlib import ticker, colors as mcolors, dates as mdates
 from matplotlib import image as mimage
 from matplotlib import patches as mpatches
 
+from ._common_chart import CommonChart
 from ._utils import prepare_wide_data
 
 
-class _LineChartRace:
+class _LineChartRace(CommonChart):
     
     def __init__(self, df, filename, n_lines, steps_per_period, period_length, 
                  end_period_pause, period_summary_func, agg_line_func, others_func,
                  line_width_data, fade, min_fade, images, colors, title, line_label_font, 
-                 tick_label_font, tick_template, shared_fontdict, scale, figsize, dpi, 
-                 fig, writer, line_kwargs, filter_column_colors):
+                 tick_label_font, tick_template, shared_fontdict, scale, fig, writer, 
+                 line_kwargs, fig_kwargs, filter_column_colors):
         self.filename = filename
         self.extension = self.get_extension()
         self.n_lines = n_lines or df.shape[1]
@@ -32,14 +33,12 @@ class _LineChartRace:
         self.line_width_data = self.get_line_width_data(line_width_data)
         self.fade = fade
         self.min_fade = min_fade
-        self.figsize = figsize
         self.title = self.get_title(title)
         self.line_label_font = self.get_font(line_label_font)
         self.tick_label_font = self.get_font(tick_label_font, True)
         self.tick_template = self.get_tick_template(tick_template)
         self.orig_rcParams = self.set_shared_fontdict(shared_fontdict)
         self.scale = scale
-        self.dpi = dpi
         self.writer = self.get_writer(writer)
         self.fps = 1000 / self.period_length * steps_per_period
         self.filter_column_colors = filter_column_colors
@@ -51,6 +50,7 @@ class _LineChartRace:
         self.is_x_date = self.df_values.index.dtype.kind == 'M'
         self.colors = self.get_colors(colors)
         self.str_index = self.df_values.index.astype('str')
+        self.fig_kwargs = self.get_fig_kwargs(fig_kwargs)
         self.subplots_adjust = self.get_subplots_adjust()
         self.fig = self.get_fig(fig)
         self.OTHERS_COLOR = .7, .7, .7, .6
@@ -59,11 +59,7 @@ class _LineChartRace:
         self.others_visible = self.others_func is True
         self.aggregate_others = isinstance(self.others_func, str) or callable(self.others_func)
         self.images = self.get_images(images)
-        self.image_radius = self.fig.get_figwidth() * self.dpi * .02
-        
-    def get_extension(self):
-        if self.filename:
-            return self.filename.split('.')[-1]
+        self.image_radius = self.fig.get_figwidth() * self.fig.dpi * .02
 
     def get_line_width_data(self, line_width_data):
         if line_width_data is None:
@@ -89,19 +85,6 @@ class _LineChartRace:
             line_kwargs['alpha'] = .8
         return line_kwargs
 
-    def get_title(self, title):
-        if isinstance(title, str):
-            return {'label': title}
-        elif isinstance(title, dict):
-            if 'label' not in title:
-                raise ValueError('You must use the key "label" in the `title` dictionary '
-                                 'to supply the name of the title')
-        elif title is not None:
-            raise TypeError('`title` must be either a string or dictionary')
-        else:
-            return {'label': None}
-        return title
-
     def get_font(self, font, ticks=False):
         default_font_dict = {'size': 7}
         if ticks:
@@ -116,45 +99,6 @@ class _LineChartRace:
         else:
             font = {**default_font_dict, **font}
         return font
-
-    def get_tick_template(self, tick_template):
-        if isinstance(tick_template, str):
-            return ticker.StrMethodFormatter(tick_template)
-        elif callable(tick_template):
-            return ticker.FuncFormatter(tick_template)
-
-    def set_shared_fontdict(self, shared_fontdict):
-        orig_rcParams = plt.rcParams.copy()
-        if shared_fontdict is None:
-            return orig_rcParams
-        for k, v in shared_fontdict.items():
-            if k not in ['fontsize', 'size']:
-                if k in ['cursive', 'family', 'fantasy', 'monospace', 'sans-serif', 'serif']:
-                        if isinstance(v, str):
-                            v = [v]
-                if k == 'color':
-                    plt.rcParams['text.color'] = v
-                    plt.rcParams['xtick.color'] = v
-                    plt.rcParams['ytick.color'] = v
-                    continue
-                try:
-                    plt.rcParams[f'font.{k}'] = v
-                except KeyError:
-                    raise KeyError(f"{k} is not a valid key in `sharedfont_dict`"
-                                    "It must be one of "
-                                    "'cursive', 'family', 'fantasy', 'monospace', 'sans-serif',"
-                                    "'serif', 'stretch','style', 'variant', 'weight'")
-        return orig_rcParams
-
-    def get_writer(self, writer):
-        if writer is None:
-            if self.extension == 'gif':
-                writer = 'imagemagick'
-            elif self.extension == 'html':
-                writer = 'html'
-            else:
-                writer = plt.rcParams['animation.writer']
-        return writer
 
     def prepare_data(self, df):
         sort = 'desc'
@@ -230,35 +174,23 @@ class _LineChartRace:
 
     def get_subplots_adjust(self):
         import io
-        fig = plt.Figure(figsize=self.figsize, dpi=self.dpi)
+        fig = plt.Figure(**self.fig_kwargs)
         ax = fig.add_subplot()
         ax.plot(self.df_values)
                 
         self.prepare_axes(ax)
         fig.canvas.print_figure(io.BytesIO(), format='png')
         xmin = min(label.get_window_extent().x0 for label in ax.get_yticklabels()) 
-        xmin /= (self.dpi * fig.get_figwidth())
+        xmin /= (fig.dpi * fig.get_figwidth())
         left = ax.get_position().x0 - xmin + .01
 
         ymin = min(label.get_window_extent().y0 for label in ax.get_xticklabels()) 
-        ymin /= (self.dpi * fig.get_figheight())
+        ymin /= (fig.dpi * fig.get_figheight())
         bottom = ax.get_position().y0 - ymin + .01
         return left, bottom
 
-    def get_fig(self, fig):
-        if fig is not None and not isinstance(fig, plt.Figure):
-            raise TypeError('`fig` must be a matplotlib Figure instance')
-        if fig is not None:
-            if not fig.axes:
-                raise ValueError('The figure passed to `fig` must have an axes')
-            ax = fig.axes[0]
-            self.figsize = fig.get_size_inches()
-        else:
-            fig = self.create_figure()
-        return fig
-
     def create_figure(self):
-        fig = plt.Figure(figsize=self.figsize, dpi=self.dpi)
+        fig = plt.Figure(**self.fig_kwargs)
         ax = fig.add_subplot()
         left, bottom = self.subplots_adjust
         fig.subplots_adjust(left=left, bottom=bottom)
@@ -400,77 +332,78 @@ class _LineChartRace:
         if self.tick_template:
             ax.yaxis.set_major_formatter(self.tick_template)
 
-    def make_animation(self):
-        def init_func():
-            ax = self.fig.axes[0]
-            s = self.df_values.iloc[0] # current Series
-            x, y = s.name, s.to_dict()
-            if self.is_x_date:
-                x = mdates.date2num(x)
+    def init_func(self):
+        ax = self.fig.axes[0]
+        s = self.df_values.iloc[0] # current Series
+        x, y = s.name, s.to_dict()
+        if self.is_x_date:
+            x = mdates.date2num(x)
 
-            if self.images:
-                xmin, xmax = ax.get_xlim()
-                x_extra = (xmax - xmin) * .025
-            else:
-                x_extra = 0
+        if self.images:
+            xmin, xmax = ax.get_xlim()
+            x_extra = (xmax - xmin) * .025
+        else:
+            x_extra = 0
 
-            visible = self.get_visible(0)
-            columns = self.df_values.columns
-            
-            for col in columns:
-                val = y[col]
-                vis = visible[col]
-                color = self.colors[col]
-                text = ax.text(x + x_extra, val, col, ha='left', va='center', size='smaller', visible=vis)
-                if not vis:
-                    color = self.OTHERS_COLOR
-                if self.others_visible:
-                    vis = True
-                lw = 1.5
-                if self.line_width_data is not None:
-                    lw = self.line_width_data.iloc[0][col]
-                collection = ax.add_collection(LineCollection([[(x, val)]], colors=[color], visible=vis, linewidths=[lw]))
-                self.texts[col] = text
-                self.collections[col] = collection
-
-            if self.agg_line_func:
-                color = 0, 0, 0, 1
-                val, name = self.get_agg_func_value(s)
-                collection = ax.add_collection(LineCollection([[(x, val)]], colors=[color]))
-                text = ax.text(x, val, name, ha='center', va='bottom', size='smaller')
-                self.collections[name] = collection
-                self.texts[name] = text
-                self.colors[name] = color
-
-            if self.aggregate_others:
+        visible = self.get_visible(0)
+        columns = self.df_values.columns
+        
+        for col in columns:
+            val = y[col]
+            vis = visible[col]
+            color = self.colors[col]
+            text = ax.text(x + x_extra, val, col, ha='left', va='center', size='smaller', visible=vis)
+            if not vis:
                 color = self.OTHERS_COLOR
-                val = self.get_others_func_value(s, visible)
-                name = "All Others"
-                collection = ax.add_collection(LineCollection([[(x, val)]], colors=[color]))
-                text = ax.text(x + x_extra, val, name, ha='right', va='center', size='smaller')
-                self.collections[name] = collection
-                self.texts[name] = text
-                self.colors[name] = color
+            if self.others_visible:
+                vis = True
+            lw = 1.5
+            if self.line_width_data is not None:
+                lw = self.line_width_data.iloc[0][col]
+            collection = ax.add_collection(LineCollection([[(x, val)]], colors=[color], visible=vis, linewidths=[lw]))
+            self.texts[col] = text
+            self.collections[col] = collection
 
-            if self.period_summary_func:
-                text_dict = self.add_period_summary(ax, s)
-                text = ax.text(transform=ax.transAxes, **text_dict)
-                self.texts['__period_summary_func__'] = text
+        if self.agg_line_func:
+            color = 0, 0, 0, 1
+            val, name = self.get_agg_func_value(s)
+            collection = ax.add_collection(LineCollection([[(x, val)]], colors=[color]))
+            text = ax.text(x, val, name, ha='center', va='bottom', size='smaller')
+            self.collections[name] = collection
+            self.texts[name] = text
+            self.colors[name] = color
 
-            if self.images:
-                for col in columns:
-                    xpixel, ypixel = ax.transData.transform((x, y[col]))
-                    center = xpixel, ypixel
-                    circle = mpatches.Circle(center, transform=None, radius=self.image_radius, fill=None, lw=0)
-                    ax.add_patch(circle)
-                    left, right = xpixel - self.image_radius, xpixel + self.image_radius
-                    bottom, top = ypixel - self.image_radius, ypixel + self.image_radius
-                    img_array = self.images[col]
-                    img = ax.imshow(img_array, extent=[left, right, bottom, top], aspect='auto', transform=None, zorder=4)
-                    img.set_clip_path(circle)
-                    vis = visible[col]
-                    img.set_visible(vis)
-                    self.images[col] = img, circle
+        if self.aggregate_others:
+            color = self.OTHERS_COLOR
+            val = self.get_others_func_value(s, visible)
+            name = "All Others"
+            collection = ax.add_collection(LineCollection([[(x, val)]], colors=[color]))
+            text = ax.text(x + x_extra, val, name, ha='left', va='center', size='smaller')
+            self.collections[name] = collection
+            self.texts[name] = text
+            self.colors[name] = color
+
+        if self.period_summary_func:
+            text_dict = self.add_period_summary(ax, s)
+            text = ax.text(transform=ax.transAxes, **text_dict)
+            self.texts['__period_summary_func__'] = text
+
+        if self.images:
+            for col in columns:
+                xpixel, ypixel = ax.transData.transform((x, y[col]))
+                center = xpixel, ypixel
+                circle = mpatches.Circle(center, transform=None, radius=self.image_radius, fill=None, lw=0)
+                ax.add_patch(circle)
+                left, right = xpixel - self.image_radius, xpixel + self.image_radius
+                bottom, top = ypixel - self.image_radius, ypixel + self.image_radius
+                img_array = self.images[col]
+                img = ax.imshow(img_array, extent=[left, right, bottom, top], aspect='auto', transform=None, zorder=4)
+                img.set_clip_path(circle)
+                vis = visible[col]
+                img.set_visible(vis)
+                self.images[col] = img, circle
+
+    def make_animation(self):
 
         interval = self.period_length / self.steps_per_period
         pause = int(self.end_period_pause // interval)
@@ -485,18 +418,24 @@ class _LineChartRace:
             return frames
         
         frames = frame_generator(len(self.df_values))
-        anim = FuncAnimation(self.fig, self.anim_func, frames, init_func, interval=interval)
+        anim = FuncAnimation(self.fig, self.anim_func, frames, self.init_func, interval=interval)
 
         try:
+            fc = self.fig.get_facecolor()
+            if fc == (1, 1, 1, 0):
+                fc = 'white'
+            savefig_kwargs = {'facecolor': fc}
             if self.html:
-                ret_val = anim.to_html5_video()
+                ret_val = anim.to_html5_video(savefig_kwargs=savefig_kwargs)
                 try:
                     from IPython.display import HTML
                     ret_val = HTML(ret_val)
                 except ImportError:
                     pass
             else:
-                ret_val = anim.save(self.filename, fps=self.fps, writer=self.writer)
+                
+                ret_val = anim.save(self.filename, fps=self.fps, writer=self.writer, 
+                                    savefig_kwargs=savefig_kwargs) 
         except Exception as e:
             message = str(e)
             raise Exception(message)
@@ -511,8 +450,8 @@ def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10,
                     agg_line_func=None, others_func=True, line_width_data=None, fade=1, 
                     min_fade=.3, images=None, colors=None, title=None, line_label_font=None, 
                     tick_label_font=None, tick_template='{x:,.0f}', shared_fontdict=None, 
-                    scale='linear', figsize=(6, 3.5), dpi=144, fig=None, writer=None, 
-                    line_kwargs=None, filter_column_colors=False):
+                    scale='linear', fig=None, writer=None, line_kwargs=None, 
+                    fig_kwargs=None, filter_column_colors=False):
     '''
     Create an animated line chart race using matplotlib. Data must be in 
     'wide' format where each row represents a single time period and each 
@@ -623,7 +562,7 @@ def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10,
     
     images : list or dict, default None
         Images to use for the end of the line. Provide a list of filenames
-        where the images are located in the same order as the columns of
+        or URLs where the images are located in the same order as the columns of
         the DataFrame or a dictionary with keys as the column names.
 
     colors : str, matplotlib colormap instance, or list of colors, default 'dark12'
@@ -685,13 +624,6 @@ def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10,
     scale : 'linear' or 'log', default 'linear'
         Type of scaling to use for the axis containing the values
 
-    figsize : two-item tuple of numbers, default (6, 3.5)
-        matplotlib figure size in inches. Will be overridden if figure 
-        supplied to `fig`.
-
-    dpi : int, default 144
-        Dots per Inch of the matplotlib figure
-
     fig : matplotlib Figure, default None
         For greater control over the aesthetics, supply your own figure.
 
@@ -717,6 +649,17 @@ def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10,
             'ls' - Line style, '-', '--', '-.', ':'
             `alpha` - opacity of line, 0 to 1
             'ms' - marker style
+
+    fig_kwargs : dict, default None
+        A dictionary of keyword arguments passed to the matplotlib
+        Figure constructor. If not given, figsize is set to (6, 3.5) and 
+        dpi to 144.
+        Example:
+        {
+            'figsize': (8, 3),
+            'dpi': 120,
+            'facecolor': 'red'
+        }
 
     filter_column_colors : bool, default `False`
         When setting n_lines, it's possible that some columns never 
@@ -776,11 +719,10 @@ def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10,
         tick_template='{x:,.0f}'
         shared_fontdict={'family' : 'Helvetica', 'weight' : 'bold', 'color' : '.1'}, 
         scale='linear', 
-        figsize=(5, 3), 
-        dpi=144,
         fig=None, 
         writer=None, 
         line_kwargs={'alpha': .7},
+        fig_kwargs={'figsizse': (6, 3.5), 'dpi': 144},
         filter_column_colors=False)        
 
     Font Help
@@ -793,7 +735,7 @@ def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10,
     lcr = _LineChartRace(df, filename, n_lines, steps_per_period, period_length, 
                          end_period_pause, period_summary_func, agg_line_func, others_func, 
                          line_width_data, fade, min_fade, images, colors, title, line_label_font, 
-                         tick_label_font, tick_template, shared_fontdict, scale, figsize, dpi, 
-                         fig, writer, line_kwargs, filter_column_colors)
+                         tick_label_font, tick_template, shared_fontdict, scale, fig, writer, 
+                         line_kwargs, fig_kwargs, filter_column_colors)
     return lcr.make_animation()
     

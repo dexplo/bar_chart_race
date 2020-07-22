@@ -4,12 +4,13 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import ticker
-from matplotlib.animation import FuncAnimation
+from ._func_animation import FuncAnimation
 from matplotlib.colors import Colormap
 
+from ._common_chart import CommonChart
 from ._utils import prepare_wide_data
 
-class _BarChartRace:
+class _BarChartRace(CommonChart):
     
     def __init__(self, df, filename, orientation, sort, n_bars, fixed_order, fixed_max,
                  steps_per_period, period_length, end_period_pause, interpolate_period, 
@@ -56,10 +57,6 @@ class _BarChartRace:
         self.fig_kwargs = self.get_fig_kwargs(fig_kwargs)
         self.subplots_adjust = self.get_subplots_adjust()
         self.fig = self.get_fig(fig)
-        
-    def get_extension(self):
-        if self.filename:
-            return self.filename.split('.')[-1]
 
     def validate_params(self):
         if isinstance(self.filename, str):
@@ -117,19 +114,6 @@ class _BarChartRace:
 
         return period_label
 
-    def get_title(self, title):
-        if isinstance(title, str):
-            return {'label': title}
-        elif isinstance(title, dict):
-            if 'label' not in title:
-                raise ValueError('You must use the key "label" in the `title` dictionary '
-                                 'to supply the name of the title')
-        elif title is not None:
-            raise TypeError('`title` must be either a string or dictionary')
-        else:
-            return {'label': None}
-        return title
-
     def get_font(self, font, ticks=False):
         default_font_dict = {'size': 7}
         if ticks:
@@ -157,46 +141,6 @@ class _BarChartRace:
         else:
             font = {**default_font_dict, **font}
         return font
-
-    def get_tick_template(self, tick_template):
-        if isinstance(tick_template, str):
-            return ticker.StrMethodFormatter(tick_template)
-        elif callable(tick_template):
-            return ticker.FuncFormatter(tick_template)
-
-    def set_shared_fontdict(self, shared_fontdict):
-        orig_rcParams = plt.rcParams.copy()
-        if shared_fontdict is None:
-            return orig_rcParams
-        for k, v in shared_fontdict.items():
-            if k not in ['fontsize', 'size']:
-                if k in ['cursive', 'family', 'fantasy', 'monospace', 'sans-serif', 'serif']:
-                        if isinstance(v, str):
-                            v = [v]
-                if k == 'color':
-                    plt.rcParams['text.color'] = v
-                    plt.rcParams['xtick.color'] = v
-                    plt.rcParams['ytick.color'] = v
-                    continue
-                try:
-                    plt.rcParams[f'font.{k}'] = v
-                except KeyError:
-                    raise KeyError(f"{k} is not a valid key in `sharedfont_dict`"
-                                    "It must be one of "
-                                    "'cursive', 'family', 'fantasy', 'monospace',"
-                                    "sans-serif', 'serif',"
-                                    "'stretch', 'style', 'variant', 'weight'")
-        return orig_rcParams
-
-    def get_writer(self, writer):
-        if writer is None:
-            if self.extension == 'gif':
-                writer = 'imagemagick'
-            elif self.extension == 'html':
-                writer = 'html'
-            else:
-                writer = plt.rcParams['animation.writer']
-        return writer
 
     def prepare_data(self, df):
         if self.fixed_order is True:
@@ -289,16 +233,6 @@ class _BarChartRace:
                                     "To reduce color repetition, set `filter_column_colors` to `True`")
         return bar_colors
 
-    def get_fig_kwargs(self, fig_kwargs):
-        default_fig_kwargs = {'figsize': (6, 3.5), 'dpi': 144}
-        if fig_kwargs is None:
-            return default_fig_kwargs
-        if isinstance(fig_kwargs, dict):
-            fig_kwargs = {**default_fig_kwargs, **fig_kwargs}
-        else:
-            raise TypeError('fig_kwargs must be a dict or None')
-        return fig_kwargs
-
     def get_max_plotted_value(self):
         plotted_values = []
         for i in range(len(self.df_values)):
@@ -387,17 +321,6 @@ class _BarChartRace:
                 ax.set_xlim(None, self.fixed_max_value)
             else:
                 ax.set_ylim(None, self.fixed_max_value)
-
-    def get_fig(self, fig):
-        if fig is not None and not isinstance(fig, plt.Figure):
-            raise TypeError('`fig` must be a matplotlib Figure instance')
-        if fig is not None:
-            if not fig.axes:
-                raise ValueError('The figure passed to `fig` must have an axes')
-            ax = fig.axes[0]
-        else:
-            fig = self.create_figure()
-        return fig
 
     def create_figure(self):
         fig = plt.Figure(**self.fig_kwargs)
@@ -560,8 +483,12 @@ class _BarChartRace:
         anim = FuncAnimation(self.fig, self.anim_func, frames, init_func, interval=interval)
 
         try:
+            fc = self.fig.get_facecolor()
+            if fc == (1, 1, 1, 0):
+                fc = 'white'
+            savefig_kwargs = {'facecolor': fc}
             if self.html:
-                ret_val = anim.to_html5_video()
+                ret_val = anim.to_html5_video(savefig_kwargs=savefig_kwargs)
                 try:
                     from IPython.display import HTML
                     ret_val = HTML(ret_val)
@@ -569,11 +496,10 @@ class _BarChartRace:
                     pass
             else:
                 fc = self.fig.get_facecolor()
-                print(fc)
                 if fc == (1, 1, 1, 0):
                     fc = 'white'
                 ret_val = anim.save(self.filename, fps=self.fps, writer=self.writer, 
-                                    savefig_kwargs={'facecolor': fc}) 
+                                    savefig_kwargs=savefig_kwargs) 
         except Exception as e:
             message = str(e)
             raise Exception(message)
