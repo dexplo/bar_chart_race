@@ -81,6 +81,7 @@ class _LineChartRace(CommonChart):
                 text = kwargs.pop('s')
         else:
             raise TypeError(f'{kind}_line_kwargs must be a dictionary with line properties')
+        kwargs['color'] = mcolors.to_rgba(kwargs['color'])
         return kwargs, text
 
     def get_line_width_data(self, line_width_data):
@@ -147,10 +148,10 @@ class _LineChartRace(CommonChart):
             return others
 
         if isinstance(self.others_line_func, str):
-            s_others = self.df_values.agg(self.others_line_func, axis=1)
+            s_others = others.agg(self.others_line_func, axis=1)
             label = self.others_line_func
         elif callable(self.others_line_func):
-            s_others = self.df_values.agg(self.others_line_func, axis=1)
+            s_others = others.agg(self.others_line_func, axis=1)
             label = self.others_line_func.__name__
         else:
             raise TypeError('`others_line_func` must be either a string or function')
@@ -326,15 +327,13 @@ class _LineChartRace(CommonChart):
 
         visible = self.get_visible(i)
 
-        agg_line_name = None
         if self.agg_line is not None:
-            agg_line_name = self.agg_line.name
-            y[agg_line_name] = self.agg_line.iloc[i]
-            visible[agg_line_name] = True
+            y['___agg_line___'] = self.agg_line.iloc[i]
+            visible['___agg_line___'] = True
 
         if isinstance(self.df_others, pd.Series):
-            y['All Others'] = self.df_others.iloc[i]
-            visible['All Others'] = True
+            y['___others_line___'] = self.df_others.iloc[i]
+            visible['___others_line___'] = True
 
         for col, collection in self.collections.items():
             text = self.texts[col]
@@ -353,7 +352,7 @@ class _LineChartRace(CommonChart):
             color_arr[:, -1] = np.clip(color_arr[:, -1] * self.fade, self.min_fade, None)
             collection.set_color(color_arr)
 
-            if self.line_width_data is not None and col != 'All Others' and col != agg_line_name:
+            if self.line_width_data is not None and col != '___others_line___' and col != agg_line_name:
                 lw = self.line_width_data.iloc[i // self.steps_per_period][col]
                 lw_arr = collection.get_linewidths()
                 lw_arr = np.append(lw_arr, [lw], axis=0)
