@@ -14,13 +14,17 @@ from ._common_chart import CommonChart
 from ._utils import prepare_wide_data
 
 
+OTHERS_COLOR = .7, .7, .7, .6
+AGG_COLOR = 0, 0, 0, 1
+
+
 class _LineChartRace(CommonChart):
     
     def __init__(self, df, filename, n_lines, steps_per_period, period_length, 
-                 end_period_pause, period_summary_func, agg_line_func, others_func,
-                 line_width_data, fade, min_fade, images, colors, title, line_label_font, 
-                 tick_label_font, tick_template, shared_fontdict, scale, fig, writer, 
-                 line_kwargs, fig_kwargs, filter_column_colors):
+                 end_period_pause, period_summary_func, line_width_data, agg_line_func, 
+                 agg_line_kwargs, others_line_func, others_line_kwargs, fade, min_fade, 
+                 images, colors, title, line_label_font, tick_label_font, tick_template, 
+                 shared_fontdict, scale, fig, writer, line_kwargs, fig_kwargs, filter_column_colors):
         self.filename = filename
         self.extension = self.get_extension()
         self.n_lines = n_lines or df.shape[1]
@@ -29,7 +33,9 @@ class _LineChartRace(CommonChart):
         self.end_period_pause = end_period_pause
         self.period_summary_func = period_summary_func
         self.agg_line_func = agg_line_func
-        self.others_func = others_func
+        self.agg_line_kwargs, self.agg_line_label = self.get_extra_line_kwargs(agg_line_kwargs, 'agg')
+        self.others_line_func = others_line_func
+        self.others_line_kwargs, self.others_line_label = self.get_extra_line_kwargs(others_line_kwargs, 'others')
         self.line_width_data = self.get_line_width_data(line_width_data)
         self.fade = fade
         self.min_fade = min_fade
@@ -54,13 +60,28 @@ class _LineChartRace(CommonChart):
         self.fig_kwargs = self.get_fig_kwargs(fig_kwargs)
         self.subplots_adjust = self.get_subplots_adjust()
         self.fig = self.get_fig(fig)
-        self.OTHERS_COLOR = .7, .7, .7, .6
         self.collections = {}
         self.other_collections = {}
         self.texts = {}
-        self.aggregate_others = isinstance(self.others_func, str) or callable(self.others_func)
+        self.aggregate_others = isinstance(self.others_line_func, str) or callable(self.others_line_func)
         self.images = self.get_images(images)
         self.image_radius = self.fig.get_figwidth() * self.fig.dpi * .02
+
+    def get_extra_line_kwargs(self, kwargs, kind):
+        text = None
+        if kind == 'agg':
+            defaults = {'color': OTHERS_COLOR, 'lw': 1.5}
+        else:
+            defaults = {'color': AGG_COLOR, 'lw': 1.5}
+        if kwargs is None:
+            kwargs = defaults
+        elif isinstance(kwargs, dict):
+            kwargs = {**defaults, **kwargs}
+            if 's' in kwargs:
+                text = kwargs.pop('s')
+        else:
+            raise TypeError(f'{kind}_line_kwargs must be a dictionary with line properties')
+        return kwargs, text
 
     def get_line_width_data(self, line_width_data):
         if line_width_data is None:
@@ -113,34 +134,45 @@ class _LineChartRace(CommonChart):
         top_cols, other_cols = idx[:self.n_lines], idx[self.n_lines:]
         values, ranks, others = values[top_cols], ranks[top_cols], values[other_cols]
 
-        if self.others_func is None or len(other_cols) == 0:
+        if self.others_line_func is None or len(other_cols) == 0:
             others = None
         others = self.prepare_others_df(others)
         return values, ranks, others
 
     def prepare_others_df(self, others):
-        # when others_func is None -> others is None
-        # when others_func is True -> others is a dataframe
-        # when others_func is str or func -> others is a series
-        if others is None or self.others_func is True:
+        # when others_line_func is None -> others is None
+        # when others_line_func is True -> others is a dataframe
+        # when others_line_func is str or func -> others is a series
+        if others is None or self.others_line_func is True:
             return others
 
-        if isinstance(self.others_func, str) or callable(self.others_func):
-            return others.agg(self.others_func, axis=1)
+        if isinstance(self.others_line_func, str):
+            s_others = self.df_values.agg(self.others_line_func, axis=1)
+            label = self.others_line_func
+        elif callable(self.others_line_func):
+            s_others = self.df_values.agg(self.others_line_func, axis=1)
+            label = self.others_line_func.__name__
         else:
-            raise TypeError('`others_func` must be either a string or function')
+            raise TypeError('`others_line_func` must be either a string or function')
+
+        if self.others_line_label is None:
+            self.others_line_label = label
+        return s_others
 
     def prepare_agg_line(self):
         if self.agg_line_func is None:
             return
         if isinstance(self.agg_line_func, str):
             s_agg = self.df_values.agg(self.agg_line_func, axis=1)
-            s_agg.name = self.agg_line_func
+            label = self.agg_line_func
         elif callable(self.agg_line_func):
             s_agg = self.df_values.agg(self.agg_line_func, axis=1)
-            s_agg.name = self.agg_line_func.__name__
+            label = self.agg_line_func.__name__
         else:
             raise TypeError('`agg_line_func` must be either a string or function')
+
+        if self.agg_line_label is None:
+            self.agg_line_label = label
         return s_agg
 
     def get_colors(self, colors):
@@ -265,9 +297,7 @@ class _LineChartRace(CommonChart):
         return {col: mimage.imread(image) for col, image in images.items()}
             
     def get_visible(self, i):
-        n = 0
-        if self.others_func is None or self.others_func is True:
-            n = 1_000_000
+        n = 1_000_000 # make all visible until better logic here
         return (self.df_ranks.iloc[i] <= self.n_lines + n + .5).to_dict()
 
     def add_period_summary(self, ax, s):
@@ -333,7 +363,7 @@ class _LineChartRace(CommonChart):
             text.set_visible(vis)
             collection.set_visible(vis)
 
-        if self.others_func is True:
+        if self.others_line_func is True:
             y_other = self.df_others.iloc[i].to_dict()
             for col, collection in self.other_collections.items():
                 val = y_other[col]
@@ -393,31 +423,36 @@ class _LineChartRace(CommonChart):
             self.texts[col] = text
             self.collections[col] = collection
 
-        if self.others_func is True:
+        if self.others_line_func is True:
             y_other = self.df_others.iloc[0].to_dict()
             for col, val in y_other.items():
-                collection = ax.add_collection(LineCollection([[(x, val)]], colors=[self.OTHERS_COLOR]))
+                collection = ax.add_collection(LineCollection([[(x, val)]], colors=[OTHERS_COLOR]))
                 self.other_collections[col] = collection
 
         if self.agg_line is not None:
-            color = 0, 0, 0, 1
-            name = self.agg_line.name
+            color = self.agg_line_kwargs['color']
+            label = self.agg_line_label
             val = self.agg_line.iloc[0]
             collection = ax.add_collection(LineCollection([[(x, val)]], colors=[color]))
-            text = ax.text(x, val, name, ha='center', va='bottom', size='smaller')
-            self.collections[name] = collection
-            self.texts[name] = text
-            self.colors[name] = color
+            text = ax.text(x, val, label, ha='center', va='bottom', size='smaller')
+
+            label = '___agg_line___'
+            self.collections[label] = collection
+            self.texts[label] = text
+            self.colors[label] = color
 
         if isinstance(self.df_others, pd.Series):
-            color = self.OTHERS_COLOR
+            color = self.others_line_kwargs['color']
+            label = self.others_line_label
             val = self.df_others.iloc[0]
-            name = "All Others"
+            
             collection = ax.add_collection(LineCollection([[(x, val)]], colors=[color]))
-            text = ax.text(x + x_extra, val, name, ha='left', va='center', size='smaller')
-            self.collections[name] = collection
-            self.texts[name] = text
-            self.colors[name] = color
+            text = ax.text(x + x_extra, val, label, ha='left', va='center', size='smaller')
+
+            label = '___others_line___'
+            self.collections[label] = collection
+            self.texts[label] = text
+            self.colors[label] = color
 
         if self.period_summary_func:
             text_dict = self.add_period_summary(ax, s)
@@ -482,8 +517,9 @@ class _LineChartRace(CommonChart):
 
 def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10, 
                     period_length=500, end_period_pause=0, period_summary_func=None, 
-                    agg_line_func=None, others_func=None, line_width_data=None, fade=1, 
-                    min_fade=.3, images=None, colors=None, title=None, line_label_font=None, 
+                    line_width_data=None, agg_line_func=None, agg_line_kwargs=None, 
+                    others_line_func=None, others_line_kwargs=None, fade=1, min_fade=.3, 
+                    images=None, colors=None, title=None, line_label_font=None, 
                     tick_label_font=None, tick_template='{x:,.0f}', shared_fontdict=None, 
                     scale='linear', fig=None, writer=None, line_kwargs=None, 
                     fig_kwargs=None, filter_column_colors=False):
@@ -520,7 +556,7 @@ def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10,
         chosen will be those with the highest values in the last 
         period. 
         
-        See the others_func parameter for more options on plotting 
+        See the others_line_func parameter for more options on plotting 
         the other columns outside of the top n_lines.
         By default, use all lines.
 
@@ -557,17 +593,35 @@ def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10,
             s = f'Worldwide deaths: {total}'
             return {'x': .85, 'y': .2, 's': s, 'ha': 'right', 'size': 11}
 
+    line_width_data : DataFrame, default None
+        Control the width of the line at each time period.
+        Provide a separate DataFrame with the same index, columns, and 
+        dimensions as the original. Line width will be scaled so that
+        it is between 1 and 6 points.
+
     agg_line_func : function or str, default None
         Create an additional line to summarize all of the data. Pass it either 
         a string that the DataFrame `agg` method understands or a user-defined 
-        function.
+        function. Use agg_line_kwargs to style the line and provide it a label.
 
         If providing function, it will be passed all values of the current period 
         as a Series. Return a single value that summarizes the current period.
 
         DataFrame agg strings - 'mean', 'median', 'max', 'min', etc..
 
-    others_func : bool, str, or function, default None
+    agg_line_kwargs : dict, default None
+        A dictionary of matplotlib line properties used with agg_line_func. 
+        Use the key `s` to control the label of the line.
+        Keys `x` and `y` will be ignored as the position is already determined.
+        Example: 
+        {
+            's': 'Median',
+            'color': '.2',
+            'lw': 3,
+            'ls': '--',
+        }
+
+    others_line_func : bool, str, or function, default None
         This parameter may be used when there are more columns than n_lines.
         By default (None), these other lines will not be plotted. Use True to 
         plot the lines in a soft gray color without labels or images.
@@ -577,14 +631,20 @@ def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10,
         be passed a pandas Series of the current period.
         
         Example:
-        def my_others_func(s):
+        def my_others_line_func(s):
             return s.median()
 
-    line_width_data : DataFrame or function, default None
-        Control the width of the line at each time period.
-        Provide a separate DataFrame with the same index, columns, and 
-        dimensions as the original. Line width will be scaled so that
-        it is between 1 and 3 points.
+    others_line_kwargs : dict, default None
+        A dictionary of matplotlib line properties used with others_line_func. 
+        Use the key `s` to control the label of the line.
+        Keys `x` and `y` will be ignored as the position is already determined.
+        Example: 
+        {
+            's': 'Rest of World',
+            'color': '.2',
+            'lw': 3,
+            'ls': '--',
+        }
 
     fade : float, default 1
         Used to slowly fade historical values of the line, i.e. decrease the 
@@ -746,9 +806,11 @@ def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10,
         period_summary_func=lambda v, r: {'x': .85, 'y': .2, 
                                           's': f'Total deaths: {v.sum()}', 
                                           'ha': 'right', 'size': 11}, 
-        agg_line_func='median', 
-        others_func=None,
         line_width_data=None,
+        agg_line_func='median', 
+        agg_line_kwargs=None
+        others_line_func=None,
+        others_line_kwargs=None,
         fade=.99,
         min_fade=.5,
         colors='dark12', 
@@ -771,10 +833,11 @@ def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10,
     These sizes are relative to plt.rcParams['font.size'].
     '''
 
-    lcr = _LineChartRace(df, filename, n_lines, steps_per_period, period_length, 
-                         end_period_pause, period_summary_func, agg_line_func, others_func, 
-                         line_width_data, fade, min_fade, images, colors, title, line_label_font, 
-                         tick_label_font, tick_template, shared_fontdict, scale, fig, writer, 
-                         line_kwargs, fig_kwargs, filter_column_colors)
+    lcr = _LineChartRace(df, filename, n_lines, steps_per_period, period_length, end_period_pause, 
+                         period_summary_func, line_width_data, agg_line_func, agg_line_kwargs, 
+                         others_line_func, others_line_kwargs, fade, min_fade, images, colors, 
+                         title, line_label_font, tick_label_font, tick_template, shared_fontdict, 
+                         scale, fig, writer, line_kwargs, fig_kwargs, filter_column_colors)
     return lcr.make_animation()
     
+agg_line_kwargs, others_line_func, others_line_kwargs
