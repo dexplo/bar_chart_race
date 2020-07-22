@@ -46,7 +46,8 @@ class _LineChartRace(CommonChart):
 
         self.line_kwargs = self.get_line_kwargs(line_kwargs)
         self.html = self.filename is None
-        self.df_values, self.df_ranks = self.prepare_data(df)
+        self.df_values, self.df_ranks, self.df_others = self.prepare_data(df)
+        self.agg_line = self.prepare_agg_line()
         self.is_x_date = self.df_values.index.dtype.kind == 'M'
         self.colors = self.get_colors(colors)
         self.str_index = self.df_values.index.astype('str')
@@ -55,8 +56,8 @@ class _LineChartRace(CommonChart):
         self.fig = self.get_fig(fig)
         self.OTHERS_COLOR = .7, .7, .7, .6
         self.collections = {}
+        self.other_collections = {}
         self.texts = {}
-        self.others_visible = self.others_func is True
         self.aggregate_others = isinstance(self.others_func, str) or callable(self.others_func)
         self.images = self.get_images(images)
         self.image_radius = self.fig.get_figwidth() * self.fig.dpi * .02
@@ -105,9 +106,42 @@ class _LineChartRace(CommonChart):
         interpolate_period = True
         compute_ranks = sort = True
         orientation = 'h'
-        values, ranks =  prepare_wide_data(df, orientation, sort, self.n_lines,
-                                    interpolate_period, self.steps_per_period, compute_ranks)
-        return values, ranks
+        values, ranks =  prepare_wide_data(df, orientation, sort, self.n_lines, interpolate_period, 
+                                           self.steps_per_period, compute_ranks)
+
+        idx = values.iloc[-1].sort_values(ascending=False).index
+        top_cols, other_cols = idx[:self.n_lines], idx[self.n_lines:]
+        values, ranks, others = values[top_cols], ranks[top_cols], values[other_cols]
+
+        if self.others_func is None or len(other_cols) == 0:
+            others = None
+        others = self.prepare_others_df(others)
+        return values, ranks, others
+
+    def prepare_others_df(self, others):
+        # when others_func is None -> others is None
+        # when others_func is True -> others is a dataframe
+        # when others_func is str or func -> others is a series
+        if others is None or self.others_func is True:
+            return others
+
+        if isinstance(self.others_func, str) or callable(self.others_func):
+            return others.agg(self.others_func, axis=1)
+        else:
+            raise TypeError('`others_func` must be either a string or function')
+
+    def prepare_agg_line(self):
+        if self.agg_line_func is None:
+            return
+        if isinstance(self.agg_line_func, str):
+            s_agg = self.df_values.agg(self.agg_line_func, axis=1)
+            s_agg.name = self.agg_line_func
+        elif callable(self.agg_line_func):
+            s_agg = self.df_values.agg(self.agg_line_func, axis=1)
+            s_agg.name = self.agg_line_func.__name__
+        else:
+            raise TypeError('`agg_line_func` must be either a string or function')
+        return s_agg
 
     def get_colors(self, colors):
         if colors is None:
@@ -152,14 +186,28 @@ class _LineChartRace(CommonChart):
         ax.set_axisbelow(True)
         ax.set_facecolor('.9')
         ax.set_title(**self.title)
-        min_val = 1 if self.scale == 'log' else self.df_values.min().min()
+        
+        min_val = self.df_values.min().min()
+        max_val = self.df_values.max().max()
+        if isinstance(self.df_others, pd.Series):
+            min_val = min(min_val, self.df_others.min())
+            max_val = max(max_val, self.df_others.max())
+        elif isinstance(self.df_others, pd.DataFrame):
+            min_val = min(min_val, self.df_others.min().min())
+            max_val = max(max_val, self.df_others.max().max())
+            
+        if self.agg_line is not None:
+            min_val = min(min_val, self.agg_line.min())
+            max_val = max(max_val, self.agg_line.max())
+        min_val = 1 if self.scale == 'log' else min_val
+
         ax.set_yscale(self.scale)
 
         for spine in ax.spines.values():
             spine.set_visible(False)
 
         ax.set_xlim(self.df_values.index[0], self.df_values.index[-1])
-        ax.set_ylim(min_val, self.df_values.max().max())
+        ax.set_ylim(min_val, max_val)
         xmin, xmax = ax.get_xlim()
         delta = (xmax - xmin) * .05
         ax.set_xlim(xmin - delta, xmax + delta)
@@ -217,7 +265,10 @@ class _LineChartRace(CommonChart):
         return {col: mimage.imread(image) for col, image in images.items()}
             
     def get_visible(self, i):
-        return (self.df_ranks.iloc[i] <= self.n_lines + .5).to_dict()
+        n = 0
+        if self.others_func is None or self.others_func is True:
+            n = 1_000_000
+        return (self.df_ranks.iloc[i] <= self.n_lines + n + .5).to_dict()
 
     def add_period_summary(self, ax, s):
         if self.period_summary_func:
@@ -227,29 +278,6 @@ class _LineChartRace(CommonChart):
                 raise ValueError(f'The dictionary returned from `{name}` must contain '
                                   '"x", "y", and "s"')
             return text_dict
-
-    def get_agg_func_value(self, s):
-        if isinstance(self.agg_line_func, str):
-            val = s.agg(self.agg_line_func)
-            name = self.agg_line_func
-        elif callable(self.agg_line_func):
-            val = self.agg_line_func(s)
-            name = self.agg_line_func.__name__
-        else:
-            raise TypeError('`agg_line_func` must be either a string or function')
-        return val, name
-
-    def get_others_func_value(self, s, visible):
-        cols = set(col for col, vis in visible.items() if not vis)
-        cols = cols & set(self.df_values.columns.tolist())
-        s = s.loc[cols]
-        if isinstance(self.others_func, str):
-            val = s.agg(self.others_func)
-        elif callable(self.others_func):
-            val = self.others_func(s)
-        else:
-            raise TypeError('`others_func` must be either a string or function')
-        return val
 
     def anim_func(self, i):
         if i is None:
@@ -267,20 +295,18 @@ class _LineChartRace(CommonChart):
             x_extra = 0
 
         visible = self.get_visible(i)
-        columns = self.df_values.columns
 
-        if self.agg_line_func:
-            val, name = self.get_agg_func_value(s)
-            y[name] = val
-            visible[name] = True
+        agg_line_name = None
+        if self.agg_line is not None:
+            agg_line_name = self.agg_line.name
+            y[agg_line_name] = self.agg_line.iloc[i]
+            visible[agg_line_name] = True
 
-        if self.aggregate_others:
-            val = self.get_others_func_value(s, visible)
-            y['All Others'] = val
+        if isinstance(self.df_others, pd.Series):
+            y['All Others'] = self.df_others.iloc[i]
             visible['All Others'] = True
 
-        for col in self.collections:
-            collection = self.collections[col]
+        for col, collection in self.collections.items():
             text = self.texts[col]
             val = y[col]
             color = self.colors[col]
@@ -292,14 +318,12 @@ class _LineChartRace(CommonChart):
             seg.append(new_seg)
             collection.set_segments(seg)
             color_arr = collection.get_colors()
-            if not vis:
-                color = self.OTHERS_COLOR
 
             color_arr = np.append(color_arr, [color], axis=0)
             color_arr[:, -1] = np.clip(color_arr[:, -1] * self.fade, self.min_fade, None)
             collection.set_color(color_arr)
 
-            if self.line_width_data is not None and col != 'All Others':
+            if self.line_width_data is not None and col != 'All Others' and col != agg_line_name:
                 lw = self.line_width_data.iloc[i // self.steps_per_period][col]
                 lw_arr = collection.get_linewidths()
                 lw_arr = np.append(lw_arr, [lw], axis=0)
@@ -309,6 +333,16 @@ class _LineChartRace(CommonChart):
             text.set_visible(vis)
             collection.set_visible(vis)
 
+        if self.others_func is True:
+            y_other = self.df_others.iloc[i].to_dict()
+            for col, collection in self.other_collections.items():
+                val = y_other[col]
+                seg = collection.get_segments()
+                last = seg[-1][-1]
+                new_seg = np.row_stack((last, [x, val]))
+                seg.append(new_seg)
+                collection.set_segments(seg)
+
         if self.period_summary_func:
             text_dict = self.add_period_summary(ax, s)
             text = self.texts['__period_summary_func__']
@@ -317,7 +351,7 @@ class _LineChartRace(CommonChart):
             text.set_text(text_val)
 
         if self.images:
-            for col in columns:
+            for col in self.df_values.columns:
                 xpixel, ypixel = ax.transData.transform((x, y[col]))
                 center = xpixel, ypixel
                 left, right = xpixel - self.image_radius, xpixel + self.image_radius
@@ -346,17 +380,12 @@ class _LineChartRace(CommonChart):
             x_extra = 0
 
         visible = self.get_visible(0)
-        columns = self.df_values.columns
         
-        for col in columns:
+        for col in self.df_values.columns:
             val = y[col]
             vis = visible[col]
             color = self.colors[col]
             text = ax.text(x + x_extra, val, col, ha='left', va='center', size='smaller', visible=vis)
-            if not vis:
-                color = self.OTHERS_COLOR
-            if self.others_visible:
-                vis = True
             lw = 1.5
             if self.line_width_data is not None:
                 lw = self.line_width_data.iloc[0][col]
@@ -364,18 +393,25 @@ class _LineChartRace(CommonChart):
             self.texts[col] = text
             self.collections[col] = collection
 
-        if self.agg_line_func:
+        if self.others_func is True:
+            y_other = self.df_others.iloc[0].to_dict()
+            for col, val in y_other.items():
+                collection = ax.add_collection(LineCollection([[(x, val)]], colors=[self.OTHERS_COLOR]))
+                self.other_collections[col] = collection
+
+        if self.agg_line is not None:
             color = 0, 0, 0, 1
-            val, name = self.get_agg_func_value(s)
+            name = self.agg_line.name
+            val = self.agg_line.iloc[0]
             collection = ax.add_collection(LineCollection([[(x, val)]], colors=[color]))
             text = ax.text(x, val, name, ha='center', va='bottom', size='smaller')
             self.collections[name] = collection
             self.texts[name] = text
             self.colors[name] = color
 
-        if self.aggregate_others:
+        if isinstance(self.df_others, pd.Series):
             color = self.OTHERS_COLOR
-            val = self.get_others_func_value(s, visible)
+            val = self.df_others.iloc[0]
             name = "All Others"
             collection = ax.add_collection(LineCollection([[(x, val)]], colors=[color]))
             text = ax.text(x + x_extra, val, name, ha='left', va='center', size='smaller')
@@ -389,7 +425,7 @@ class _LineChartRace(CommonChart):
             self.texts['__period_summary_func__'] = text
 
         if self.images:
-            for col in columns:
+            for col in self.df_values.columns:
                 xpixel, ypixel = ax.transData.transform((x, y[col]))
                 center = xpixel, ypixel
                 circle = mpatches.Circle(center, transform=None, radius=self.image_radius, fill=None, lw=0)
@@ -404,7 +440,6 @@ class _LineChartRace(CommonChart):
                 self.images[col] = img, circle
 
     def make_animation(self):
-
         interval = self.period_length / self.steps_per_period
         pause = int(self.end_period_pause // interval)
 
@@ -447,7 +482,7 @@ class _LineChartRace(CommonChart):
 
 def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10, 
                     period_length=500, end_period_pause=0, period_summary_func=None, 
-                    agg_line_func=None, others_func=True, line_width_data=None, fade=1, 
+                    agg_line_func=None, others_func=None, line_width_data=None, fade=1, 
                     min_fade=.3, images=None, colors=None, title=None, line_label_font=None, 
                     tick_label_font=None, tick_template='{x:,.0f}', shared_fontdict=None, 
                     scale='linear', fig=None, writer=None, line_kwargs=None, 
@@ -480,7 +515,13 @@ def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10,
         by ffmpeg or ImageMagick.
 
     n_lines : int, default None
-        Choose the maximum number of lines to display on the graph. 
+        The maximum number of lines to display on the graph. 
+        When there are more columns than n_lines, the columns 
+        chosen will be those with the highest values in the last 
+        period. 
+        
+        See the others_func parameter for more options on plotting 
+        the other columns outside of the top n_lines.
         By default, use all lines.
 
     steps_per_period : int, default 10
@@ -521,22 +562,20 @@ def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10,
         a string that the DataFrame `agg` method understands or a user-defined 
         function.
 
-        DataFrame strings - 'mean', 'median', 'max', 'min', etc..
+        If providing function, it will be passed all values of the current period 
+        as a Series. Return a single value that summarizes the current period.
 
-        The function will be passed all values of the current period as a Series. 
-        Return a single value that summarizes the current period.
+        DataFrame agg strings - 'mean', 'median', 'max', 'min', etc..
 
-    others_func : bool, str, or function, default True
-        When there are more columns than n_lines, use this parameter to 
-        aggregate the value of all the other columns. When set to True (default),
-        the top `n_lines` columns will be colored and labeled. All the other
-        lines will be unlabeled and light gray.
+    others_func : bool, str, or function, default None
+        This parameter may be used when there are more columns than n_lines.
+        By default (None), these other lines will not be plotted. Use True to 
+        plot the lines in a soft gray color without labels or images.
 
-        When False, don't show any lines outside of the top `n_lines`
-
-        Use a pandas aggregation function as a string or a custom function 
-        to summarize any values not in the top `n_lines`. This function is 
-        passed a pandas Series of the current period.
+        Aggregate all of the other column values by passing in a string that the 
+        DataFrame agg method understands or a user-defined function, which will
+        be passed a pandas Series of the current period.
+        
         Example:
         def my_others_func(s):
             return s.median()
