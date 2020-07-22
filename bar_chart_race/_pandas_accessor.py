@@ -2,8 +2,8 @@ import re
 
 import pandas as pd
 
-from ._make_chart import bar_chart_race as bcr
-from ._make_chart_plotly import bar_chart_race_plotly as bcrp
+from ._bar_chart_race import bar_chart_race as bcr
+from ._bar_chart_race_plotly import bar_chart_race_plotly as bcrp
 from ._utils import prepare_wide_data as pwd, prepare_long_data as pld
 
 

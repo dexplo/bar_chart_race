@@ -5,7 +5,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly
 
-from ._make_chart import prepare_wide_data
+from ._utils import prepare_wide_data
 
 
 class _BarChartRace:
