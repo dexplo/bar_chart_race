@@ -839,5 +839,3 @@ def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10,
                          title, line_label_font, tick_label_font, tick_template, shared_fontdict, 
                          scale, fig, writer, line_kwargs, fig_kwargs, filter_column_colors)
     return lcr.make_animation()
-    
-agg_line_kwargs, others_line_func, others_line_kwargs
