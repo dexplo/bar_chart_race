@@ -1,1332 +1,1330 @@
-code,country
+code,value
 ad,ad
-ad,and
-ad,andorra
-ad,principality of andorra
-ad,principality of the valleys of andorra
-ad,principat d'andorra
+and,ad
+andorra,ad
+principality of andorra,ad
+principality of the valleys of andorra,ad
+principat d'andorra,ad
 ae,ae
-ae,al emirat al arabbiya al muttahida
-ae,are
-ae,the emirates
-ae,trucial states
-ae,u.a.e
-ae,uae
-ae,united arab emirates
+al emirat al arabbiya al muttahida,ae
+are,ae
+the emirates,ae
+trucial states,ae
+u.a.e,ae
+uae,ae
+united arab emirates,ae
 af,af
-af,afghanistan
-af,da afġānistān islāmī jumhoryat
-af,islamic republic of afghanistan
-af,jomhūrīyyeh eslāmīyyeh afġānestān
+afghanistan,af
+da afġānistān islāmī jumhoryat,af
+islamic republic of afghanistan,af
+jomhūrīyyeh eslāmīyyeh afġānestān,af
 ag,ag
-ag,antigua and barbuda
-ag,atg
+antigua and barbuda,ag
+atg,ag
 ai,ai
-ai,aia
-ai,anguilla
+aia,ai
+anguilla,ai
 al,al
-al,alb
-al,albania
-al,arbanon
-al,arnavutluk
-al,republic of albania
-al,republika e shqipërisë
+alb,al
+albania,al
+arbanon,al
+arnavutluk,al
+republic of albania,al
+republika e shqipërisë,al
 am,am
-am,arm
-am,armenia
-am,hayastan
-am,republic of armenia
-ao,ago
-ao,angola
+arm,am
+armenia,am
+hayastan,am
+republic of armenia,am
+ago,ao
+angola,ao
 ao,ao
-aq,antarctica
+antarctica,aq
 aq,aq
-aq,ata
+ata,aq
 ar,ar
-ar,arg
-ar,argentina
-ar,argentine confederation
-ar,argentine nation
-ar,argentine republic
-ar,la argentina
-ar,the argentine
-ar,united provinces of the río de la plata
-as,american samoa
+arg,ar
+argentina,ar
+argentine confederation,ar
+argentine nation,ar
+argentine republic,ar
+la argentina,ar
+the argentine,ar
+united provinces of the río de la plata,ar
+american samoa,as
 as,as
-as,asm
+asm,as
 at,at
-at,austria
-at,aut
-at,republic of austria
-at,republik österreich
-at,österreich
+austria,at
+aut,at
+republic of austria,at
+republik österreich,at
+österreich,at
 au,au
-au,aus
-au,australia
-au,commonwealth of australia
-au,new holland
-aw,abw
-aw,aruba
+aus,au
+australia,au
+commonwealth of australia,au
+new holland,au
+abw,aw
+aruba,aw
 aw,aw
-ax,ala
+ala,ax
 ax,ax
-ax,åland islands
-ax,åland
-ax,aland
-ax,aland islands
+åland islands,ax
+åland,ax
+aland,ax
+aland islands,ax
 az,az
-az,aze
-az,azerbaijan
-az,azərbaycan respublikası
-az,republic of azerbaijan
+aze,az
+azerbaijan,az
+azərbaycan respublikası,az
+republic of azerbaijan,az
 ba,ba
-ba,bih
-ba,bosnia and herzegovina
-ba,republic of bosnia and herzegovina
-ba,socialist republic of bosnia and herzegovina
-bb,barbados
+bih,ba
+bosnia and herzegovina,ba
+republic of bosnia and herzegovina,ba
+socialist republic of bosnia and herzegovina,ba
+barbados,bb
 bb,bb
-bb,bimshire
-bb,brb
-bd,bangladesh
+bimshire,bb
+brb,bb
+bangladesh,bd
 bd,bd
-bd,bengal presidency
-bd,bgd
-bd,east bengal
-bd,east pakistan
-bd,people's republic of bangladesh
+bengal presidency,bd
+bgd,bd
+east bengal,bd
+east pakistan,bd
+people's republic of bangladesh,bd
 be,be
-be,bel
-be,belgium
-be,kingdom of belgium
-be,koninkrijk belgië
-be,königreich belgien
-be,royaume de belgique
+bel,be
+belgium,be
+kingdom of belgium,be
+koninkrijk belgië,be
+königreich belgien,be
+royaume de belgique,be
 bf,bf
-bf,bfa
-bf,bourkina-fasso
-bf,burkina faso
-bf,haute-volta
-bf,upper volta
+bfa,bf
+bourkina-fasso,bf
+burkina faso,bf
+haute-volta,bf
+upper volta,bf
 bg,bg
-bg,bgr
-bg,bulgaria
-bg,people's republic of bulgaria
-bg,republic of bulgaria
-bg,republika bǎlgariya
-bh,bahrain
+bgr,bg
+bulgaria,bg
+people's republic of bulgaria,bg
+republic of bulgaria,bg
+republika bǎlgariya,bg
+bahrain,bh
 bh,bh
-bh,bhr
-bh,kingdom of bahrain
-bh,mamlakat al-baḥrayn
-bh,state of bahrain
-bi,bdi
+bhr,bh
+kingdom of bahrain,bh
+mamlakat al-baḥrayn,bh
+state of bahrain,bh
+bdi,bi
 bi,bi
-bi,burundi
-bi,kingdom of burundi
-bi,republic of burundi
-bi,republika y'uburundi
-bi,république du burundi
-bj,ben
-bj,benin
+burundi,bi
+kingdom of burundi,bi
+republic of burundi,bi
+republika y'uburundi,bi
+république du burundi,bi
+ben,bj
+benin,bj
 bj,bj
-bj,dahomey
-bj,republic of benin
-bj,république du bénin
-bl,blm
-bl,saint barthélemy
+dahomey,bj
+republic of benin,bj
+république du bénin,bj
+blm,bl
+saint barthélemy,bl
 bl,bl
-bm,bermuda
+bermuda,bm
 bm,bm
-bm,bmu
+bmu,bm
 bn,bn
-bn,brn
-bn,brunei
-bn,brunei darussalam
-bn,negara brunei darussalam
-bn,state of brunei
-bn,نڬارا بروني دارالسلام‎
+brn,bn
+brunei,bn
+brunei darussalam,bn
+negara brunei darussalam,bn
+state of brunei,bn
+نڬارا بروني دارالسلام‎,bn
 bo,bo
-bo,bol
-bo,bolivia
-bo,estado plurinacional de bolivia
-bo,plurinational state of bolivia
-bo,republic of bolivia
-bo,republic of bolívar
-bq,bes
+bol,bo
+bolivia,bo
+estado plurinacional de bolivia,bo
+plurinational state of bolivia,bo
+republic of bolivia,bo
+republic of bolívar,bo
+bes,bq
 bq,bq
-bq,sint eustatius
+sint eustatius,bq
 br,br
-br,bra
-br,brazil
-br,empire of brazil
-br,federative republic of brazil
-br,ilha de vera cruz
-br,pindorama
-br,república federativa do brasil
-br,terra de santa cruz
-br,terra di papaga
-br,united states of brazil
-bs,bahamas
-bs,bhs
+bra,br
+brazil,br
+empire of brazil,br
+federative republic of brazil,br
+ilha de vera cruz,br
+pindorama,br
+república federativa do brasil,br
+terra de santa cruz,br
+terra di papaga,br
+united states of brazil,br
+bahamas,bs
+bhs,bs
 bs,bs
-bs,commonwealth of the bahamas
-bs,the bahamas
-bt,bhutan
+commonwealth of the bahamas,bs
+the bahamas,bs
+bhutan,bt
 bt,bt
-bt,btn
-bt,druk gyal khap
-bt,kingdom of bhutan
-bv,bouvet island
+btn,bt
+druk gyal khap,bt
+kingdom of bhutan,bt
+bouvet island,bv
 bv,bv
-bv,bvt
-bw,bechuanaland
-bw,botswana
+bvt,bv
+bechuanaland,bw
+botswana,bw
 bw,bw
-bw,bwa
-bw,republic of botswana
-by,belarus
-by,blr
+bwa,bw
+republic of botswana,bw
+belarus,by
+blr,by
 by,by
-by,byelorussia
-by,gudija
-by,republic of belarus
-by,white russia
-bz,belize
-bz,blz
-bz,british honduras
+byelorussia,by
+gudija,by
+republic of belarus,by
+white russia,by
+belize,bz
+blz,bz
+british honduras,bz
 bz,bz
 ca,ca
-ca,can
-ca,canada
-ca,dominion du canada
-ca,dominion of canada
-cc,cck
+can,ca
+canada,ca
+dominion du canada,ca
+dominion of canada,ca
+cck,cc
 cc,cc
-cc,cocos islands
-cc,cocos (keeling) islands
-cc,keeling islands
-cc,territory of cocos islands
-cd,belgian congo
+cocos islands,cc
+cocos (keeling) islands,cc
+keeling islands,cc
+territory of cocos islands,cc
+belgian congo,cd
 cd,cd
-cd,cod
-cd,congo belge
-cd,congo free state
-cd,congo kinshasa
-cd,democratic republic of congo
-cd,congo (kinshasa)
-cd,drc
-cd,zaire
-cf,caf
-cf,central african empire
-cf,central african republic
+cod,cd
+congo belge,cd
+congo free state,cd
+congo kinshasa,cd
+democratic republic of congo,cd
+congo (kinshasa),cd
+drc,cd
+zaire,cd
+caf,cf
+central african empire,cf
+central african republic,cf
 cf,cf
-cf,empire centrafricain
-cf,oubangui-chari
-cf,république centrafricaine
-cf,ubangi-shari
+empire centrafricain,cf
+oubangui-chari,cf
+république centrafricaine,cf
+ubangi-shari,cf
 cg,cg
-cg,cog
-cg,congo
-cg,congo brazzaville
-cg,french congo
-cg,republic of the congo
-cg,congo (brazzaville)
-cg,the congo
+cog,cg
+congo,cg
+congo brazzaville,cg
+french congo,cg
+republic of the congo,cg
+congo (brazzaville),cg
+the congo,cg
 ch,ch
-ch,che
-ch,confederazione svizzera
-ch,confederaziun svizra
-ch,confédération suisse
-ch,schweiz
-ch,schweizerische eidgenossenschaft
-ch,suisse
-ch,svizra
-ch,svizzera
-ch,swiss confederation
-ch,switzerland
+che,ch
+confederazione svizzera,ch
+confederaziun svizra,ch
+confédération suisse,ch
+schweiz,ch
+schweizerische eidgenossenschaft,ch
+suisse,ch
+svizra,ch
+svizzera,ch
+swiss confederation,ch
+switzerland,ch
 ci,ci
-ci,civ
-ci,côte d'ivoire
-ci,ivory coast
-ci,cote d'ivoire
-ci,republic of côte d'ivoire
-ci,république de côte d'ivoire
-ci,the ivory coast
-ck,cok
+civ,ci
+côte d'ivoire,ci
+ivory coast,ci
+cote d'ivoire,ci
+republic of côte d'ivoire,ci
+république de côte d'ivoire,ci
+the ivory coast,ci
+cok,ck
 ck,ck
-ck,cook islands
-cl,capitania general de chile
-cl,chile
-cl,chili
-cl,chilli
-cl,chl
+cook islands,ck
+capitania general de chile,cl
+chile,cl
+chili,cl
+chilli,cl
+chl,cl
 cl,cl
-cl,republic of chile
-cl,reyno de chile
-cm,cameroon
+republic of chile,cl
+reyno de chile,cl
+cameroon,cm
 cm,cm
-cm,cmr
-cm,kamerun
-cm,republic of cameroon
-cm,united republic of cameroon
-cn,china
-cn,chn
+cmr,cm
+kamerun,cm
+republic of cameroon,cm
+united republic of cameroon,cm
+china,cn
+chn,cn
 cn,cn
-cn,communist china
-cn,people's republic of china
-cn,red china
+communist china,cn
+people's republic of china,cn
+red china,cn
 co,co
-co,col
-co,colombia
-co,confederación granadina
-co,estados unidos de colombia
-co,republic of colombia
-co,república de colombia
-co,república de la nueva granada
-cr,costa rica
+col,co
+colombia,co
+confederación granadina,co
+estados unidos de colombia,co
+republic of colombia,co
+república de colombia,co
+república de la nueva granada,co
+costa rica,cr
 cr,cr
-cr,cri
-cr,republic of costa rica
-cr,república de costa rica
+cri,cr
+republic of costa rica,cr
+república de costa rica,cr
 cu,cu
-cu,cub
-cu,cuba
-cu,republic of cuba
-cu,república de cuba
-cv,cabo verde
-cv,cape verde
-cv,cpv
+cub,cu
+cuba,cu
+republic of cuba,cu
+república de cuba,cu
+cabo verde,cv
+cape verde,cv
+cpv,cv
 cv,cv
-cw,curaçao
-cw,cuw
+curaçao,cw
+cuw,cw
 cw,cw
-cx,christmas island
+christmas island,cx
 cx,cx
-cx,cxr
+cxr,cx
 cy,cy
-cy,cyp
-cy,cyprus
-cz,bohemia
+cyp,cy
+cyprus,cy
+bohemia,cz
 cz,cz
-cz,cze
-cz,czech republic
-cz,czechia
-cz,czechland
-cz,koruna česká
-cz,the czechlands
-cz,čechy a morava
-cz,česko
-cz,česká konfederace
-cz,česká republika
-de,alemania
-de,allemagne
-de,bundesrepublik deutschland
+cze,cz
+czech republic,cz
+czechia,cz
+czechland,cz
+koruna česká,cz
+the czechlands,cz
+čechy a morava,cz
+česko,cz
+česká konfederace,cz
+česká republika,cz
+alemania,de
+allemagne,de
+bundesrepublik deutschland,de
 de,de
-de,deu
-de,deutschland
-de,federal republic of germany
-de,german democratic republic
-de,germania
-de,germany
+deu,de
+deutschland,de
+federal republic of germany,de
+german democratic republic,de
+germania,de
+germany,de
 dj,dj
-dj,dji
-dj,djibouti
-dj,republic of djibouti
-dj,république de djibouti
-dk,danmark
-dk,denmark
+dji,dj
+djibouti,dj
+republic of djibouti,dj
+république de djibouti,dj
+danmark,dk
+denmark,dk
 dk,dk
-dk,dnk
-dk,kingdom of denmark
-dk,kongeriget danmark
+dnk,dk
+kingdom of denmark,dk
+kongeriget danmark,dk
 dm,dm
-dm,dma
-dm,dominica
+dma,dm
+dominica,dm
 do,do
-do,dom
-do,dominican republic
-dz,al-jazā’ir
-dz,algeria
+dom,do
+dominican republic,do
+al-jazā’ir,dz
+algeria,dz
 dz,dz
-dz,dza
-dz,people's democratic republic of algeria
+dza,dz
+people's democratic republic of algeria,dz
 ec,ec
-ec,ecu
-ec,ecuador
+ecu,ec
+ecuador,ec
 ee,ee
-ee,eesti
-ee,est
-ee,estland
-ee,estonia
-eg,aegyptus
-eg,arab republic of egypt
+eesti,ee
+est,ee
+estland,ee
+estonia,ee
+aegyptus,eg
+arab republic of egypt,eg
 eg,eg
-eg,egy
-eg,egypt
-eh,esh
-eh,western sahara
-eh,the sahrawi arab democratic republic
+egy,eg
+egypt,eg
+esh,eh
+western sahara,eh
+the sahrawi arab democratic republic,eh
 er,er
-er,eri
-er,eritrea
+eri,er
+eritrea,er
 es,es
-es,esp
-es,espainia
-es,espanya
-es,españa
-es,kingdom of spain
-es,spain
-es,spanish state
-et,abyssinia
-et,al-habasha
+esp,es
+espainia,es
+espanya,es
+españa,es
+kingdom of spain,es
+spain,es
+spanish state,es
+abyssinia,et
+al-habasha,et
 et,et
-et,eth
-et,ethiopia
-et,ethiopië
-et,federal democratic republic of ethiopia
-et,habeshastan
+eth,et
+ethiopia,et
+ethiopië,et
+federal democratic republic of ethiopia,et
+habeshastan,et
 fi,fi
-fi,fin
-fi,finland
-fi,republic of finland
-fi,republiken finland
-fi,soome
-fi,suomen tasavalta
-fi,suomenmaa
-fi,suomi
-fi,suomâ and suomâ täsiväldi
-fi,suopma and suoma dásseváldi
-fj,fiji
+fin,fi
+finland,fi
+republic of finland,fi
+republiken finland,fi
+soome,fi
+suomen tasavalta,fi
+suomenmaa,fi
+suomi,fi
+suomâ and suomâ täsiväldi,fi
+suopma and suoma dásseváldi,fi
+fiji,fj
 fj,fj
-fj,fji
-fk,falkland islands
+fji,fj
+falkland islands,fk
 fk,fk
-fk,flk
+flk,fk
 fm,fm
-fm,fsm
-fm,micronesia
-fo,fro
+fsm,fm
+micronesia,fm
+fro,fo
 fo,fo
-fo,faroe
-fo,faroe islands
-fo,the faroe
-fo,the faroe islands
-fr,farança
+faroe,fo
+faroe islands,fo
+the faroe,fo
+the faroe islands,fo
+farança,fr
 fr,fr
-fr,fra
-fr,france
-fr,french republic
-fr,gaul
-fr,gaule
-fr,l'hexagone
-fr,république française
-fr,tsarfat
-fr,γαλλία
+fra,fr
+france,fr
+french republic,fr
+gaul,fr
+gaule,fr
+l'hexagone,fr
+république française,fr
+tsarfat,fr
+γαλλία,fr
 ga,ga
-ga,gab
-ga,gabon
-ga,gabonese republic
-gb,anglia
-gb,britain
-gb,britannia
-gb,caledonia
+gab,ga
+gabon,ga
+gabonese republic,ga
+anglia,gb
+britain,gb
+britannia,gb
+caledonia,gb
 gb,gb
-gb,gbr
-gb,great britain
-gb,u.k.
-gb,uk
-gb,united kingdom
-gb,united kingdom of great britain and northern ireland
+gbr,gb
+great britain,gb
+u.k.,gb
+uk,gb
+united kingdom,gb
+united kingdom of great britain and northern ireland,gb
 gd,gd
-gd,grd
-gd,grenada
-ge,colchis
+grd,gd
+grenada,gd
+colchis,ge
 ge,ge
-ge,geo
-ge,georgia
-ge,iveria
-ge,republic of georgia
-ge,گرجستان
-gf,french guiana
+geo,ge
+georgia,ge
+iveria,ge
+republic of georgia,ge
+گرجستان,ge
+french guiana,gf
 gf,gf
-gf,guf
+guf,gf
 gg,gg
-gg,ggy
-gg,guernsey
-gh,gaana
+ggy,gg
+guernsey,gg
+gaana,gh
 gh,gh
-gh,gha
-gh,ghana
-gh,ghana tiŋzuɣu
-gh,gold coast
-gh,united gold coast convention
+gha,gh
+ghana,gh
+ghana tiŋzuɣu,gh
+gold coast,gh
+united gold coast convention,gh
 gi,gi
-gi,gib
-gi,gibraltar
+gib,gi
+gibraltar,gi
 gl,gl
-gl,greenland
-gl,grl
+greenland,gl
+grl,gl
 gm,gm
-gm,gmb
-gm,the gambia
-gm,gambia
-gm,gambia (the)
-gm,the republic of gambia
-gn,gin
+gmb,gm
+the gambia,gm
+gambia,gm
+gambia (the),gm
+the republic of gambia,gm
+gin,gn
 gn,gn
-gn,guinea
-gp,glp
+guinea,gn
+glp,gp
 gp,gp
-gp,guadeloupe
-gq,equatorial guinea
-gq,gnq
+guadeloupe,gp
+equatorial guinea,gq
+gnq,gq
 gq,gq
 gr,gr
-gr,grc
-gr,greece
-gr,hellas
-gr,hellenic republic
-gr,yavan
-gr,yunanistan
-gr,ελλάδα
-gr,ελλάς
-gs,sgs
+grc,gr
+greece,gr
+hellas,gr
+hellenic republic,gr
+yavan,gr
+yunanistan,gr
+ελλάδα,gr
+ελλάς,gr
+sgs,gs
 gs,gs
-gs,south georgia and the south sandwich islands
+south georgia and the south sandwich islands,gs
 gt,gt
-gt,gtm
-gt,guatemala
+gtm,gt
+guatemala,gt
 gu,gu
-gu,guam
-gu,gum
-gw,gnb
-gw,guinea-bissau
-gw,guiné-bissao
+guam,gu
+gum,gu
+gnb,gw
+guinea-bissau,gw
+guiné-bissao,gw
 gw,gw
-gw,portuguese guinea
-gw,republic of guinea-bissau
-gy,guy
-gy,guyana
+portuguese guinea,gw
+republic of guinea-bissau,gw
+guy,gy
+guyana,gy
 gy,gy
 hk,hk
-hk,hkg
-hk,hong kong
-hm,hmd
+hkg,hk
+hong kong,hk
+hmd,hm
 hm,hm
-hm,heard island and mcdonald islands
-hm,territory of heard island and mcdonald islands
+heard island and mcdonald islands,hm
+territory of heard island and mcdonald islands,hm
 hn,hn
-hn,hnd
-hn,honduras
-hr,croatia
+hnd,hn
+honduras,hn
+croatia,hr
 hr,hr
-hr,hrv
-hr,hrvatska
-hr,hrvaška
-hr,republic of croatia
-hr,republika hrvatska
-ht,haiti
+hrv,hr
+hrvatska,hr
+hrvaška,hr
+republic of croatia,hr
+republika hrvatska,hr
+haiti,ht
 ht,ht
-ht,hti
+hti,ht
 hu,hu
-hu,hun
-hu,hungaria
-hu,hungarian people's republic
-hu,hungary
-hu,kingdom of hungary
-hu,magyar királyság
-hu,magyar köztársaság
-hu,magyar népköztársaság
-hu,magyar tanácsköztársaság
-hu,magyarország
-hu,regnum hungariæ
-hu,republic of hungary
-id,hindia belanda
+hun,hu
+hungaria,hu
+hungarian people's republic,hu
+hungary,hu
+kingdom of hungary,hu
+magyar királyság,hu
+magyar köztársaság,hu
+magyar népköztársaság,hu
+magyar tanácsköztársaság,hu
+magyarország,hu
+regnum hungariæ,hu
+republic of hungary,hu
+hindia belanda,id
 id,id
-id,idn
-id,indonesia
-id,indonesië
-id,indunesia
-id,insulinde
-id,nederlands
-id,nusantara
-id,republic of indonesia
-id,republik indonesia
-ie,hibernia
+idn,id
+indonesia,id
+indonesië,id
+indunesia,id
+insulinde,id
+nederlands,id
+nusantara,id
+republic of indonesia,id
+republik indonesia,id
+hibernia,ie
 ie,ie
-ie,ireland
-ie,irish free state
-ie,irl
-ie,republic of ireland
-il,herzlstan
+ireland,ie
+irish free state,ie
+irl,ie
+republic of ireland,ie
+herzlstan,il
 il,il
-il,isr
-il,israel
-il,state of israel
-il,yehuda
-im,imn
+isr,il
+israel,il
+state of israel,il
+yehuda,il
+imn,im
 im,im
-im,isle of man
-in,hindustan
+isle of man,im
+hindustan,in
 in,in
-in,ind
-in,india
-in,republic of india
-in,union of india
-in,भारत
-in,भारतवर्ष
-io,iot
+ind,in
+india,in
+republic of india,in
+union of india,in
+भारत,in
+भारतवर्ष,in
+iot,io
 io,io
-io,british indian ocean territory
-iq,assyria
-iq,babylon
+british indian ocean territory,io
+assyria,iq
+babylon,iq
 iq,iq
-iq,iraq
-iq,irq
-iq,mesopotamia
+iraq,iq
+irq,iq
+mesopotamia,iq
 ir,ir
-ir,iran
-ir,irn
-ir,islamic republic of iran
-ir,persia
-is,iceland
+iran,ir
+irn,ir
+islamic republic of iran,ir
+persia,ir
+iceland,is
 is,is
-is,isl
-is,lýðveldið ísland
-is,republic of iceland
+isl,is
+lýðveldið ísland,is
+republic of iceland,is
 it,it
-it,ita
-it,italia
-it,italy
-it,repubblica italiana
-it,the beautiful country
-it,the boot
+ita,it
+italia,it
+italy,it
+repubblica italiana,it
+the beautiful country,it
+the boot,it
 je,je
-je,jersey
-je,jey
-jm,jam
-jm,jamaica
+jersey,je
+jey,je
+jam,jm
+jamaica,jm
 jm,jm
-jm,xamayca
-jo,hashemite kingdom of jordan
+xamayca,jm
+hashemite kingdom of jordan,jo
 jo,jo
-jo,jor
-jo,jordan
-jp,japan
+jor,jo
+jordan,jo
+japan,jp
 jp,jp
-jp,jpn
-jp,nihon
-jp,nippon
-jp,yamato
-jp,ōyashima
-ke,british east africa protectorate
-ke,jamhuri ya kenya
+jpn,jp
+nihon,jp
+nippon,jp
+yamato,jp
+ōyashima,jp
+british east africa protectorate,ke
+jamhuri ya kenya,ke
 ke,ke
-ke,ken
-ke,kenya
-ke,kenya colony
-ke,republic of kenya
+ken,ke
+kenya,ke
+kenya colony,ke
+republic of kenya,ke
 kg,kg
-kg,kgz
-kg,kirghiz soviet socialist republic
-kg,kirghizia
-kg,kirgizstan
-kg,kyrgyz republic
-kg,kyrgyzskaya respublika
-kg,kyrgyzstan
-kg,republic of kyrgyzstan
-kg,кыргызстан
-kh,cambodia
-kh,democratic kampuchea
-kh,kampuchea
+kgz,kg
+kirghiz soviet socialist republic,kg
+kirghizia,kg
+kirgizstan,kg
+kyrgyz republic,kg
+kyrgyzskaya respublika,kg
+kyrgyzstan,kg
+republic of kyrgyzstan,kg
+кыргызстан,kg
+cambodia,kh
+democratic kampuchea,kh
+kampuchea,kh
 kh,kh
-kh,khm
-kh,khmer republic
-kh,kingdom of cambodia
-kh,people's republic of kampuchea
-kh,royaume du cambodge
-kh,state of cambodia
+khm,kh
+khmer republic,kh
+kingdom of cambodia,kh
+people's republic of kampuchea,kh
+royaume du cambodge,kh
+state of cambodia,kh
 ki,ki
-ki,kir
-ki,kiribati
-km,al-ittiḥād al-qumurī
-km,com
-km,comoros
+kir,ki
+kiribati,ki
+al-ittiḥād al-qumurī,km
+com,km
+comoros,km
 km,km
-km,udzima wa komori
-km,union des comores
-km,union of the comoros
-km,united republic of the commoros
-kn,federation of saint christopher and nevis
-kn,federation of saint kitts and nevis
+udzima wa komori,km
+union des comores,km
+union of the comoros,km
+united republic of the commoros,km
+federation of saint christopher and nevis,kn
+federation of saint kitts and nevis,kn
 kn,kn
-kn,kna
-kn,liamuiga and oualie
-kn,saint christopher and nevis
-kn,saint christopher-nevis-anguilla
-kn,saint kitts and nevis
-kn,saint kitts-nevis-anguilla
-kp,cho-son
-kp,choson minjujuui inmin konghwaguk
-kp,d.p.r.k.
-kp,democratic people's republic of korea
-kp,dprk
+kna,kn
+liamuiga and oualie,kn
+saint christopher and nevis,kn
+saint christopher-nevis-anguilla,kn
+saint kitts and nevis,kn
+saint kitts-nevis-anguilla,kn
+cho-son,kp
+choson minjujuui inmin konghwaguk,kp
+d.p.r.k.,kp
+democratic people's republic of korea,kp
+dprk,kp
 kp,kp
-kp,north korea
-kp,prk
-kr,dae-han-min-guk
-kr,han-guk
-kr,kor
-kr,korea
-kr,korea republic
+north korea,kp
+prk,kp
+dae-han-min-guk,kr
+han-guk,kr
+kor,kr
+korea,kr
+korea republic,kr
 kr,kr
-kr,republic of korea
-kr,south korea
-kr,"korea, south"
-kw,kuwait
+republic of korea,kr
+south korea,kr
+"korea, south",kr
+kuwait,kw
 kw,kw
-kw,kwt
-ky,cayman islands
-ky,cym
+kwt,kw
+cayman islands,ky
+cym,ky
 ky,ky
-kz,kaz
-kz,kazakh soviet socialist republic
-kz,kazakhstan
+kaz,kz
+kazakh soviet socialist republic,kz
+kazakhstan,kz
 kz,kz
-kz,qazaqstan
-kz,republic of kazakhstan
-kz,қазақстан
-kz,қазақстан республикасы
+qazaqstan,kz
+republic of kazakhstan,kz
+қазақстан,kz
+қазақстан республикасы,kz
 la,la
-la,lao
-la,lao people's democratic republic
-la,laos
-la,république démocratique populaire lao
-la,sathalanalat paxathipatai paxaxôn
-la,ສາທາລະນະລັດ ປະຊາທິປະໄຕ ປະຊາຊົນລາວ
-lb,al-jumhuriyya al-lubnaniyya
+lao,la
+lao people's democratic republic,la
+laos,la
+république démocratique populaire lao,la
+sathalanalat paxathipatai paxaxôn,la
+ສາທາລະນະລັດ ປະຊາທິປະໄຕ ປະຊາຊົນລາວ,la
+al-jumhuriyya al-lubnaniyya,lb
 lb,lb
-lb,lbn
-lb,lebanon
-lb,lebnan
-lb,levanon
-lb,liban
-lb,lubnan
-lb,the lebanese republic
+lbn,lb
+lebanon,lb
+lebnan,lb
+levanon,lb
+liban,lb
+lubnan,lb
+the lebanese republic,lb
 lc,lc
-lc,lca
-lc,saint lucia
+lca,lc
+saint lucia,lc
 li,li
-li,lie
-li,liechtenstein
-lk,ceylon
-lk,democratic socialist republic of sri lanka
-lk,heladiva
+lie,li
+liechtenstein,li
+ceylon,lk
+democratic socialist republic of sri lanka,lk
+heladiva,lk
 lk,lk
-lk,lka
-lk,ratnadeepa
-lk,sri lanka
-lk,taprobane
-lr,lbr
-lr,liberia
+lka,lk
+ratnadeepa,lk
+sri lanka,lk
+taprobane,lk
+lbr,lr
+liberia,lr
 lr,lr
-ls,basutoland
-ls,kingdom of lesotho
-ls,lesotho
+basutoland,ls
+kingdom of lesotho,ls
+lesotho,ls
 ls,ls
-ls,lso
-lt,lietuva
-lt,lietuvos respublika
-lt,lita
-lt,lithuania
+lso,ls
+lietuva,lt
+lietuvos respublika,lt
+lita,lt
+lithuania,lt
 lt,lt
-lt,ltu
-lt,литва
-lu,grand duchy of luxembourg
-lu,grand-duché de luxembourg
-lu,groussherzogdem lëtzebuerg
-lu,großherzogtum luxemburg
+ltu,lt
+литва,lt
+grand duchy of luxembourg,lu
+grand-duché de luxembourg,lu
+groussherzogdem lëtzebuerg,lu
+großherzogtum luxemburg,lu
 lu,lu
-lu,lussemburgo
-lu,lux
-lu,luxembourg
-lu,luxemburg
-lu,luxemburgo
-lu,lëtzebuerg
-lv,latvia
-lv,latvija
-lv,letland
-lv,letonija
-lv,letonnie
-lv,lettland
+lussemburgo,lu
+lux,lu
+luxembourg,lu
+luxemburg,lu
+luxemburgo,lu
+lëtzebuerg,lu
+latvia,lv
+latvija,lv
+letland,lv
+letonija,lv
+letonnie,lv
+lettland,lv
 lv,lv
-lv,lva
-ly,lby
-ly,libya
+lva,lv
+lby,ly
+libya,ly
 ly,ly
-ma,al mamkaka al maghribiya
-ma,kingdom of morocco
+al mamkaka al maghribiya,ma
+kingdom of morocco,ma
 ma,ma
-ma,mar
-ma,morocco
+mar,ma
+morocco,ma
 mc,mc
-mc,mco
-mc,monaco
-md,boğdan
+mco,mc
+monaco,mc
+boğdan,md
 md,md
-md,mda
-md,moldau
-md,moldavia
-md,moldavian soviet socialist republic
-md,moldova
-md,republic of moldova
-md,republica moldova
+mda,md
+moldau,md
+moldavia,md
+moldavian soviet socialist republic,md
+moldova,md
+republic of moldova,md
+republica moldova,md
 me,me
-me,mne
-me,montenegro
-me,republic of montenegro
-mf,maf
+mne,me
+montenegro,me
+republic of montenegro,me
+maf,mf
 mf,mf
-mf,collectivity of saint martin
-mf,saint martin
-mg,madagascar
-mg,madagasikara
-mg,mdg
+collectivity of saint martin,mf
+saint martin,mf
+madagascar,mg
+madagasikara,mg
+mdg,mg
 mg,mg
-mg,repoblikan'i madagasikara
-mg,republic of madagascar
-mg,république de madagascar
-mh,mhl
+repoblikan'i madagasikara,mg
+republic of madagascar,mg
+république de madagascar,mg
+mhl,mh
 mh,mh
-mh,marshall islands
-mk,macedonia
+marshall islands,mh
+macedonia,mk
 mk,mk
-mk,mkd
-mk,north macedonia
-mk,paeonia
-mk,republic of north macedonia
-mk,vardar banovina
-mk,македонија
-mk,северна македонија
-ml,mali
+mkd,mk
+north macedonia,mk
+paeonia,mk
+republic of north macedonia,mk
+vardar banovina,mk
+македонија,mk
+северна македонија,mk
+mali,ml
 ml,ml
-ml,mli
-mm,burma
+mli,ml
+burma,mm
 mm,mm
-mm,mmr
-mm,myanmar
-mm,republic of the union of myanmar
-mn,mng
-mn,mongolia
-mn,the state of mongolia
-mo,mac
-mo,macao
+mmr,mm
+myanmar,mm
+republic of the union of myanmar,mm
+mng,mn
+mongolia,mn
+the state of mongolia,mn
+mac,mo
+macao,mo
 mo,mo
-mp,mnp
+mnp,mp
 mp,mp
-mp,northern mariana islands
-mq,martinique
+northern mariana islands,mp
+martinique,mq
 mq,mq
-mq,mtq
-mr,islamic republic of mauritania
-mr,mauritania
+mtq,mq
+islamic republic of mauritania,mr
+mauritania,mr
 mr,mr
-mr,mrt
-mr,république islamique de mauritanie
-ms,montserrat
+mrt,mr
+république islamique de mauritanie,mr
+montserrat,ms
 ms,ms
-ms,msr
-mt,malta
-mt,mlt
+msr,ms
+malta,mt
+mlt,mt
 mt,mt
-mu,mauritius
+mauritius,mu
 mu,mu
-mu,mus
-mv,maldives
-mv,mdv
+mus,mu
+maldives,mv
+mdv,mv
 mv,mv
-mv,republic of the maldives
-mv,the maldive islands
-mw,malawi
+republic of the maldives,mv
+the maldive islands,mv
+malawi,mw
 mw,mw
-mw,mwi
-mw,nyasaland
-mw,republic of malawi
-mx,aztlán
-mx,aztlān
-mx,estados unidos mexicanos
-mx,mex
-mx,mexico
+mwi,mw
+nyasaland,mw
+republic of malawi,mw
+aztlán,mx
+aztlān,mx
+estados unidos mexicanos,mx
+mex,mx
+mexico,mx
 mx,mx
-mx,méjico
-mx,méxico
-mx,república mexicana
-mx,united mexican states
-my,federation of malaysia
-my,malaysia
+méjico,mx
+méxico,mx
+república mexicana,mx
+united mexican states,mx
+federation of malaysia,my
+malaysia,my
 my,my
-my,mys
-my,persekutuan malaysia
-mz,moz
-mz,mozambique
+mys,my
+persekutuan malaysia,my
+moz,mz
+mozambique,mz
 mz,mz
-na,namibia
+namibia,na
 na,na
-na,nam
+nam,na
 nc,nc
-nc,ncl
-nc,new caledonia
+ncl,nc
+new caledonia,nc
 ne,ne
-ne,ner
-ne,niger
+ner,ne
+niger,ne
 nf,nf
-nf,nfk
-nf,norfolk island
+nfk,nf
+norfolk island,nf
 ng,ng
-ng,nga
-ng,nigeria
+nga,ng
+nigeria,ng
 ni,ni
-ni,nic
-ni,nicaragua
-nl,batavia
-nl,holland
-nl,kingdom of the netherlands
-nl,koninkrijk der nederlanden
-nl,nederland
-nl,netherlands
+nic,ni
+nicaragua,ni
+batavia,nl
+holland,nl
+kingdom of the netherlands,nl
+koninkrijk der nederlanden,nl
+nederland,nl
+netherlands,nl
 nl,nl
-nl,nld
-nl,pays-bas
-no,kingdom of norway
-no,kongeriket noreg
-no,kongeriket norge
+nld,nl
+pays-bas,nl
+kingdom of norway,no
+kongeriket noreg,no
+kongeriket norge,no
 no,no
-no,nor
-no,noreg
-no,norge
-no,norway
-np,federal democratic republic of nepal
-np,nepal
+nor,no
+noreg,no
+norge,no
+norway,no
+federal democratic republic of nepal,np
+nepal,np
 np,np
-np,npl
-nr,nauru
+npl,np
+nauru,nr
 nr,nr
-nr,nru
-nu,niu
-nu,niue
+nru,nr
+niu,nu
+niue,nu
 nu,nu
-nz,aotearoa
-nz,dominion of new zealand
-nz,new zealand
+aotearoa,nz
+dominion of new zealand,nz
+new zealand,nz
 nz,nz
-nz,nzl
-nz,realm of new zealand
+nzl,nz
+realm of new zealand,nz
 om,om
-om,oman
-om,omn
-om,sultanate of oman
+oman,om
+omn,om
+sultanate of oman,om
 pa,pa
-pa,pan
-pa,panama
+pan,pa
+panama,pa
 pe,pe
-pe,per
-pe,peru
-pe,peruvian republic
-pe,perú
-pe,republic of peru
-pe,república del perú
-pe,república peruana
-pf,french polynesia
+per,pe
+peru,pe
+peruvian republic,pe
+perú,pe
+republic of peru,pe
+república del perú,pe
+república peruana,pe
+french polynesia,pf
 pf,pf
-pf,pyf
-pg,papua new guinea
+pyf,pf
+papua new guinea,pg
 pg,pg
-pg,png
-ph,filipina
-ph,filipinas
-ph,haríng bayang katagalugan
-ph,islas de san lázaro
-ph,las islas felipenas
-ph,las islas filipinas
+png,pg
+filipina,ph
+filipinas,ph
+haríng bayang katagalugan,ph
+islas de san lázaro,ph
+las islas felipenas,ph
+las islas filipinas,ph
 ph,ph
-ph,philippine islands
-ph,philippines
-ph,phl
-ph,pilipinas
-ph,pinás
-ph,republic of the philippines
-ph,repúblika ng pilipinas
-pk,dominion of pakistan
-pk,federation of pakistan
-pk,islamic republic of pakistan
-pk,mumlikat-e khudadaad pakistan
-pk,pak
-pk,pakistan
+philippine islands,ph
+philippines,ph
+phl,ph
+pilipinas,ph
+pinás,ph
+republic of the philippines,ph
+repúblika ng pilipinas,ph
+dominion of pakistan,pk
+federation of pakistan,pk
+islamic republic of pakistan,pk
+mumlikat-e khudadaad pakistan,pk
+pak,pk
+pakistan,pk
 pk,pk
-pk,sindhustan and indoscythia
-pk,west pakistan
-pl,lechia
-pl,people's republic of poland
+sindhustan and indoscythia,pk
+west pakistan,pk
+lechia,pl
+people's republic of poland,pl
 pl,pl
-pl,pol
-pl,poland
-pl,polish-lithuanian commonwealth
-pl,polonia
-pl,polska
-pl,republic of poland
-pm,spm
+pol,pl
+poland,pl
+polish-lithuanian commonwealth,pl
+polonia,pl
+polska,pl
+republic of poland,pl
+spm,pm
 pm,pm
-pm,saint pierre and miquelon
-pn,pcn
+saint pierre and miquelon,pm
+pcn,pn
 pn,pn
-pn,pitcairn
-pn,"pitcairn, henderson, ducie and oeno islands"
-pr,associated free state of puerto rico
-pr,commonwealth of puerto rico
-pr,estado libre asociado de puerto rico
-pr,porto rico
+pitcairn,pn
+"pitcairn, henderson, ducie and oeno islands",pn
+associated free state of puerto rico,pr
+commonwealth of puerto rico,pr
+estado libre asociado de puerto rico,pr
+porto rico,pr
 pr,pr
-pr,pri
-pr,puerto rico
-ps,israeli-occupied territories
-ps,mandatory palestine
-ps,palestine
-ps,palestinian national authority
-ps,palestinian territories
+pri,pr
+puerto rico,pr
+israeli-occupied territories,ps
+mandatory palestine,ps
+palestine,ps
+palestinian national authority,ps
+palestinian territories,ps
 ps,ps
-ps,pse
-ps,state of palestine
-ps,west bank and gaza strip
-ps,מדינת פָּלֶשְׂתִּינָה
-ps,פָּלֶשְׂתִּינָה
-ps,الأراضي الفلسطينية
-ps,السلطة الفلسطينية
-ps,دَوْلَة فلسطين
-ps,فلسطين
-pt,and galician-portuguese
-pt,and pátria lusitana
-pt,lusitania
-pt,portugal
-pt,portuguese republic
-pt,prt
+pse,ps
+state of palestine,ps
+west bank and gaza strip,ps
+west bank and gaza,ps
+and galician-portuguese,pt
+and pátria lusitana,pt
+lusitania,pt
+portugal,pt
+portuguese republic,pt
+prt,pt
 pt,pt
-pw,belau
-pw,palau
-pw,plw
+belau,pw
+palau,pw
+plw,pw
 pw,pw
-pw,republic of palau
-py,paraguay
-py,pry
+republic of palau,pw
+paraguay,py
+pry,py
 py,py
 qa,qa
-qa,qat
-qa,qatar
-re,reu
+qat,qa
+qatar,qa
+reu,re
 re,re
-re,réunion
-re,reunion
-ro,kingdom of romania
-ro,regatul româniei
-ro,republica populară romînă
-ro,republica socialistă românia
+réunion,re
+reunion,re
+kingdom of romania,ro
+regatul româniei,ro
+republica populară romînă,ro
+republica socialistă românia,ro
 ro,ro
-ro,romania
-ro,romanian people's republic
-ro,românia
-ro,rou
-ro,socialist republic of romania
-rs,raška
-rs,republic of serbia
-rs,republika srbija
+romania,ro
+romanian people's republic,ro
+românia,ro
+rou,ro
+socialist republic of romania,ro
+raška,rs
+republic of serbia,rs
+republika srbija,rs
 rs,rs
-rs,serbia
-rs,serbia and montenegro
-rs,serboslavia
-rs,servia
-rs,srb
-rs,srbija
-rs,yugoslavia
+serbia,rs
+serbia and montenegro,rs
+serboslavia,rs
+servia,rs
+srb,rs
+srbija,rs
+yugoslavia,rs
 ru,ru
-ru,rus
-ru,russia
-ru,russian federation
-ru,russian socialist federative soviet republic
-ru,russian soviet federative socialist republic
-ru,soviet union
-ru,union of soviet socialist republics
-ru,ussr
-rw,republic of rwanda
-rw,repubulika y'u rwanda
-rw,ruanda
+rus,ru
+russia,ru
+russian federation,ru
+russian socialist federative soviet republic,ru
+russian soviet federative socialist republic,ru
+soviet union,ru
+union of soviet socialist republics,ru
+ussr,ru
+republic of rwanda,rw
+repubulika y'u rwanda,rw
+ruanda,rw
 rw,rw
-rw,rwa
-rw,rwanda
-rw,rwandese republic
-rw,république du rwanda
-sa,kingdom of saudi arabia
-sa,ksa
+rwa,rw
+rwanda,rw
+rwandese republic,rw
+république du rwanda,rw
+kingdom of saudi arabia,sa
+ksa,sa
 sa,sa
-sa,sau
-sa,saudi arabia
-sa,saudia
+sau,sa
+saudi arabia,sa
+saudia,sa
 sb,sb
-sb,slb
-sb,solomon islands
+slb,sb
+solomon islands,sb
 sc,sc
-sc,seychelles
-sc,syc
-sd,anglo-egyptian sudan
-sd,mahdist state
-sd,nubia
-sd,republic of the sudan
+seychelles,sc
+syc,sc
+anglo-egyptian sudan,sd
+mahdist state,sd
+nubia,sd
+republic of the sudan,sd
 sd,sd
-sd,sdn
-sd,sudan
-sd,the sudan
-se,kingdom of sweden
-se,konungariket sverige
+sdn,sd
+sudan,sd
+the sudan,sd
+kingdom of sweden,se
+konungariket sverige,se
 se,se
-se,svea rike
-se,sverige
-se,svitjod
-se,swe
-se,sweden
-sg,pulau ujong
-sg,republic of singapore
+svea rike,se
+sverige,se
+svitjod,se
+swe,se
+sweden,se
+pulau ujong,sg
+republic of singapore,sg
 sg,sg
-sg,sgp
-sg,singapore
-sg,singapura
-sg,sinhapura
-sh,shn
+sgp,sg
+singapore,sg
+singapura,sg
+sinhapura,sg
+shn,sh
 sh,sh
-sh,saint helena
-sh,"saint helena, ascension and tristan da cunha"
-si,republic of slovenia
-si,republika slovenija
+saint helena,sh
+"saint helena, ascension and tristan da cunha",sh
+republic of slovenia,si
+republika slovenija,si
 si,si
-si,slovenia
-si,slovenija
-si,svn
-sj,sjm
+slovenia,si
+slovenija,si
+svn,si
+sjm,sj
 sj,sj
-sj,svalbard and jan mayen
+svalbard and jan mayen,sj
 sk,sk
-sk,slovak republic
-sk,slovak socialist republic
-sk,slovakia
-sk,slovensko
-sk,slovenská republika
-sk,slovenská socialistická republika
-sk,svk
-sl,sierra leone
+slovak republic,sk
+slovak socialist republic,sk
+slovakia,sk
+slovensko,sk
+slovenská republika,sk
+slovenská socialistická republika,sk
+svk,sk
+sierra leone,sl
 sl,sl
-sl,sle
-sm,san marino
+sle,sl
+san marino,sm
 sm,sm
-sm,smr
-sn,sen
-sn,senegal
+smr,sm
+sen,sn
+senegal,sn
 sn,sn
 so,so
-so,som
-so,somalia
-sr,dutch guiana
-sr,netherlands guiana
-sr,republic of suriname
-sr,republiek suriname
+som,so
+somalia,so
+dutch guiana,sr
+netherlands guiana,sr
+republic of suriname,sr
+republiek suriname,sr
 sr,sr
-sr,sur
-sr,surinam
-sr,suriname
-ss,south sudan
+sur,sr
+surinam,sr
+suriname,sr
+south sudan,ss
 ss,ss
-ss,ssd
-st,sao tome and principe
+ssd,ss
+sao tome and principe,st
 st,st
-st,stp
-sv,el salvador
-sv,slv
+stp,st
+el salvador,sv
+slv,sv
 sv,sv
-sx,sxm
+sxm,sx
 sx,sx
-sx,sint maarten
+sint maarten,sx
 sy,sy
-sy,syr
-sy,syria
-sz,eswatini
-sz,kingdom of eswatini
-sz,swaziland
-sz,swz
+syr,sy
+syria,sy
+eswatini,sz
+kingdom of eswatini,sz
+swaziland,sz
+swz,sz
 sz,sz
 tc,tc
-tc,tca
-tc,turks and caicos
-td,chad
-td,jumhūrīyat tashād
-td,republic of chad
-td,république du tchad
-td,tcd
+tca,tc
+turks and caicos,tc
+chad,td
+jumhūrīyat tashād,td
+republic of chad,td
+république du tchad,td
+tcd,td
 td,td
-tf,atf
+atf,tf
 tf,tf
-tf,french southern territories
-tf,french southern and antarctic lands
+french southern territories,tf
+french southern and antarctic lands,tf
 tg,tg
-tg,tgo
-tg,togo
-th,kingdom of thailand
-th,siam
+tgo,tg
+togo,tg
+kingdom of thailand,th
+siam,th
 th,th
-th,tha
-th,thailand
-th,ประเทศสยาม
-th,ประเทศไทย
-th,ราชอาณาจักรไทย
-tj,tajikistan
+tha,th
+thailand,th
+ประเทศสยาม,th
+ประเทศไทย,th
+ราชอาณาจักรไทย,th
+tajikistan,tj
 tj,tj
-tj,tjk
+tjk,tj
 tk,tk
-tk,tkl
-tk,tokelau
-tl,democratic republic of timor-leste
-tl,east timor
-tl,timor-leste
+tkl,tk
+tokelau,tk
+democratic republic of timor-leste,tl
+east timor,tl
+timor-leste,tl
 tl,tl
-tl,tls
-tm,tkm
+tls,tl
+tkm,tm
 tm,tm
-tm,turkmenistan
-tn,republic of tunisia
+turkmenistan,tm
+republic of tunisia,tn
 tn,tn
-tn,tun
-tn,tunisia
+tun,tn
+tunisia,tn
 to,to
-to,ton
-to,tonga
-tr,anatolia
-tr,ottoman empire
-tr,republic of turkey
+ton,to
+tonga,to
+anatolia,tr
+ottoman empire,tr
+republic of turkey,tr
 tr,tr
-tr,tur
-tr,turkey
-tt,iere
-tt,republic of trinidad and tobago
-tt,trinbago
-tt,trinidad and tobago
+tur,tr
+turkey,tr
+iere,tt
+republic of trinidad and tobago,tt
+trinbago,tt
+trinidad and tobago,tt
 tt,tt
-tt,tto
-tv,ellice islands
-tv,tuv
-tv,tuvalu
+tto,tt
+ellice islands,tv
+tuv,tv
+tuvalu,tv
 tv,tv
-tw,cathay
-tw,formosa
-tw,republic of china
-tw,roc
-tw,taiwan
+cathay,tw
+formosa,tw
+republic of china,tw
+roc,tw
+taiwan,tw
 tw,tw
-tw,twn
-tw,zhonggua taipei
-tw,zhongguo
-tz,tanzania
+twn,tw
+zhonggua taipei,tw
+zhongguo,tw
+tanzania,tz
 tz,tz
-tz,tza
-tz,united republic of tanganyika and zanzibar
-tz,united republic of tanzania
+tza,tz
+united republic of tanganyika and zanzibar,tz
+united republic of tanzania,tz
 ua,ua
-ua,ukr
-ua,ukraine
-ua,україна
+ukr,ua
+ukraine,ua
+україна,ua
 ug,ug
-ug,uga
-ug,uganda
-um,umi
+uga,ug
+uganda,ug
+umi,um
 um,um
-um,united states minor outlying islands
-us,u.s.a
-us,united states
-us,united states of america
+united states minor outlying islands,um
+u.s.a,us
+united states,us
+united states of america,us
 us,us
-us,usa
-uy,uruguay
-uy,ury
+usa,us
+uruguay,uy
+ury,uy
 uy,uy
 uz,uz
-uz,uzb
-uz,uzbekistan
+uzb,uz
+uzbekistan,uz
 va,va
-va,vat
-va,vatican city
-vc,hairouna
-vc,saint vincent and the grenadines
+vat,va
+vatican city,va
+holy see,va
+the holy see,va
+holy see (the),va
+hairouna,vc
+saint vincent and the grenadines,vc
 vc,vc
-vc,vct
+vct,vc
 ve,ve
-ve,ven
-ve,venezuela
-vg,vgb
+ven,ve
+venezuela,ve
+vgb,vg
 vg,vg
-vg,british virgin islands
-vg,bvi
-vg,virgin islands
-vi,vir
+british virgin islands,vg
+bvi,vg
+virgin islands,vg
+vir,vi
 vi,vi
-vi,usvi
-vi,united states virgin islands
-vi,american virgin islands
-vi,u.s. virgin islands
-vi,virgin islands of the united states
-vn,an nam
-vn,and south vietnam
-vn,champa
-vn,french indochina
-vn,giao chỉ
-vn,lĩnh nam
-vn,parted in north vietnam
-vn,socialist republic of vietnam
-vn,vietnam
-vn,việt nam
+usvi,vi
+united states virgin islands,vi
+american virgin islands,vi
+u.s. virgin islands,vi
+virgin islands of the united states,vi
+an nam,vn
+and south vietnam,vn
+champa,vn
+french indochina,vn
+giao chỉ,vn
+lĩnh nam,vn
+parted in north vietnam,vn
+socialist republic of vietnam,vn
+vietnam,vn
+việt nam,vn
 vn,vn
-vn,vnm
-vn,đại việt
-vu,vanuatri
-vu,vanuatu
+vnm,vn
+đại việt,vn
+vanuatri,vu
+vanuatu,vu
 vu,vu
-vu,vut
-wf,wlf
+vut,vu
+wlf,wf
 wf,wf
-wf,wallis and futuna
-wf,territory of the wallis and futuna isla
-ws,samoa
+wallis and futuna,wf
+territory of the wallis and futuna isla,wf
+samoa,ws
 ws,ws
-ws,wsm
-xk,kosovo
-xk,republic of kosovo
-xk,republika e kosovës
-xk,republika kosovo
+wsm,ws
+kosovo,xk
+republic of kosovo,xk
+republika e kosovës,xk
+republika kosovo,xk
 xk,xk
-xk,република косово
+република косово,xk
 ye,ye
-ye,yem
-ye,yemen
-yt,mayotte
-yt,myt
+yem,ye
+yemen,ye
+mayotte,yt
+myt,yt
 yt,yt
-za,south africa
-za,suid-afrika
-za,union of south africa
+south africa,za
+suid-afrika,za
+union of south africa,za
 za,za
-za,zaf
-za,zuid-afrika
-zm,northern rhodesia
-zm,republic of zambia
-zm,zambia
+zaf,za
+zuid-afrika,za
+northern rhodesia,zm
+republic of zambia,zm
+zambia,zm
 zm,zm
-zm,zmb
-zw,republic of zimbabwe
-zw,southern rhodesia
-zw,zimbabwe
+zmb,zm
+republic of zimbabwe,zw
+southern rhodesia,zw
+zimbabwe,zw
 zw,zw
-zw,zwe
+zwe,zw
