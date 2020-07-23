@@ -4,6 +4,7 @@ import pandas as pd
 
 from ._bar_chart_race import bar_chart_race as bcr
 from ._bar_chart_race_plotly import bar_chart_race_plotly as bcrp
+from ._line_chart_race import line_chart_race as lcr
 from ._utils import prepare_wide_data as pwd, prepare_long_data as pld
 
 
@@ -46,6 +47,20 @@ class _BCR:
                     hovertemplate, slider, scale, bar_kwargs, layout_kwargs, write_html_kwargs,
                     filter_column_colors)
 
+    def line_chart_race(self, filename=None, n_lines=None, steps_per_period=10, 
+                        period_length=500, end_period_pause=0, period_summary_func=None, 
+                        line_width_data=None, agg_line_func=None, agg_line_kwargs=None, 
+                        others_line_func=None, others_line_kwargs=None, fade=1, min_fade=.3, 
+                        images=None, colors=None, title=None, line_label_font=None, 
+                        tick_label_font=None, tick_template='{x:,.0f}', shared_fontdict=None, 
+                        scale='linear', fig=None, writer=None, line_kwargs=None, 
+                        fig_kwargs=None, filter_column_colors=False):
+        return lcr(self, filename, n_lines, steps_per_period, period_length, end_period_pause, 
+                   period_summary_func, line_width_data, agg_line_func, agg_line_kwargs, 
+                   others_line_func, others_line_kwargs, fade, min_fade, images, colors, 
+                   title, line_label_font, tick_label_font, tick_template, shared_fontdict, 
+                   scale, fig, writer, line_kwargs, fig_kwargs, filter_column_colors)
+
     def prepare_wide_data(self, orientation='h', sort='desc', n_bars=None, interpolate_period=False, 
                           steps_per_period=10, compute_ranks=True):
         return pwd(self._df, orientation, sort, n_bars, interpolate_period,
@@ -60,5 +75,6 @@ class _BCR:
 
 _BCR.bar_chart_race.__doc__ = re.sub('df : .*(?=filename :)', '',  bcr.__doc__, flags=re.S)
 _BCR.bar_chart_race_plotly.__doc__ = re.sub('df : .*(?=filename :)', '',  bcrp.__doc__, flags=re.S)
+_BCR.line_chart_race.__doc__ = re.sub('df : .*(?=filename :)', '',  lcr.__doc__, flags=re.S)
 _BCR.prepare_wide_data.__doc__ = re.sub('df : .*(?=filename :)', '',  pwd.__doc__, flags=re.S)
 _BCR.prepare_long_data.__doc__ = re.sub('df : .*(?=filename :)', '',  pld.__doc__, flags=re.S)
