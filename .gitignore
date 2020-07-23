@@ -5,3 +5,4 @@ notebooks/
 build/
 dist/
 site/
+*.mp4
