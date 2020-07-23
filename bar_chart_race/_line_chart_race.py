@@ -24,7 +24,7 @@ class _LineChartRace(CommonChart):
                  end_period_pause, period_summary_func, line_width_data, agg_line_func, 
                  agg_line_kwargs, others_line_func, others_line_kwargs, fade, min_fade, 
                  images, colors, title, line_label_font, tick_label_font, tick_template, 
-                 shared_fontdict, scale, fig, writer, line_kwargs, fig_kwargs, filter_column_colors):
+                 shared_fontdict, scale, fig, writer, line_kwargs, fig_kwargs):
         self.filename = filename
         self.extension = self.get_extension()
         self.n_lines = n_lines or df.shape[1]
@@ -47,7 +47,6 @@ class _LineChartRace(CommonChart):
         self.scale = scale
         self.writer = self.get_writer(writer)
         self.fps = 1000 / self.period_length * steps_per_period
-        self.filter_column_colors = filter_column_colors
         self.validate_params()
 
         self.line_kwargs = self.get_line_kwargs(line_kwargs, 'line')
@@ -452,7 +451,7 @@ class _LineChartRace(CommonChart):
             lw = self.agg_line_kwargs.get('lw')
             ls = self.agg_line_kwargs.get('ls')
             alpha = self.agg_line_kwargs.get('alpha', AGG_COLOR[-1])
-            color[-1] = alpha
+            color = tuple(color[:3]) + (alpha,)
             label = self.agg_line_label
             val = self.agg_line.iloc[0]
             lc = LineCollection([[(x, val)]], colors=[color], linewidths=[lw], linestyles=[ls])
@@ -469,7 +468,7 @@ class _LineChartRace(CommonChart):
             lw = self.others_line_kwargs.get('lw')
             ls = self.others_line_kwargs.get('ls')
             alpha = self.others_line_kwargs.get('alpha', OTHERS_COLOR[-1])
-            color[-1] = alpha
+            color = tuple(color[:3]) + (alpha,)
             label = self.others_line_label
             val = self.others_agg_line.iloc[0]
             lc = LineCollection([[(x, val)]], colors=[color], linewidths=[lw], linestyles=[ls])
@@ -549,7 +548,7 @@ def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10,
                     images=None, colors=None, title=None, line_label_font=None, 
                     tick_label_font=None, tick_template='{x:,.0f}', shared_fontdict=None, 
                     scale='linear', fig=None, writer=None, line_kwargs=None, 
-                    fig_kwargs=None, filter_column_colors=False):
+                    fig_kwargs=None):
     '''
     Create an animated line chart race using matplotlib. Data must be in 
     'wide' format where each row represents a single time period and each 
@@ -559,9 +558,9 @@ def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10,
     If no `filename` is given, an HTML string is returned, otherwise the 
     animation is saved to disk.
 
-    You must have ffmpeg installed on your machine to save files to disk.
-    Get ffmpeg here: https://www.ffmpeg.org/download.html. To save .gif 
-    files, install ImageMagick.
+    You must have ffmpeg installed on your machine to save videos to disk
+    and ImageMagick to save animated gifs. Read more here:
+    https://www.dexplo.org/bar_chart_race/installation/
 
     Parameters
     ----------
@@ -572,10 +571,9 @@ def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10,
         The index can be of any type.
 
     filename : `None` or str, default None
-        If `None` return animation as an HTML5 string.
-        If a string, save animation to that filename location. 
-        Use .mp4, .gif, .html, .mpeg, .mov and any other extensions supported
-        by ffmpeg or ImageMagick.
+        If `None` return animation as an HTML5 string. If a string, save 
+        animation to that filename location. Use .mp4, .gif, .html, .mpeg, 
+        .mov or any other extensions supported by ffmpeg or ImageMagick.
 
     n_lines : int, default None
         The maximum number of lines to display on the graph. 
@@ -584,15 +582,15 @@ def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10,
         period. 
         
         See the others_line_func parameter for more options on plotting 
-        the other columns outside of the top n_lines.
-        By default, use all lines.
+        the other columns outside of the top n_lines. Use all lines by default.
 
     steps_per_period : int, default 10
         The number of steps to go from one time period to the next. 
+        Increasing this number creates smoother animations.
 
     period_length : int, default 500
         Number of milliseconds to animate each period (row). 
-        Default is 500ms (half of a second)
+        Default is 500ms (half of a second).
 
     end_period_pause : int, default 0
         Number of milliseconds to pause the animation at the end of
@@ -605,15 +603,14 @@ def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10,
         to be a pause. The pause will be in increments of this
         calculated interval and not exact. For example, setting the
         end_period_pause to 725 will produce a pause of 700 
-        milliseconds (by default).
+        milliseconds when using the defaults.
 
     period_summary_func : function, default None
         Custom text added to the axes each period.
         Create a user-defined function that accepts one pandas Series of the 
-        current time period's values. It must return a dictionary 
-        containing at a minimum the keys "x", "y", and "s" which will be 
-        passed to the matplotlib `text` method.
-
+        current time period's values. It must return a dictionary containing 
+        the keys "x", "y", and "s" which will be passed to the matplotlib 
+        `text` method.
         Example:
         def func(values):
             total = values.sum()
@@ -631,15 +628,16 @@ def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10,
         a string that the DataFrame `agg` method understands or a user-defined 
         function. Use agg_line_kwargs to style the line and provide it a label.
 
-        If providing function, it will be passed all values of the current period 
-        as a Series. Return a single value that summarizes the current period.
+        If providing function, it will be passed all values of the current 
+        period as a Series. Return a single value that summarizes the current 
+        period.
 
         DataFrame agg strings - 'mean', 'median', 'max', 'min', etc..
 
     agg_line_kwargs : dict, default None
         A dictionary of matplotlib line properties used with agg_line_func. 
-        Use the key `s` to control the label of the line.
-        Keys `x` and `y` will be ignored as the position is already determined.
+        Use the key `s` to control the label of the line. Keys `x` and `y` 
+        will be ignored as the position is already determined.
         Example: 
         {
             's': 'Median',
@@ -653,18 +651,18 @@ def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10,
         By default (None), these other lines will not be plotted. Use True to 
         plot the lines in a soft gray color without labels or images.
 
-        Aggregate all of the other column values by passing in a string that the 
-        DataFrame agg method understands or a user-defined function, which will
-        be passed a pandas Series of the current period.
-        
+        Aggregate all of the other column values by passing in a string that 
+        the DataFrame agg method understands or a user-defined function, which 
+        will be passed a pandas Series of just these other values for this 
+        time period.
         Example:
         def my_others_line_func(s):
             return s.median()
 
     others_line_kwargs : dict, default None
         A dictionary of matplotlib line properties used with others_line_func. 
-        Use the key `s` to control the label of the line.
-        Keys `x` and `y` will be ignored as the position is already determined.
+        Use the key `s` to control the label of the line. Keys `x` and `y` 
+        will be ignored as the position is already determined.
         Example: 
         {
             's': 'Rest of World',
@@ -674,22 +672,27 @@ def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10,
         }
 
     fade : float, default 1
-        Used to slowly fade historical values of the line, i.e. decrease the 
+        Use to slowly fade historical values of the line, i.e. decrease the 
         opacity (alpha). This number multiplies the current alpha of the line 
         each time period.
         
         Choose a number between 0 and 1. When 1, no fading occurs. 
-        This number will likely need to be very close to 1, as alpha will
-        quickly go to zero
+        This number will likely need to be close to 1, as alpha decreases fast.
         
     min_fade : float, default .3
-        Minimum value of alpha for each line. Choose a number between 0 and 1.
-        Use 0 to have the line eventually become completely transparent.
+        Minimum value of alpha for each line when setting fade < 1. Choose a 
+        number between 0 and 1. Use 0 to have the line eventually become 
+        completely transparent.
     
-    images : list or dict, default None
-        Images to use for the end of the line. Provide a list of filenames
-        or URLs where the images are located in the same order as the columns of
-        the DataFrame or a dictionary with keys as the column names.
+    images : str, list, or dict, default None
+        Images to use for the end of the line. Use a string to use one of the
+        built-in image databases by name. Currently, there are two image bases
+        'country', and 'nfl'. If your columns are countries are NFL teams, the 
+        images will automatically be found.
+        
+        Otherwise, provide a list of filenames or URLs where the images are 
+        located in the same order as the columns of the DataFrame or a 
+        dictionary mapping column names to filenames/URLs.
 
     colors : str, matplotlib colormap instance, or list of colors, default 'dark12'
         Colors to be used for the lines. All matplotlib and plotly 
@@ -704,7 +707,7 @@ def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10,
 
     title : str or dict, default None
         Title of plot as a string. Use a dictionary to supply several title 
-        parameters. You must use the key 'label' for the title.
+        parameters. You must use the key 'label' for the text.
         Example:
         {
             'label': 'My Line Chart Race Title',
@@ -723,21 +726,19 @@ def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10,
         Use a dictionary to supply several font properties.
 
     tick_template : str or function, default '{x:,.0f}'
-        Formats the ticks on the axis with numeric values 
-        (x-axis when horizontal and y-axis when vertical). If given a string,
-        pass it to the ticker.StrMethodFormatter matplotlib function. 
+        Formats the ticks on the y-axis with numeric values When given a 
+        string, it's passed to the ticker.StrMethodFormatter function. 
         Use 'x' as the variable
         Example: '{x:10.2f}'
 
-        If given a function, its passed to ticker.FuncFormatter, which
-        implicitly passes it two variables `x` and `pos` and must return
+        WHen given a function, it's passed to ticker.FuncFormatter, which
+        implicitly passes it two parameters `x` and `pos` and must return
         a string.
 
     shared_fontdict : dict, default None
         Dictionary of font properties shared across the tick labels, 
         line labels, and title. The only property not shared is `size`. 
         It will be ignored if you try to set it.
-
         Possible keys are:
             'family', 'weight', 'color', 'style', 'stretch', 'weight', 'variant'
         Example:
@@ -748,10 +749,11 @@ def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10,
         }
 
     scale : 'linear' or 'log', default 'linear'
-        Type of scaling to use for the axis containing the values
+        Type of scaling to use for the y-axis
 
     fig : matplotlib Figure, default None
-        For greater control over the aesthetics, supply your own figure.
+        For greater control over the aesthetics, supply your own figure
+        with at least one axes.
 
     writer : str or matplotlib Writer instance
         This argument is passed to the matplotlib FuncAnimation.save method.
@@ -764,17 +766,13 @@ def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10,
         >>> from matplotlib import animation
         >>> animation.writers.list()
 
-        You must have ffmpeg or ImageMagick installed in order
-
-    line_kwargs : dict, default `None` (alpha=.8)
-        Other keyword arguments (within a dictionary) forwarded to the 
-        matplotlib Line2D function. If no value for 'alpha' is given,
-        then it is set to .8 by default.
+    line_kwargs : dict, default None
+        Other keyword arguments within a dictionary used to control line
+        properties. 
         Sample properties:
             `lw` - Line width, default is 1.5
             'ls' - Line style, '-', '--', '-.', ':'
             `alpha` - opacity of line, 0 to 1
-            'ms' - marker style
 
     fig_kwargs : dict, default None
         A dictionary of keyword arguments passed to the matplotlib
@@ -786,31 +784,6 @@ def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10,
             'dpi': 120,
             'facecolor': 'red'
         }
-
-    filter_column_colors : bool, default `False`
-        When setting n_lines, it's possible that some columns never 
-        appear in the animation. Regardless, all columns get assigned
-        a color by default. 
-        
-        For instance, suppose you have 100 columns 
-        in your DataFrame, set n_lines to 10, and 15 different columns 
-        make at least one appearance in the animation. Even if your 
-        colormap has at least 15 colors, it's possible that many 
-        lines will be the same color, since each of the 100 columns is
-        assigned of the colormaps colors.
-
-        Setting this to `True` will map your colormap to just those 
-        columns that make an appearance in the animation, helping
-        avoid duplication of colors.
-
-        Setting this to `True` will also have the (possibly unintended)
-        consequence of changing the colors of each color every time a 
-        new integer for n_lines is used.
-
-        EXPERIMENTAL
-        This parameter is experimental and may be changed/removed
-        in a later version.
-
 
     Returns
     -------
@@ -850,8 +823,7 @@ def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10,
         fig=None, 
         writer=None, 
         line_kwargs={'alpha': .7},
-        fig_kwargs={'figsizse': (6, 3.5), 'dpi': 144},
-        filter_column_colors=False)        
+        fig_kwargs={'figsizse': (6, 3.5), 'dpi': 144})        
 
     Font Help
     ---------
@@ -864,5 +836,5 @@ def line_chart_race(df, filename=None, n_lines=None, steps_per_period=10,
                          period_summary_func, line_width_data, agg_line_func, agg_line_kwargs, 
                          others_line_func, others_line_kwargs, fade, min_fade, images, colors, 
                          title, line_label_font, tick_label_font, tick_template, shared_fontdict, 
-                         scale, fig, writer, line_kwargs, fig_kwargs, filter_column_colors)
+                         scale, fig, writer, line_kwargs, fig_kwargs)
     return lcr.make_animation()

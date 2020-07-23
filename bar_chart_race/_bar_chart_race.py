@@ -516,8 +516,8 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
                    perpendicular_bar_func=None, colors=None, title=None, bar_size=.95,
                    bar_textposition='outside', bar_texttemplate='{x:,.0f}',
                    bar_label_font=None, tick_label_font=None, tick_template='{x:,.0f}',
-                   shared_fontdict=None, scale='linear', fig=None, writer=None, bar_kwargs=None, 
-                   fig_kwargs=None, filter_column_colors=False):
+                   shared_fontdict=None, scale='linear', fig=None, writer=None, 
+                   bar_kwargs=None,  fig_kwargs=None, filter_column_colors=False):
     '''
     Create an animated bar chart race using matplotlib. Data must be in 
     'wide' format where each row represents a single time period and each 
@@ -528,9 +528,9 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
     If no `filename` is given, an HTML string is returned, otherwise the 
     animation is saved to disk.
 
-    You must have ffmpeg installed on your machine to save files to disk.
-    Get ffmpeg here: https://www.ffmpeg.org/download.html. To save .gif 
-    files, install ImageMagick.
+    You must have ffmpeg installed on your machine to save videos to disk
+    and ImageMagick to save animated gifs. Read more here:
+    https://www.dexplo.org/bar_chart_race/installation/
 
     Parameters
     ----------
@@ -541,10 +541,9 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         The index can be of any type.
 
     filename : `None` or str, default None
-        If `None` return animation as an HTML5 string.
-        If a string, save animation to that filename location. 
-        Use .mp4, .gif, .html, .mpeg, .mov and any other extensions supported
-        by ffmpeg or ImageMagick.
+        If `None` return animation as an HTML5 string. If a string, save 
+        animation to that filename location. Use .mp4, .gif, .html, .mpeg, 
+        .mov or any other extensions supported by ffmpeg or ImageMagick.
 
     orientation : 'h' or 'v', default 'h'
         Bar orientation - horizontal or vertical
@@ -578,11 +577,12 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
 
     steps_per_period : int, default 10
         The number of steps to go from one time period to the next. 
-        The bars will grow linearly between each period.
+        The bars will grow linearly between each period. 
+        Increasing this number creates smoother animations.
 
     period_length : int, default 500
         Number of milliseconds to animate each period (row). 
-        Default is 500ms (half of a second)
+        Default is 500ms (half of a second).
 
     end_period_pause : int, default 0
         Number of milliseconds to pause the animation at the end of
@@ -595,7 +595,7 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         to be a pause. The pause will be in increments of this
         calculated interval and not exact. For example, setting the
         end_period_pause to 725 will produce a pause of 700 
-        milliseconds (by default).
+        milliseconds when using the defaults.
 
     interpolate_period : bool, default `False`
         Whether to interpolate the period. Only valid for datetime or
@@ -650,11 +650,10 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
 
     period_summary_func : function, default None
         Custom text added to the axes each period.
-        Create a user-defined function that accepts two pandas Series of the 
-        current time period's values and ranks. It must return a dictionary 
-        containing at a minimum the keys "x", "y", and "s" which will be 
-        passed to the matplotlib axes `text` method.
-
+        Create a user-defined function that accepts one pandas Series of the 
+        current time period's values. It must return a dictionary containing 
+        the keys "x", "y", and "s" which will be passed to the matplotlib 
+        `text` method.
         Example:
         def func(values, ranks):
             total = values.sum()
@@ -670,7 +669,7 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
 
         The function is passed two pandas Series of the current time period's
         data and ranks. It must return a single value.
-
+        Example:
         def func(values, ranks):
             return values.quantile(.75)
 
@@ -713,7 +712,6 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
 
         Provide a function that accepts one numeric argument,
         the value of the bar and returns a string
-
         Example:
         def func(val):
             new_val = int(round(val, -3))
@@ -748,7 +746,6 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         Dictionary of font properties shared across the tick labels, 
         bar labels, period labels, and title. The only property not shared 
         is `size`. It will be ignored if you try to set it.
-
         Possible keys are:
             'family', 'weight', 'color', 'style', 'stretch', 'weight', 'variant'
         Example:
@@ -774,8 +771,6 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         Find all of the availabe Writers:
         >>> from matplotlib import animation
         >>> animation.writers.list()
-
-        You must have ffmpeg or ImageMagick installed in order
 
     bar_kwargs : dict, default None
         Other keyword arguments (within a dictionary) forwarded to the 
