@@ -36,9 +36,6 @@ class TestSimpleBC:
     def test_interpolate_period(self):
         bar_chart_race(df, interpolate_period=True, n_bars=8)
 
-    def test_label_bars(self):
-        bar_chart_race(df, n_bars=8, label_bars=False)
-
     def test_bar_size(self):
         bar_chart_race(df, n_bars=8, bar_size=.99)
 
@@ -47,7 +44,7 @@ class TestSimpleBC:
         bar_chart_race(df, n_bars=8, period_label={'x': .99, 'y': .1, 'ha': 'right'})
 
     def test_period_fmt(self):
-        bar_chart_race(df, n_bars=8, period_fmt='%b %-d, %Y')
+        bar_chart_race(df, n_bars=8, period_template='%b %-d, %Y')
         bar_chart_race(df1, n_bars=8, interpolate_period=True, period_template='{x: .2f}')
 
     def test_period_summary_func(self):
@@ -75,7 +72,7 @@ class TestSimpleBC:
         with pytest.warns(UserWarning):
             bar_chart_race(df, n_bars=6, sort='asc', colors='Accent')
 
-        bar_chart_race(df,  n_bars=6, sort='asc', colors=='Accent', filter_column_colors=True)
+        bar_chart_race(df,  n_bars=6, sort='asc', colors='Accent', filter_column_colors=True)
 
         bar_chart_race(df, n_bars=6, colors=plt.cm.tab20.colors[:19])
 
@@ -88,24 +85,21 @@ class TestSimpleBC:
     def test_title(self):
         bar_chart_race(df, n_bars=6, title='Great title')
         bar_chart_race(df, n_bars=6, title={'label': 'Great title', 'size':20})
-    
-    def test_label_size(self):
-        bar_chart_race(df, n_bars=6, bar_label_size=4, tick_label_size=12)
 
     def test_shared_fontdict(self):
         bar_chart_race(df, n_bars=6, shared_fontdict={'family': 'Courier New', 
-                                            'weight': 'bold', 'color': 'teal'}))
+                                            'weight': 'bold', 'color': 'teal'})
 
     def test_scale(self):
         bar_chart_race(df, n_bars=6, scale='log')
 
     def test_save(self):
-        bar_chart_race(df, 'videos/test.mp4', n_bars=6)
-        bar_chart_race(df, 'videos/test.gif', n_bars=6)
-        bar_chart_race(df, 'videos/test.html', n_bars=6)
+        bar_chart_race(df, 'tests/videos/test.mp4', n_bars=6)
+        bar_chart_race(df, 'tests/videos/test.gif', n_bars=6, writer='imagemagick')
+        bar_chart_race(df, 'tests/videos/test.html', n_bars=6)
 
     def test_writer(self):
-        bar_chart_race(df, 'videos/test.mpeg', n_bars=6, writer='imagemagick')
+        bar_chart_race(df, 'tests/videos/test.mpeg', n_bars=6, writer='imagemagick')
 
     def test_fig(self):
         fig, ax = plt.subplots(dpi=100)
