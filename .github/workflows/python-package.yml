@@ -26,10 +26,11 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Download ffmpeg linux
       if: ${{ matrix.os == 'ubuntu-latest' }}
-      run: sudo add-apt-repository ppa:jonathonf/ffmpeg-4
-      run: sudo apt-get update
-      run: sudo apt-get install ffmpeg
-      run: sudo apt install ffmpeg
+      run: |
+        sudo add-apt-repository ppa:jonathonf/ffmpeg-4
+        sudo apt-get update
+        sudo apt-get install ffmpeg
+        sudo apt install ffmpeg
     - name: Download ffmpeg mac
       if: ${{ matrix.os == 'macos-latest' }}
       run: brew install ffmpeg
