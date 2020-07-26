@@ -44,7 +44,7 @@ class TestSimpleBC:
         bar_chart_race(df, n_bars=8, period_label={'x': .99, 'y': .1, 'ha': 'right'})
 
     def test_period_fmt(self):
-        bar_chart_race(df, n_bars=8, period_template='%b %-d, %Y')
+        bar_chart_race(df, n_bars=8, period_template='%b %d, %Y')
         bar_chart_race(df1, n_bars=8, interpolate_period=True, period_template='{x: .2f}')
 
     def test_period_summary_func(self):
@@ -73,7 +73,6 @@ class TestSimpleBC:
             bar_chart_race(df, n_bars=6, sort='asc', colors='Accent')
 
         bar_chart_race(df,  n_bars=6, sort='asc', colors='Accent', filter_column_colors=True)
-
         bar_chart_race(df, n_bars=6, colors=plt.cm.tab20.colors[:19])
 
     def test_colors(self):
@@ -107,3 +106,4 @@ class TestSimpleBC:
 
     def test_bar_kwargs(self):
         bar_chart_race(df, n_bars=6, bar_kwargs={'alpha': .2, 'ec': 'black', 'lw': 3})
+        
