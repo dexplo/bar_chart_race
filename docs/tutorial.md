@@ -12,7 +12,7 @@ The data you choose to animate as a bar chart race must be provided in a specifi
 
 ### Example data
 
-The data below is an example of properly formatted data. It shows total deaths from COVID-19 for several countries by date. Each row represents a single day's worth of data. Each column represents a single country's deaths. The index contains the date. Any pandas DataFrame that conforms to this structure may be used to create a bar chart race.
+Below, we have an example of properly formatted data that shows total deaths from COVID-19 for several countries by date. Each row represents a single day's worth of data. Each column represents a single country's deaths. The index contains the date. Any pandas DataFrame that conforms to this structure may be used to create a bar chart race.
 
 {% include 'html/tutorial_1.html' %}
 
@@ -21,9 +21,9 @@ The data below is an example of properly formatted data. It shows total deaths f
 A single main function, `bar_chart_race`, exists to create the animations. Calling it with the defaults returns the animation as an HTML string. The `load_dataset` function is available to load sample DataFrames. If you are working within a Jupyter Notebook, it will automatically be embedded in the output as a video.
 
 ```python
-import bar_chart_race as bcr
+import bar_chart_race
 df = bcr.load_dataset('covid19_tutorial')
-bcr.bar_chart_race(df)
+df.bcr.bar_chart_race()
 ```
 
 {% macro video(name) %}
@@ -36,10 +36,10 @@ bcr.bar_chart_race(df)
 
 ### Vertical bars
 
-By default, bars are horizontal. Use the `orientation` parameter to switch it to vertical.
+By default, bars are horizontal. Use the `orientation` parameter to switch to vertical.
 
 ```python
-bcr.bar_chart_race(df, orientation='v')
+df.bcr.bar_chart_race(orientation='v')
 ```
 
 <div>{{ video('basic_vert') }}</div>
@@ -49,7 +49,7 @@ bcr.bar_chart_race(df, orientation='v')
 By default, the bars are plotted in descending order. Change the order by setting `sort` to `'asc'`.
 
 ```python
-bcr.bar_chart_race(df, sort='asc')
+df.bcr.bar_chart_race(sort='asc')
 ```
 
 <div>{{ video('basic_asc') }}</div>
@@ -59,7 +59,7 @@ bcr.bar_chart_race(df, sort='asc')
 By default, all columns will be plotted. Use `n_bars` to limit the number. When limiting bars, the smallest bar can drop off the plot.
 
 ```python
-bcr.bar_chart_race(df, n_bars=6)
+df.bcr.bar_chart_race(n_bars=6)
 ```
 
 <div>{{ video('basic_n_bars') }}</div>
@@ -69,7 +69,7 @@ bcr.bar_chart_race(df, n_bars=6)
 By default, the bars will be ordered. Set `fixed_order` to `True` or to a specific list of column names to keep the order the same throughout.
 
 ```python
-bcr.bar_chart_race(df, fixed_order=['Iran', 'USA', 'Italy', 'Spain', 'Belgium'])
+df.bcr.bar_chart_race(fixed_order=['Iran', 'USA', 'Italy', 'Spain', 'Belgium'])
 ```
 
 <div>{{ video('basic_fixed_order') }}</div>
@@ -79,7 +79,7 @@ bcr.bar_chart_race(df, fixed_order=['Iran', 'USA', 'Italy', 'Spain', 'Belgium'])
 By default, the maximum value of the axis moves with the largest bar. Set `fixed_max` to `True` to keep the maximum value equal to the largest overall value for all frames in the animation.
 
 ```python
-bcr.bar_chart_race(df, fixed_max=True)
+df.bcr.bar_chart_race(fixed_max=True)
 ```
 
 <div>{{ video('basic_fixed_max') }}</div>
@@ -89,7 +89,7 @@ bcr.bar_chart_race(df, fixed_max=True)
 By default, 10 frames are used to step from one period to the next. Increase/decrease the smoothness of the animation with `steps_per_period`.
 
 ```python
-bcr.bar_chart_race(df, steps_per_period=3)
+df.bcr.bar_chart_race(steps_per_period=3)
 ```
 
 <div>{{ video('basic_steps') }}</div>
@@ -97,17 +97,17 @@ bcr.bar_chart_race(df, steps_per_period=3)
 You may also change the amount of time per period with `period_length`, which is set to 500 milliseconds (half of a second) by default.
 
 ```python
-bcr.bar_chart_race(df, steps_per_period=20, period_length=200)
+df.bcr.bar_chart_race(steps_per_period=20, period_length=200)
 ```
 
 <div>{{ video('basic_period_length') }}</div>
 
 ### Interpolate the period
 
-By default, the label for each frame changes after the entire period has been plotted. Linearly interpolate the value for the period with `interpolate_period`. Below, every frame increase by 1 / 10 of a day (2 hours and 24 minutes).
+By default, the label for each frame changes after the entire period has been plotted. Linearly interpolate the value for the period with `interpolate_period`. Below, every frame increases by 1 / 10 of a day (2 hours and 24 minutes).
 
 ```python
-bcr.bar_chart_race(df, interpolate_period=True)
+df.bcr.bar_chart_race(interpolate_period=True)
 ```
 
 <div>{{ video('basic_interpolate') }}</div>
@@ -123,7 +123,7 @@ Many properties of the plot can be set.
 * `title` - title of plot
 
 ```python
-bcr.bar_chart_race(df, figsize=(5, 3), dpi=100, label_bars=False,
+df.bcr.bar_chart_race(figsize=(5, 3), dpi=100, label_bars=False,
                    period_label={'x': .99, 'y': .1, 'ha': 'right', 'color': 'red'},
                    title='COVID-19 Deaths by Country')
 ```
@@ -135,7 +135,7 @@ bcr.bar_chart_race(df, figsize=(5, 3), dpi=100, label_bars=False,
 Control the size of labels with `bar_label_size`, `tick_label_size`, and `title_size`.
 
 ```python
-bcr.bar_chart_race(df, bar_label_size=4, tick_label_size=5,
+df.bcr.bar_chart_race(bar_label_size=4, tick_label_size=5,
                    title='COVID-19 Deaths by Country', title_size='smaller')
 ```
 
@@ -146,7 +146,7 @@ bcr.bar_chart_race(df, bar_label_size=4, tick_label_size=5,
 Set font properties for all text objects with `shared_fontdict`.
 
 ```python
-bcr.bar_chart_race(df, title='COVID-19 Deaths by Country',
+df.bcr.bar_chart_race(title='COVID-19 Deaths by Country',
                    shared_fontdict={'family': 'Helvetica', 'weight': 'bold',
                                     'color': 'rebeccapurple'})
 ```
@@ -157,7 +157,7 @@ bcr.bar_chart_race(df, title='COVID-19 Deaths by Country',
 Set `bar_kwargs` to a dictionary of keyword arguments forwarded to the matploblib `bar` function to control bar properties.
 
 ```python
-bcr.bar_chart_race(df, bar_kwargs={'alpha': .2, 'ec': 'black', 'lw': 3})
+df.bcr.bar_chart_race(bar_kwargs={'alpha': .2, 'ec': 'black', 'lw': 3})
 ```
 
 <div>{{ video('basic_bar_kwargs') }}</div>
@@ -171,7 +171,7 @@ There are several more additional features to customize the animation.
 Format the label of the period by setting `period_fmt` to a string with either a date directive or a new-style formatted string.
 
 ```python
-bcr.bar_chart_race(df, period_fmt='%b %-d, %Y')
+df.bcr.bar_chart_race(period_fmt='%b %-d, %Y')
 ```
 
 <div>{{ video('other_date_directive') }}</div>
@@ -198,7 +198,7 @@ def summary(values, ranks):
     s = f'Total Deaths - {total_deaths:,.0f}'
     return {'x': .99, 'y': .05, 's': s, 'ha': 'right', 'size': 8}
 
-bcr.bar_chart_race(df, period_summary_func=summary)
+df.bcr.bar_chart_race(period_summary_func=summary)
 ```
 
 <div>{{ video('other_summary') }}</div>
@@ -208,7 +208,7 @@ bcr.bar_chart_race(df, period_summary_func=summary)
 Add a single bar perpendicular to the main bars by defining a function that accepts two arguments, the values and ranks of the current period of data, and returns a single number, the position of the bar. You can use string names of aggregation functions that pandas understands.
 
 ```python
-bcr.bar_chart_race(df, perpendicular_bar_func='mean')
+df.bcr.bar_chart_race(perpendicular_bar_func='mean')
 ```
 
 <div>{{ video('other_perpendicular') }}</div>
@@ -218,7 +218,7 @@ An example with a user-defined function:
 ```python
 def func(values, ranks):
     return values.quantile(.9)
-bcr.bar_chart_race(df, perpendicular_bar_func=func)
+df.bcr.bar_chart_race(perpendicular_bar_func=func)
 ```
 
 <div>{{ video('other_perpendicular_func') }}</div>
@@ -228,7 +228,7 @@ bcr.bar_chart_race(df, perpendicular_bar_func=func)
 By default, the `'dark12'` colormap is used, with 12 unique colors. This is a qualitative color map containing every other color from the 'dark24' colormap originally found from the [plotly express documentation](https://plotly.com/python/discrete-color/#color-sequences-in-plotly-express). All [matplotlib](https://matplotlib.org/tutorials/colors/colormaps.html) and [plotly](https://plotly.com/python/builtin-colorscales/) colormaps are available by name. The entire `'dark24'` colormap will be used by default when your DataFrame contains more than 12 columns.
 
 ```python
-bcr.bar_chart_race(df, cmap='antique')
+df.bcr.bar_chart_race(cmap='antique')
 ```
 
 <div>{{ video('color_map') }}</div>
@@ -241,7 +241,7 @@ It is possible that some colors repeat in your animation, even if there are more
 The following example uses the Accent colormap which has 8 unique colors. The animation is set to have a maximum of 7 bars, but there are still repeating colors.
 
 ```python
-bcr.bar_chart_race(df, cmap='accent', n_bars=7)
+df.bcr.bar_chart_race(cmap='accent', n_bars=7)
 ```
 
 !!! warning "`UserWarning`"
@@ -252,7 +252,7 @@ bcr.bar_chart_race(df, cmap='accent', n_bars=7)
 Setting `filter_column_colors` to `True` will reduce the likelihood of repeating colors, but will still happen if the total number of unique bars is more than the number of colors in the colormap.
 
 ```python
-bcr.bar_chart_race(df, cmap='accent', n_bars=7, filter_column_colors=True)
+df.bcr.bar_chart_race(cmap='accent', n_bars=7, filter_column_colors=True)
 ```
 
 <div>{{ video('color_warning_fixed') }}</div>
@@ -264,7 +264,7 @@ If you want to highly customize the animation, set the `fig` parameter to a prev
 ```python
 fig, ax = plt.subplots(figsize=(5, 2), dpi=120)
 ax.set_facecolor((0, 0, 1, .3))
-bcr.bar_chart_race(df, n_bars=3, fig=fig)
+df.bcr.bar_chart_race(n_bars=3, fig=fig)
 ```
 
 <div>{{ video('other_figure') }}</div>
@@ -285,7 +285,7 @@ ax3.bar(df.index, df.median(axis=1))
 ax3.xaxis.set_major_locator(dates.DayLocator([3, 7, 12]))
 ax4.pie(df.iloc[-1], radius=1.5, labels=df.columns)
 
-bcr.bar_chart_race(df, n_bars=3, fig=fig)
+df.bcr.bar_chart_race(n_bars=3, fig=fig)
 ```
 
 <div>{{ video('other_subplots') }}</div>
@@ -308,7 +308,7 @@ If you do not have IPython installed, then a string of HTML will be returned dir
 In order to save the animation to disk, use a string of the file name of where you'd like to save as the second argument. You'll need to [install ffmpeg](../installation#installing-ffmpeg) first in order to save the animation. Once installed, you'll be able to save the animation as a wide variety of formats (mp4, m4v, mov, etc...). To save the animation as a gif, install ImageMagick.
 
 ```
-bcr.bar_chart_race(df, 'docs/videos/covid19.mp4', figsize=(5, 3))
+df.bcr.bar_chart_race('docs/videos/covid19.mp4', figsize=(5, 3))
 ```
 
 ### Matplotlib writer
