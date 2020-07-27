@@ -7,8 +7,44 @@ from matplotlib import ticker
 from ._func_animation import FuncAnimation
 from matplotlib.colors import Colormap
 
+from matplotlib.offsetbox import OffsetImage,AnnotationBbox
+from PIL import Image
+#import matplotlib.image as mpimg
+import os
+
 from ._common_chart import CommonChart
 from ._utils import prepare_wide_data
+
+
+def get_image_label(root_folder,name):
+    #path = "data/flags/Flags/flags/flags/24/{}.png".format(name.title())
+    path = os.path.join(root_folder , name)
+    #im = plt.imread(path)
+    img = Image.open(path)
+    img.thumbnail((200,200),Image.ANTIALIAS)
+    return img
+
+def get_image_name(col_name):
+    '''
+    Needs to account for more cases. This is incomplete but it will do for now.
+    col_name: str
+        Takes a column or bar name and attaches an image extension (only .png for now)
+        
+    Returns
+    ----------
+        str
+    '''
+    img_name = col_name + '.png'
+    return img_name
+
+def offset_image(location,root_folder,name,ax):
+    img = get_image_label(root_folder,name)
+    im  = OffsetImage(img,zoom=.08)
+    im.image.axes = ax 
+    
+    ab = AnnotationBbox(im,(0,location,),xybox=(-30,0.),frameon=False,xycoords='data',boxcoords='offset points',pad=0)
+    ax.add_artist(ab)
+
 
 class _BarChartRace(CommonChart):
     
@@ -17,7 +53,7 @@ class _BarChartRace(CommonChart):
                  period_label, period_template, period_summary_func, perpendicular_bar_func, 
                  colors, title, bar_size, bar_textposition, bar_texttemplate, bar_label_font, 
                  tick_label_font, tick_template, shared_fontdict, scale, fig, writer, 
-                 bar_kwargs, fig_kwargs, filter_column_colors):
+                 bar_kwargs, fig_kwargs, filter_column_colors, img_label_folder):
         self.filename = filename
         self.extension = self.get_extension()
         self.orientation = orientation
@@ -57,6 +93,14 @@ class _BarChartRace(CommonChart):
         self.fig_kwargs = self.get_fig_kwargs(fig_kwargs)
         self.subplots_adjust = self.get_subplots_adjust()
         self.fig = self.get_fig(fig)
+
+        self.img_label_folder = img_label_folder
+        self.img_label_artist = []
+        print(f'STR_INDEX values:\n{self.str_index}')
+        print(f'RANKS values:\n{self.df_ranks}')
+        print(f'DF_VALUES values:\n{self.df_values}')
+        print(f'COL_FILT value:\n{self.col_filt}')
+        print(f'DF_RANKS list:\n{list(self.df_ranks)}')
 
     def validate_params(self):
         if isinstance(self.filename, str):
@@ -141,6 +185,15 @@ class _BarChartRace(CommonChart):
         else:
             font = {**default_font_dict, **font}
         return font
+
+    def offset_image(self,location,name,ax):
+        img = get_image_label(self.img_label_folder,name)
+        im  = OffsetImage(img,zoom=.08)
+        im.image.axes = ax 
+        
+        ab = AnnotationBbox(im,(0,location,),xybox=(-30,0.),frameon=False,xycoords='data',boxcoords='offset points',pad=0)
+        self.img_label_artist.append(ab)
+        ax.add_artist(ab)
 
     def prepare_data(self, df):
         if self.fixed_order is True:
@@ -365,10 +418,20 @@ class _BarChartRace(CommonChart):
                 new_max_pixels = ax.transData.transform((0, max_bar))[1] + self.extra_pixels
                 new_ymax = ax.transData.inverted().transform((0, new_max_pixels))[1]
                 ax.set_ylim(ax.get_ylim()[0], new_ymax)
+        #print(cols)
+        if self.img_label_folder:
+            #for artist in self.img_label_artist:
+            #    artist.remove()
+            #for col_position,col_name in enumerate(cols):
+            zipped = zip(bar_location,cols)
+            for col_position,col_name in zipped:
+                img_name = get_image_name(col_name)
+                self.offset_image(col_position,img_name,ax)
 
         self.set_major_formatter(ax)
         self.add_period_label(ax, i)
         self.add_period_summary(ax, i)
+        #self.add_bar_images(ax, bar_location, bar_length, self.img_label_folder)
         self.add_bar_labels(ax, bar_location, bar_length)
         self.add_perpendicular_bar(ax, bar_length, i)
 
@@ -400,6 +463,42 @@ class _BarChartRace(CommonChart):
                                   '"x", "y", and "s"')
             ax.text(transform=ax.transAxes, **text_dict)
 
+    def add_bar_images(self, ax, bar_location, bar_length, img_label_folder):
+        if self.img_label_folder:
+            if self.orientation == 'h':
+                labels = ax.yaxis.get_label()
+                zipped = zip(bar_length, bar_location)
+            else:
+                zipped = zip(bar_location, bar_length)
+                labels = ax.xaxis.get_label()
+
+            print(labels)
+            raise NotImplementedError("ERROR")
+            delta = .02 if self.bar_textposition == 'outside' else -.02
+
+            img_objs = []
+            for x1, y1 in zipped:
+                xtext, ytext = ax.transLimits.transform((x1, y1))
+                if self.orientation == 'h':
+                    xtext += delta
+                    val = x1
+                else:
+                    ytext += delta
+                    val = y1
+
+                if callable(self.bar_texttemplate):
+                    text = self.bar_texttemplate(val)
+                else:
+                    text = self.bar_texttemplate.format(x=val)
+
+                xtext, ytext = ax.transLimits.inverted().transform((xtext, ytext))
+
+                img_obj = ax.text(xtext, ytext, text, clip_on=True, **self.bar_label_font)
+
+                img_objs.append(img_obj)
+                offset_image(xtext, img_label_folder, xtext, ax)
+            return img_objs
+
     def add_bar_labels(self, ax, bar_location, bar_length):
         if self.bar_textposition:
             if self.orientation == 'h':
@@ -425,7 +524,6 @@ class _BarChartRace(CommonChart):
                     text = self.bar_texttemplate.format(x=val)
 
                 xtext, ytext = ax.transLimits.inverted().transform((xtext, ytext))
-
                 text_obj = ax.text(xtext, ytext, text, clip_on=True, **self.bar_label_font)
                 text_objs.append(text_obj)
             return text_objs
@@ -460,6 +558,10 @@ class _BarChartRace(CommonChart):
         start = int(bool(self.period_label))
         for text in ax.texts[start:]:
             text.remove()
+        if self.img_label_folder:
+            for artist in self.img_label_artist:
+                artist.remove()
+        self.img_label_artist = []
         self.plot_bars(ax, i)
         
     def make_animation(self):
@@ -517,7 +619,7 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
                    bar_textposition='outside', bar_texttemplate='{x:,.0f}',
                    bar_label_font=None, tick_label_font=None, tick_template='{x:,.0f}',
                    shared_fontdict=None, scale='linear', fig=None, writer=None, bar_kwargs=None, 
-                   fig_kwargs=None, filter_column_colors=False):
+                   fig_kwargs=None, filter_column_colors=False,img_label_folder=None):
     '''
     Create an animated bar chart race using matplotlib. Data must be in 
     'wide' format where each row represents a single time period and each 
@@ -820,6 +922,11 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         EXPERIMENTAL
         This parameter is experimental and may be changed/removed
         in a later version.
+    
+    img_label_folder : str, default `None`
+        Folder that contains images to be used as labels in the chart.
+        The folder should contain one image per bar in the chart and
+        the filenames should match name of the corresponding column in the dataframe.
 
     Returns
     -------
@@ -877,5 +984,5 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
                         period_label, period_template, period_summary_func, perpendicular_bar_func,
                         colors, title, bar_size, bar_textposition, bar_texttemplate, 
                         bar_label_font, tick_label_font, tick_template, shared_fontdict, scale, 
-                        fig, writer, bar_kwargs, fig_kwargs, filter_column_colors)
+                        fig, writer, bar_kwargs, fig_kwargs, filter_column_colors, img_label_folder)
     return bcr.make_animation()
