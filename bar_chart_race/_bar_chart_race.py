@@ -197,18 +197,34 @@ class _BarChartRace(CommonChart):
 
         """
         #load image as an OffsetImage object
-        img_name = get_image_name(name)
-        img = get_image_label(self.img_label_folder,img_name)
-        im  = OffsetImage(img,zoom=.08)
+        img_name      = get_image_name(name)
+        img           = get_image_label(self.img_label_folder,img_name)
+        im            = OffsetImage(img,zoom=.08)
         im.image.axes = ax 
 
-        #load text as TextArea object
         
         if self.orientation=='h':
-            ab = AnnotationBbox(im,(0,location,),xybox=(-30,0.),frameon=False,xycoords='data',boxcoords='offset points',pad=0)
+            ab      = AnnotationBbox(im,(0,location,),xybox=(-30,0.),frameon=False,xycoords='data',
+                                     boxcoords='offset points',pad=0)
+            if self.tick_label_mode=='mixed':
+                #load text as TextArea object
+                label_text = TextArea(name)
+                text_ab = AnnotationBbox(label_text,(0,location,),xybox=(-30,-5),frameon=False,xycoords='data',
+                                         boxcoords='offset points',pad=0)
+                self.img_label_artist.append(text_ab)
+                ax.add_artist(text_ab)
+
         elif self.orientation=='v':
-            ab = AnnotationBbox(im,(location,0,),xybox=(0.,-30),frameon=False,xycoords='data',boxcoords='offset points',pad=0)
-        
+            ab      = AnnotationBbox(im,(location,0,),xybox=(0.,30),frameon=False,xycoords='data',
+                                     boxcoords='offset points',pad=0)
+            if self.tick_label_mode=='mixed':
+                #load text as TextArea object
+                label_text = TextArea(name)
+                text_ab = AnnotationBbox(label_text,(location,0,),xybox=(-5,30),frameon=False,xycoords='data',
+                                         boxcoords='offset points',pad=0)
+                self.img_label_artist.append(text_ab)
+                ax.add_artist(text_ab)
+
         self.img_label_artist.append(ab)
         ax.add_artist(ab)
 
@@ -526,6 +542,7 @@ class _BarChartRace(CommonChart):
                     line.set_ydata([val] * 2)
             
     def anim_func(self, i):
+        self.fig.tight_layout()
         if i is None:
             return
         ax = self.fig.axes[0]
