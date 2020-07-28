@@ -7,13 +7,14 @@ from matplotlib import ticker
 from ._func_animation import FuncAnimation
 from matplotlib.colors import Colormap
 
-from matplotlib.offsetbox import OffsetImage,AnnotationBbox
+from matplotlib.offsetbox import OffsetImage,AnnotationBbox,TextArea
 from PIL import Image
 #import matplotlib.image as mpimg
 import os
 
 from ._common_chart import CommonChart
 from ._utils import prepare_wide_data
+
 
 
 def get_image_label(root_folder,name):
@@ -26,7 +27,9 @@ def get_image_label(root_folder,name):
 
 def get_image_name(col_name):
     '''
-    Needs to account for more cases. This is incomplete but it will do for now.
+    Needs to account for more cases. This is incomplete but it will do for now. It assumes there 
+    is only one `.` in the filename. If it finds a dot, it will assume the name already has an extension.
+    If not, it will append `.png` to the name.
     col_name: str
         Takes a column or bar name and attaches an image extension (only .png for now)
         
@@ -34,16 +37,12 @@ def get_image_name(col_name):
     ----------
         str
     '''
-    img_name = col_name + '.png'
+    split_name = col_name.spli('.')
+    if len(split_name) > 1:
+        img_name = split_name
+    else:
+        img_name = col_name + '.png'
     return img_name
-
-def offset_image(location,root_folder,name,ax):
-    img = get_image_label(root_folder,name)
-    im  = OffsetImage(img,zoom=.08)
-    im.image.axes = ax 
-    
-    ab = AnnotationBbox(im,(0,location,),xybox=(-30,0.),frameon=False,xycoords='data',boxcoords='offset points',pad=0)
-    ax.add_artist(ab)
 
 
 class _BarChartRace(CommonChart):
@@ -53,7 +52,7 @@ class _BarChartRace(CommonChart):
                  period_label, period_template, period_summary_func, perpendicular_bar_func, 
                  colors, title, bar_size, bar_textposition, bar_texttemplate, bar_label_font, 
                  tick_label_font, tick_template, shared_fontdict, scale, fig, writer, 
-                 bar_kwargs, fig_kwargs, filter_column_colors, img_label_folder):
+                 bar_kwargs, fig_kwargs, filter_column_colors, img_label_folder,tick_label_mode):
         self.filename = filename
         self.extension = self.get_extension()
         self.orientation = orientation
@@ -94,13 +93,10 @@ class _BarChartRace(CommonChart):
         self.subplots_adjust = self.get_subplots_adjust()
         self.fig = self.get_fig(fig)
 
-        self.img_label_folder = img_label_folder
-        self.img_label_artist = []
-        print(f'STR_INDEX values:\n{self.str_index}')
-        print(f'RANKS values:\n{self.df_ranks}')
-        print(f'DF_VALUES values:\n{self.df_values}')
-        print(f'COL_FILT value:\n{self.col_filt}')
-        print(f'DF_RANKS list:\n{list(self.df_ranks)}')
+        self.img_label_folder = img_label_folder    #root folder where image labels are stored
+        self.tick_label_mode = tick_label_mode
+        self.img_label_artist = []     #stores image artists
+
 
     def validate_params(self):
         if isinstance(self.filename, str):
@@ -187,11 +183,32 @@ class _BarChartRace(CommonChart):
         return font
 
     def offset_image(self,location,name,ax):
-        img = get_image_label(self.img_label_folder,name)
+        """
+        Creates AnnotationBbox objects to display image labels on the graph. There is a 
+        new AnnotationBbox object created at each frame. Maybe a better approach is to create
+        the original AnnotationBbox objects and then simply update them as the program runs.
+        
+        Parameters
+        ----------
+        location: scalar or array
+            Coordinate of the bar (in the axis that is moving)
+        name: str
+            Filename of image file stored in `self.img_label_folder`
+
+        """
+        #load image as an OffsetImage object
+        img_name = get_image_name(name)
+        img = get_image_label(self.img_label_folder,img_name)
         im  = OffsetImage(img,zoom=.08)
         im.image.axes = ax 
+
+        #load text as TextArea object
         
-        ab = AnnotationBbox(im,(0,location,),xybox=(-30,0.),frameon=False,xycoords='data',boxcoords='offset points',pad=0)
+        if self.orientation=='h':
+            ab = AnnotationBbox(im,(0,location,),xybox=(-30,0.),frameon=False,xycoords='data',boxcoords='offset points',pad=0)
+        elif self.orientation=='v':
+            ab = AnnotationBbox(im,(location,0,),xybox=(0.,-30),frameon=False,xycoords='data',boxcoords='offset points',pad=0)
+        
         self.img_label_artist.append(ab)
         ax.add_artist(ab)
 
@@ -418,20 +435,15 @@ class _BarChartRace(CommonChart):
                 new_max_pixels = ax.transData.transform((0, max_bar))[1] + self.extra_pixels
                 new_ymax = ax.transData.inverted().transform((0, new_max_pixels))[1]
                 ax.set_ylim(ax.get_ylim()[0], new_ymax)
-        #print(cols)
-        if self.img_label_folder:
-            #for artist in self.img_label_artist:
-            #    artist.remove()
-            #for col_position,col_name in enumerate(cols):
+
+        if self.img_label_folder:           #here I am handling the addition of images as the bar tick labels
             zipped = zip(bar_location,cols)
             for col_position,col_name in zipped:
-                img_name = get_image_name(col_name)
-                self.offset_image(col_position,img_name,ax)
+                self.offset_image(col_position,col_name,ax)
 
         self.set_major_formatter(ax)
         self.add_period_label(ax, i)
         self.add_period_summary(ax, i)
-        #self.add_bar_images(ax, bar_location, bar_length, self.img_label_folder)
         self.add_bar_labels(ax, bar_location, bar_length)
         self.add_perpendicular_bar(ax, bar_length, i)
 
@@ -462,42 +474,6 @@ class _BarChartRace(CommonChart):
                 raise ValueError(f'The dictionary returned from `{name}` must contain '
                                   '"x", "y", and "s"')
             ax.text(transform=ax.transAxes, **text_dict)
-
-    def add_bar_images(self, ax, bar_location, bar_length, img_label_folder):
-        if self.img_label_folder:
-            if self.orientation == 'h':
-                labels = ax.yaxis.get_label()
-                zipped = zip(bar_length, bar_location)
-            else:
-                zipped = zip(bar_location, bar_length)
-                labels = ax.xaxis.get_label()
-
-            print(labels)
-            raise NotImplementedError("ERROR")
-            delta = .02 if self.bar_textposition == 'outside' else -.02
-
-            img_objs = []
-            for x1, y1 in zipped:
-                xtext, ytext = ax.transLimits.transform((x1, y1))
-                if self.orientation == 'h':
-                    xtext += delta
-                    val = x1
-                else:
-                    ytext += delta
-                    val = y1
-
-                if callable(self.bar_texttemplate):
-                    text = self.bar_texttemplate(val)
-                else:
-                    text = self.bar_texttemplate.format(x=val)
-
-                xtext, ytext = ax.transLimits.inverted().transform((xtext, ytext))
-
-                img_obj = ax.text(xtext, ytext, text, clip_on=True, **self.bar_label_font)
-
-                img_objs.append(img_obj)
-                offset_image(xtext, img_label_folder, xtext, ax)
-            return img_objs
 
     def add_bar_labels(self, ax, bar_location, bar_length):
         if self.bar_textposition:
@@ -558,10 +534,11 @@ class _BarChartRace(CommonChart):
         start = int(bool(self.period_label))
         for text in ax.texts[start:]:
             text.remove()
+
         if self.img_label_folder:
             for artist in self.img_label_artist:
                 artist.remove()
-        self.img_label_artist = []
+        self.img_label_artist = []  #clears the list of artists for the next cycle.
         self.plot_bars(ax, i)
         
     def make_animation(self):
@@ -619,7 +596,7 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
                    bar_textposition='outside', bar_texttemplate='{x:,.0f}',
                    bar_label_font=None, tick_label_font=None, tick_template='{x:,.0f}',
                    shared_fontdict=None, scale='linear', fig=None, writer=None, bar_kwargs=None, 
-                   fig_kwargs=None, filter_column_colors=False,img_label_folder=None):
+                   fig_kwargs=None, filter_column_colors=False,img_label_folder=None,tick_label_mode='image'):
     '''
     Create an animated bar chart race using matplotlib. Data must be in 
     'wide' format where each row represents a single time period and each 
@@ -923,10 +900,18 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         This parameter is experimental and may be changed/removed
         in a later version.
     
-    img_label_folder : str, default `None`
+    img_label_folder : `None` or str, default `None`
         Folder that contains images to be used as labels in the chart.
         The folder should contain one image per bar in the chart and
         the filenames should match name of the corresponding column in the dataframe.
+
+    tick_label_mode : str, default `image`
+        Dictates what kind of tick label will be used for the bars. Depending on the
+        mode selected, only the image might show up, or both image and text.
+        For only text, simply use the default value for `img_label_folder` above.
+
+        Possible keys are:
+            `image`, `mixed`
 
     Returns
     -------
@@ -984,5 +969,5 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
                         period_label, period_template, period_summary_func, perpendicular_bar_func,
                         colors, title, bar_size, bar_textposition, bar_texttemplate, 
                         bar_label_font, tick_label_font, tick_template, shared_fontdict, scale, 
-                        fig, writer, bar_kwargs, fig_kwargs, filter_column_colors, img_label_folder)
+                        fig, writer, bar_kwargs, fig_kwargs, filter_column_colors, img_label_folder,tick_label_mode)
     return bcr.make_animation()
