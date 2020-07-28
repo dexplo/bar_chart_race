@@ -37,7 +37,7 @@ def get_image_name(col_name):
     ----------
         str
     '''
-    split_name = col_name.spli('.')
+    split_name = col_name.split('.')
     if len(split_name) > 1:
         img_name = split_name
     else:
