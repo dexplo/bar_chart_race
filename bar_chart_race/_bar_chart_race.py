@@ -994,6 +994,17 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         Possible keys are:
             `image`, `mixed`
 
+        DO NOT USE. I have not polished it and it does not look good. Just let it use the
+        default value `image` and everything will be fine.
+
+    tick_image_mode : str, default `trailing`
+        Tells how to update image tick labels. `trailing` will make it so that the image is
+        always moving with the bar as it grows. `fixed` will keep the image at a fixed 
+        location near the start of the bar. I have not decided on the best way to automate 
+        the location.
+
+        Possible keys are:
+            `trailing`, `fixed`
     Returns
     -------
     When `filename` is left as `None`, an HTML5 video is returned as a string.
