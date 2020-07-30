@@ -61,6 +61,7 @@ _BCR.line_chart_race.__doc__ = re.sub('df : .*(?=filename :)', '',  lcr.__doc__,
 _BCR.prepare_wide_data.__doc__ = re.sub('df : .*(?=filename :)', '',  pwd.__doc__, flags=re.S)
 _BCR.prepare_long_data.__doc__ = re.sub('df : .*(?=filename :)', '',  pld.__doc__, flags=re.S)
 
+import importlib
 if importlib.util.find_spec('plotly'):
     from ._bar_chart_race_plotly import bar_chart_race_plotly as bcrp
     def bar_chart_race_plotly(self, filename=None, orientation='h', sort='desc', n_bars=None, 
