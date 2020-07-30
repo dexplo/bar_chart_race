@@ -1,127 +1,94 @@
-import pytest
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import bar_chart_race as bcr
+import plotly.graph_objects as go
+import plotly
+from plotly.subplots import make_subplots
 from bar_chart_race import load_dataset, bar_chart_race_plotly
 
 
 df = load_dataset('covid19')
-df = df.iloc[-20:-16]
+df = df.iloc[-20:-10]
 df1 = df.reset_index(drop=True)
 
 
-# class TestSimpleBC:
+def test_all():
+    bar_chart_race_plotly(df)
 
-    
-#     def test_defaults(self):
-#         bar_chart_race_plotly(df)
-#         bar_chart_race_plotly(df, orientation='v')
+    df.bcr.bar_chart_race_plotly()
 
-#     def test_sort(self):
-#         bar_chart_race_plotly(df, sort='asc')
-#         bar_chart_race_plotly(df, orientation='v', sort='asc')
+    bar_chart_race_plotly(df, sort='asc')
 
-#     def test_nbars(self):
-#         bar_chart_race_plotly(df, sort='desc', n_bars=8)
-#         bar_chart_race_plotly(df, orientation='v', sort='desc', n_bars=8)
+    bar_chart_race_plotly(df, orientation='v', slider=False)
 
-#     def test_fixed_order(self):
-#         bar_chart_race_plotly(df, sort='asc', n_bars=8, fixed_order=True)
-#         bar_chart_race_plotly(df, fixed_order=['Iran', 'USA', 'Italy', 'Spain'])
+    bar_chart_race_plotly(df, orientation='v', sort='asc', slider=False)
 
-#     def test_fixed_max(self):
-#         bar_chart_race_plotly(df, fixed_max=True)
+    bar_chart_race_plotly(df, sort='desc', n_bars=8)
 
-#     def test_steps_per_period(self):
-#         bar_chart_race_plotly(df, sort='asc', steps_per_period=2)
-#         bar_chart_race_plotly(df, sort='asc', steps_per_period=30)
+    bar_chart_race_plotly(df, orientation='v', sort='desc', n_bars=8)
 
-#     def test_interpolate_period(self):
-#         bar_chart_race_plotly(df, interpolate_period=True, n_bars=8)
+    bar_chart_race_plotly(df, sort='asc', n_bars=8, fixed_order=True)
 
-#     def test_textposition(self):
-#         bar_chart_race_plotly(df, n_bars=8, textposition='inside')
+    bar_chart_race_plotly(df, fixed_order=['Iran', 'USA', 'Italy', 'Spain'], period_label={'x': .95, 'y': .9})
 
-#     def test_bar_size(self):
-#         bar_chart_race_plotly(df, n_bars=8, bar_size=.99)
+    bar_chart_race_plotly(df, fixed_max=True)
 
-#     def test_period_label(self):
-#         bar_chart_race_plotly(df, n_bars=8, period_label=False)
-#         bar_chart_race_plotly(df, n_bars=8, 
-#                            period_label={'x': .99, 'y': .1, 'ha': 'right'})
+    bar_chart_race_plotly(df, fixed_max=True, orientation='v')
 
-#     def test_period_fmt(self):
-#         bar_chart_race_plotly(df, n_bars=8, period_fmt='%b %-d, %Y')
-#         bar_chart_race_plotly(df1, n_bars=8, interpolate_period=True, 
-#                            period_fmt='{x: .2f}')
+    bar_chart_race_plotly(df, sort='asc', steps_per_period=2)
 
-#     def test_period_summary_func(self):
-#         def summary(values, ranks):
-#             total_deaths = int(round(values.sum(), -2))
-#             s = f'Total Deaths - {total_deaths:,.0f}'
-#             return {'x': .99, 'y': .05, 's': s, 'ha': 'right', 'size': 8}
+    bar_chart_race_plotly(df, interpolate_period=True, n_bars=8)
 
-#         bar_chart_race_plotly(df, n_bars=8, period_summary_func=summary)
-    
-#     def test_perpendicular_bar_func(self):
-#         bar_chart_race_plotly(df, n_bars=8, period_summary_func=summary,
-#                       perpendicular_bar_func='mean')
-#         def func(values, ranks):
-#             return values.quantile(.9)
-        
-#         bar_chart_race_plotly(df, n_bars=8, period_summary_func=summary,
-#                             perpendicular_bar_func=func)
+    bar_chart_race_plotly(df, n_bars=8, textposition='inside')
 
-#     def test_period_length(self):
-#         bar_chart_race_plotly(df, n_bars=8, period_length=1200)
+    bar_chart_race_plotly(df, n_bars=8, bar_size=.99, layout_kwargs={'height': 800})
 
-#     def test_figsize(self):
-#         bar_chart_race_plotly(df, figsize=(4, 2.5))
+    bar_chart_race_plotly(df, n_bars=8, period_label=False)
 
-#     def test_filter_column_colors(self):
-#         with pytest.warns(UserWarning):
-#             bar_chart_race_plotly(df, n_bars=6, sort='asc', cmap='Accent')
+    bar_chart_race_plotly(df, n_bars=8, sort='asc', orientation='h', period_label={'bgcolor': 'orange', 
+                                                                                'font': {'color': 'blue', 'size': 30}})
 
-#         bar_chart_race_plotly(df, n_bars=6, sort='asc', cmap='Accent', 
-#                           filter_column_colors=True)
+    bar_chart_race_plotly(df, n_bars=8, period_template='%b %d, %Y')
 
-#         bar_chart_race_plotly(df, n_bars=6, cmap=plt.cm.tab20.colors[:19])
+    bar_chart_race_plotly(df1, n_bars=8, period_template='{x:.1f}', interpolate_period=True)
 
-#     def test_cmap(self):
-#         bar_chart_race_plotly(df, cmap=['red', 'blue'], 
-#                            filter_column_colors=True)
+    bar_chart_race_plotly(df, n_bars=8, interpolate_period=False, bar_textposition='outside', 
+                        period_length=500, steps_per_period=10, fixed_max=True)
 
-#         with pytest.raises(KeyError):
-#             bar_chart_race_plotly(df, cmap='adf')
+    def summary(values, ranks):
+        total_deaths = int(round(values.sum(), -2))
+        s = f'Total Deaths - {total_deaths:,.0f}'
+        return {'x': .99, 'y': .05, 'text': s, 'align': 'right', 'size': 8}
 
-#     def test_title(self):
-#         bar_chart_race_plotly(df, n_bars=6, title='Great title', title_size=4)
-#         bar_chart_race_plotly(df, n_bars=6, title='Great title', 
-#                            title_size='xx-large')
-    
-#     def test_label_size(self):
-#         bar_chart_race_plotly(df, n_bars=6, 
-#                            bar_label_size=4, tick_label_size=12)
+    bar_chart_race_plotly(df, n_bars=8, period_summary_func=summary)
 
-#     def test_shared_fontdict(self):
-#         bar_chart_race_plotly(df, n_bars=6, 
-#                    shared_fontdict={'family': 'Courier New', 'weight': 'bold', 'color': 'teal'})
+    bar_chart_race_plotly(df, n_bars=8, period_summary_func=summary, perpendicular_bar_func='mean')
 
-#     def test_scale(self):
-#         bar_chart_race_plotly(df, n_bars=6, scale='log')
+    bar_chart_race_plotly(df, n_bars=8, period_summary_func=summary, perpendicular_bar_func='max', fixed_max=True)
 
-#     def test_save(self):
-#         bar_chart_race_plotly(df, 'videos/test.mp4', n_bars=6)
-#         bar_chart_race_plotly(df, 'videos/test.gif', n_bars=6)
-#         bar_chart_race_plotly(df, 'videos/test.html', n_bars=6)
+    def func(values, ranks):
+        return values.quantile(.9)
 
-#     def test_writer(self):
-#         bar_chart_race_plotly(df, 'videos/test.mpeg', n_bars=6, 
-#                            writer='imagemagick')
+    bar_chart_race_plotly(df, n_bars=8, period_summary_func=summary, perpendicular_bar_func=func)
 
-#     def test_fig(self):
-#         fig, ax = plt.subplots(dpi=100)
-#         bar_chart_race_plotly(df, n_bars=6, fig=fig)
+    bar_chart_race_plotly(df, n_bars=8, period_length=1200)
 
-#     def test_dpi(self):
-#         bar_chart_race_plotly(df, n_bars=6, dpi=90)
+    bar_chart_race_plotly(df, n_bars=6, sort='asc', colors='Accent')
 
-#     def test_bar_kwargs(self):
-#         bar_chart_race_plotly(df, n_bars=6, bar_kwargs={'alpha': .2, 'ec': 'black', 'lw': 3})
+    bar_chart_race_plotly(df, n_bars=6, sort='asc', colors='Accent', filter_column_colors=True)
+
+
+    bar_chart_race_plotly(df, n_bars=6, colors=plt.cm.tab20.colors[:19])
+
+    bar_chart_race_plotly(df, colors=['red', 'blue'], filter_column_colors=True)
+
+    bar_chart_race_plotly(df, n_bars=6, title={'text':'Great title', 'font': {'size': 40}, 'x': .5})
+
+    bar_chart_race_plotly(df, n_bars=6, bar_label_font=8, tick_label_font=20)
+
+    bar_chart_race_plotly(df, n_bars=6, bar_label_font={'size': 18, 'family': 'Courier New, monospace', 'color': 'red'})
+
+    bar_chart_race_plotly(df, n_bars=6, scale='log')
+
+    bar_chart_race_plotly(df, 'test.html', n_bars=6, write_html_kwargs={'auto_play': False})
