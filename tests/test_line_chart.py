@@ -1,5 +1,6 @@
 import pytest
 import pandas as pd
+import matplotlib.pyplot as plt
 import bar_chart_race as bcr
 
 
@@ -69,17 +70,19 @@ class TestBasics:
                             steps_per_period=5, period_summary_func=psf)
 
     def test_line_width_data(self):
-        bcr.line_chart_race(df_race, n_lines=5, images='country',
+        bcr.line_chart_race(df_race[df_pop.columns], n_lines=5, images='country',
                             steps_per_period=5, line_width_data=df_pop)
 
     def test_fade(self):
-        bcr.line_chart_race(df_race, n_lines=5, images='country',
+        bcr.line_chart_race(df_race[df_pop.columns],  images='country',
                             steps_per_period=5, line_width_data=df_pop, fade=.9)
 
-        bcr.line_chart_race(df_race, n_lines=5, images='country',
+        bcr.line_chart_race(df_race[df_pop.columns], n_lines=5, images='country',
                             steps_per_period=5, line_width_data=df_pop, fade=.8, min_fade=0)
 
-    def test_title(self):
+    def test_images(self):
+        url = 'https://icons.iconarchive.com/icons/wikipedia/flags/1024/US-United-States-Flag-icon.png'
+        images = [url] * 5
         bcr.line_chart_race(df_race, n_lines=5, images=images, title='COVID-19 Deaths',
                             steps_per_period=5, line_width_data=df_pop, fade=.9)
 
