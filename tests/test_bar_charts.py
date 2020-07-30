@@ -92,13 +92,13 @@ class TestSimpleBC:
     def test_scale(self):
         bar_chart_race(df, n_bars=6, scale='log')
 
-    # def test_save(self):
-    #     bar_chart_race(df, 'tests/videos/test.mp4', n_bars=6)
-    #     bar_chart_race(df, 'tests/videos/test.gif', n_bars=6, writer='imagemagick')
-    #     bar_chart_race(df, 'tests/videos/test.html', n_bars=6)
+    def test_save(self):
+        bar_chart_race(df, 'tests/videos/test.mp4', n_bars=6)
+        bar_chart_race(df, 'tests/videos/test.gif', n_bars=6, writer='imagemagick')
+        bar_chart_race(df, 'tests/videos/test.html', n_bars=6)
 
-    # def test_writer(self):
-    #     bar_chart_race(df, 'tests/videos/test.mpeg', n_bars=6, writer='imagemagick')
+    def test_writer(self):
+        bar_chart_race(df, 'tests/videos/test.mpeg', n_bars=6, writer='imagemagick')
 
     def test_fig(self):
         fig, ax = plt.subplots(dpi=100)
