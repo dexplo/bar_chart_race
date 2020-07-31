@@ -8,7 +8,7 @@ from ._func_animation import FuncAnimation
 from matplotlib.colors import Colormap
 
 from matplotlib.offsetbox import OffsetImage,AnnotationBbox,TextArea
-from PIL import Image
+from PIL import Image               #for opening images
 #import matplotlib.image as mpimg
 import os
 
