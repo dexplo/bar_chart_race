@@ -724,7 +724,7 @@ def bar_chart_race_plotly(df, filename=None, orientation='h', sort='desc', n_bar
     create an animation.
 
     df = bcr.load_dataset('covid19')
-    bcr.bar_chart_race(
+    bcr.bar_chart_race_plotly(
         df=df, 
         filename='covid19_horiz_desc.html', 
         orientation='h', 

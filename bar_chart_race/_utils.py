@@ -1,4 +1,8 @@
+from pathlib import Path
+
 import pandas as pd
+from matplotlib import image as mimage
+
 
 def load_dataset(name='covid19'):
     '''
@@ -201,3 +205,21 @@ def prepare_long_data(df, index, columns, values, aggfunc='sum', orientation='h'
                              aggfunc=aggfunc).fillna(method='ffill')
     return prepare_wide_data(df_wide, orientation, sort, n_bars, interpolate_period,
                              steps_per_period, compute_ranks)
+
+
+def read_images(filename, columns):
+    image_dict = {}
+    code_path = Path(__file__).resolve().parent / "_codes"
+    code_value_path = code_path / 'code_value.csv'
+    data_path = code_path / f'{filename}.csv'
+    url_path = pd.read_csv(code_value_path).query('code == @filename')['value'].values[0]
+    codes = pd.read_csv(data_path, index_col='code')['value'].to_dict()
+
+    for col in columns:
+        code = codes[col.lower()]
+        if url_path == 'self':
+            final_url = code
+        else:
+            final_url = url_path.format(code=code)
+        image_dict[col] = mimage.imread(final_url)
+    return image_dict

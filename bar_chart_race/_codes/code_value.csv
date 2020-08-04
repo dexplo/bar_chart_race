@@ -1,0 +1,3 @@
+code,value
+country,https://github.com/hjnilsson/country-flags/raw/master/png250px/{code}.png
+nfl,self

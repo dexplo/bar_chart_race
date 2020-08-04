@@ -5,3 +5,6 @@ notebooks/
 build/
 dist/
 site/
+*.mp4
+docs/
+data/

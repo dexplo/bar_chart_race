@@ -54,7 +54,8 @@ plugins:
     - search
     - macros
     - minify:
-        minify_html: true
+        minify_html: false
 
 extra_javascript:
   - https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML
+  - https://cdn.plot.ly/plotly-latest.min.js
