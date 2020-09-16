@@ -6,6 +6,15 @@ from tempfile import TemporaryDirectory
 from matplotlib import rcParams
 from matplotlib import animation
 
+def printProgressBar(current_frame, total_frames):
+    percent = ("{0:.2f}").format(100 * (current_frame / float(total_frames)))
+    filledLength = int(100 * current_frame // total_frames)
+    bar = '█' * filledLength + '-' * (100 - filledLength)
+    print(f'\r|{bar}| {percent}%', end = "\r")
+    # Print New Line on Complete
+    if current_frame == total_frames: 
+        print()
+
 class FuncAnimation(animation.FuncAnimation):
 
     def to_html5_video(self, embed_limit=None, savefig_kwargs=None):

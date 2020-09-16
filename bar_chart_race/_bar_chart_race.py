@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import ticker
 from ._func_animation import FuncAnimation
+from ._func_animation import printProgressBar
 from matplotlib.colors import Colormap
 
 from ._common_chart import CommonChart
@@ -461,7 +462,7 @@ class _BarChartRace(CommonChart):
         for text in ax.texts[start:]:
             text.remove()
         self.plot_bars(ax, i)
-        
+    
     def make_animation(self):
         def init_func():
             ax = self.fig.axes[0]
@@ -478,10 +479,8 @@ class _BarChartRace(CommonChart):
                     for _ in range(pause):
                         frames.append(None)
             return frames
-        
         frames = frame_generator(len(self.df_values))
         anim = FuncAnimation(self.fig, self.anim_func, frames, init_func, interval=interval)
-
         try:
             fc = self.fig.get_facecolor()
             if fc == (1, 1, 1, 0):
@@ -498,8 +497,11 @@ class _BarChartRace(CommonChart):
                 fc = self.fig.get_facecolor()
                 if fc == (1, 1, 1, 0):
                     fc = 'white'
+                print("Rendering video to " + self.filename)
                 ret_val = anim.save(self.filename, fps=self.fps, writer=self.writer, 
-                                    savefig_kwargs=savefig_kwargs) 
+                                    savefig_kwargs=savefig_kwargs, progress_callback=printProgressBar) 
+                printProgressBar(100, 100)
+                print("Rendering Complete")
         except Exception as e:
             message = str(e)
             raise Exception(message)
