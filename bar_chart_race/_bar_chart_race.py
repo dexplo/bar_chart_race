@@ -632,14 +632,14 @@ class _BarChartRace(CommonChart):
                 artist.remove()
         self.img_label_artist = []  #clears the list of artists for the next cycle.
         self.plot_bars(ax, i)
-        self.fig.tight_layout()
+        # self.fig.tight_layout()
         
         
     def make_animation(self):
         def init_func():
             ax = self.fig.axes[0]
             self.plot_bars(ax, 0)
-            self.fig.tight_layout()
+            # self.fig.tight_layout()
 
         interval = self.period_length / self.steps_per_period
         pause = int(self.end_period_pause // interval)
@@ -688,8 +688,8 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
                    period_length=500, end_period_pause=0, interpolate_period=False, 
                    period_label=True, period_template=None, period_summary_func=None,
                    perpendicular_bar_func=None, colors=None, title=None, bar_size=.95,
-                   bar_textposition='outside', bar_texttemplate='{x:,.0f}',
-                   bar_label_font=None, tick_label_font=None, tick_template='{x:,.0f}',
+                   bar_textposition='outside', bar_texttemplate='{x:,.2f}'+'%',
+                   bar_label_font=None, tick_label_font=None, tick_template='{x:,.0f}'+'%',
                    shared_fontdict=None, scale='linear', fig=None, writer=None, bar_kwargs=None, 
                    fig_kwargs=None, filter_column_colors=False,
                    img_label_folder=None,tick_label_mode='image',tick_image_mode='trailing'):
