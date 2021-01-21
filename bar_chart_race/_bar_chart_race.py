@@ -573,7 +573,7 @@ class _BarChartRace(CommonChart):
             else:
                 zipped = zip(bar_location, bar_length)
 
-            delta = .01 if self.bar_textposition == 'outside' else -.01
+            delta = .008 if self.bar_textposition == 'outside' else -.008
 
             text_objs = []
             for x1, y1 in zipped:
