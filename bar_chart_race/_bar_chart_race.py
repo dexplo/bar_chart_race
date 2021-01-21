@@ -420,10 +420,10 @@ class _BarChartRace(CommonChart):
         ax.spines['right'].set_linewidth(0)
         ax.spines['top'].set_linewidth(0)
         ax.spines['bottom'].set_linewidth(0)
-        
+
     def get_subplots_adjust(self):
         import io
-        fig = plt.Figure(**self.fig_kwargs)
+        fig = plt.Figure(**self.fig_kwargs, tight_layout=False)
         ax = fig.add_subplot()
         plot_func = ax.barh if self.orientation == 'h' else ax.bar
         bar_location, bar_length, cols, _ = self.get_bar_info(-1)
