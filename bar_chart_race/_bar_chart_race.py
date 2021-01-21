@@ -480,10 +480,11 @@ class _BarChartRace(CommonChart):
                 ax.set_ylim(None, self.fixed_max_value)
 
     def create_figure(self):
-        fig = plt.Figure(**self.fig_kwargs)
+        fig = plt.Figure(**self.fig_kwargs, tight_layout=False)
+        
         ax = fig.add_subplot()
-        left, bottom = self.subplots_adjust
-        fig.subplots_adjust(left=left, bottom=bottom)
+        # left, bottom = self.subplots_adjust
+        # fig.subplots_adjust(left=left, bottom=bottom)
         self.prepare_axes(ax)
         self.fix_axis_limits(ax)
         return fig
