@@ -81,7 +81,7 @@ class _BarChartRace(CommonChart):
         self.fps = 1000 / self.period_length * steps_per_period
         self.writer = self.get_writer(writer)
         self.filter_column_colors = filter_column_colors
-        self.extra_pixels = 0
+        self.extra_pixels = 2
         self.validate_params()
 
         self.bar_kwargs = self.get_bar_kwargs(bar_kwargs)
