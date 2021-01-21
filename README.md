@@ -6,7 +6,7 @@
 Make animated bar and line chart races in Python with matplotlib or plotly.
 
 ## Customized bar chart race for programming languages
-![img](docs/images/programming_languages.gif)
+![img](programming_languages.gif)
 
 ## Bar Chart Race with Images For Bars
 This is what this feature should accomplish. It is a little rough right now and not very generalizable.
