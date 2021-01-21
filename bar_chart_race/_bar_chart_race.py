@@ -481,7 +481,7 @@ class _BarChartRace(CommonChart):
 
     def create_figure(self):
         fig = plt.Figure(**self.fig_kwargs, tight_layout=False)
-        
+
         ax = fig.add_subplot()
         # left, bottom = self.subplots_adjust
         # fig.subplots_adjust(left=left, bottom=bottom)
@@ -515,7 +515,7 @@ class _BarChartRace(CommonChart):
                 max_bar = bar_length.max()
                 new_max_pixels = ax.transData.transform((max_bar, 0))[0] + self.extra_pixels
                 new_xmax = ax.transData.inverted().transform((new_max_pixels, 0))[0]
-                ax.set_xlim(ax.get_xlim()[0], new_xmax)
+                ax.set_xlim(ax.get_xlim()[0] , new_xmax+10)
         else:
             ax.bar(bar_location, bar_length, tick_label=cols, 
                    color=colors, **self.bar_kwargs)
