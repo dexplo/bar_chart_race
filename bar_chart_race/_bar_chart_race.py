@@ -385,18 +385,26 @@ class _BarChartRace(CommonChart):
 
     def prepare_axes(self, ax):
         value_axis = ax.xaxis if self.orientation == 'h' else ax.yaxis
-        value_axis.grid(True, color='white')
+        # value_axis.grid(True, color='white')
         if self.tick_template:
             value_axis.set_major_formatter(self.tick_template)
-        ax.tick_params(labelsize=self.tick_label_font['size'], length=0, pad=2)
+
+
+        ax.grid(True, axis='x', color='#D3DCE6', linewidth=5, zorder=0)
+
+        # ax.tick_params(labelsize=self.tick_label_font['size'], length=0, pad=2)
+        ax.tick_params(axis='x', length=12, labelsize=self.tick_label_font['size'], pad=1, color='#F8FAFF')
+        ax.tick_params(axis='y', length=12, labelsize=self.tick_label_font['size'], pad=1, color='#ffffff00')
+        ax.set_facecolor('#F8FAFF')
+
         ax.minorticks_off()
         ax.set_axisbelow(True)
-        ax.set_facecolor('.9')
+
         ax.set_title(**self.title)
         # min_val = 1 if self.scale == 'log' else 0
 
         for spine in ax.spines.values():
-            spine.set_visible(False)
+            spine.set_visible(True)
 
         limit = (.2, self.n_bars + .8)
         if self.orientation == 'h':
@@ -407,6 +415,12 @@ class _BarChartRace(CommonChart):
             ax.set_yscale(self.scale)
             ax.tick_params(axis='x', labelrotation=30)
 
+        ax.spines['left'].set_linewidth(5)
+        ax.spines['left'].set_color('#D3DCE6')
+        ax.spines['right'].set_linewidth(0)
+        ax.spines['top'].set_linewidth(0)
+        ax.spines['bottom'].set_linewidth(0)
+        
     def get_subplots_adjust(self):
         import io
         fig = plt.Figure(**self.fig_kwargs)
