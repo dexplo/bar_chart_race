@@ -201,7 +201,7 @@ class _BarChartRace(CommonChart):
         #load image as an OffsetImage object
         img_name      = get_image_name(name)
         img           = get_image_label(self.img_label_folder,img_name)
-        im            = OffsetImage(img,zoom=.08)
+        im            = OffsetImage(img,zoom=.8) # change zoom value based on icon image's size
         im.image.axes = ax 
 
         
