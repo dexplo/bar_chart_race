@@ -18,16 +18,16 @@ This is what this feature should accomplish. It is a little rough right now and 
 ## Usage/Customization
 
 1. Use <code>customized_programiz</code> branch to customize the code.<br>
+
 To install the branch using pip:
-<pre>pip install git+https://github.com/Rhitabrat/bar_chart_race.git@customized_programiz</pre><br>
-To clone using git:
+<pre>pip install git+https://github.com/Rhitabrat/bar_chart_race.git@customized_programiz</pre>To clone using git:
 <pre>git clone -b customized_programiz https://github.com/Rhitabrat/bar_chart_race.git</pre>
 
 2. Create a folder called <code>bar_image_labels</code> and store the icons with the exact names as the column names.
 For example: if the name of a column is 'python', the icon name should be <code>python.png</code>.
 
 3. Create a file and create the animation as shown below.
-<pre>
+```python
 import numpy as np
 import pandas as pd
 import bar_chart_race as bcr
@@ -83,7 +83,7 @@ bcr.bar_chart_race(
     
     img_label_folder='bar_image_labels',
 )
-</pre>
+```
 
 ## Official Documentation
 
