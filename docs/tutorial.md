@@ -34,6 +34,26 @@ df.bcr.bar_chart_race()
 
 <div>{{ video('basic_default') }}</div>
 
+### Add Images to Bars
+Images can be added as icons for each bar by using the parameter `img_label_folder` in the constructor. `img_label_folder` is a string containing the path to the folder where the images are stored.
+
+The folder you indicate should contain one image per bar, and the filename should match the name of the columns in the dataset.
+
+An additional parameter `tick_image_mode` can be used to control how the images update with respect to the bars by passing the string `trailing` or `fixed`. In trailing mode the images will stay at the end of their respective bars. In fixed mode, images will stay 
+
+```python
+import bar_chart_race as bcr
+import pandas as pd
+
+df = bcr.load_dataset('covid19_tutorial')
+
+folder_with_images = "flag_images"   #have a folder with images ready
+
+bcr.bar_chart_race(df,
+                   img_label_folder='bar_image_labels',
+                   tick_image_mode='trailing',)
+```
+
 ### Vertical bars
 
 By default, bars are horizontal. Use the `orientation` parameter to switch to vertical.
