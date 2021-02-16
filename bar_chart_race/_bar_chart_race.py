@@ -253,14 +253,15 @@ class _BarChartRace(CommonChart):
         #renderer = self.fig.canvas.renderer
         #_,_,img_width,img_height = im.get_window_extent(renderer=None)
         #print(im.get_data())
-        img_width  = 30
-        img_height = 30
+        # img_width  = 30
+        # img_height = 30
 
         if self.tick_image_mode=='trailing':     #images move along with the bar
             if self.orientation=='h':
                 #len_bar = (img_width/2) + 2 if length < img_width else length - (img_width/2) - 2
                 len_bar = length
-                xybox_val = (-38,0) if length < 30 else (-38,0)
+                # xybox_val = (-38,0) if length < 30 else (-38,0)
+                xybox_val = (38,0)
                 ab = AnnotationBbox(im,(len_bar,location,),xybox=xybox_val,frameon=False,xycoords='data',
                                     boxcoords='offset points',pad=0)
             else:
@@ -515,7 +516,7 @@ class _BarChartRace(CommonChart):
                 max_bar = bar_length.max()
                 new_max_pixels = ax.transData.transform((max_bar, 0))[0] + self.extra_pixels
                 new_xmax = ax.transData.inverted().transform((new_max_pixels, 0))[0]
-                ax.set_xlim(ax.get_xlim()[0] , new_xmax+10)
+                ax.set_xlim(ax.get_xlim()[0] , new_xmax)
         else:
             ax.bar(bar_location, bar_length, tick_label=cols, 
                    color=colors, **self.bar_kwargs)
@@ -573,7 +574,7 @@ class _BarChartRace(CommonChart):
             else:
                 zipped = zip(bar_location, bar_length)
 
-            delta = .008 if self.bar_textposition == 'outside' else -.008
+            delta = .05 if self.bar_textposition == 'outside' else -.008
 
             text_objs = []
             for x1, y1 in zipped:
@@ -688,7 +689,7 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
                    period_length=500, end_period_pause=0, interpolate_period=False, 
                    period_label=True, period_template=None, period_summary_func=None,
                    perpendicular_bar_func=None, colors=None, title=None, bar_size=.95,
-                   bar_textposition='outside', bar_texttemplate='{x:,.2f}'+'%',
+                   bar_textposition='outside', bar_texttemplate='{x:,.2f}',
                    bar_label_font=None, tick_label_font=None, tick_template='{x:,.0f}'+'%',
                    shared_fontdict=None, scale='linear', fig=None, writer=None, bar_kwargs=None, 
                    fig_kwargs=None, filter_column_colors=False,
