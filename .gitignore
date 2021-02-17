@@ -8,3 +8,5 @@ site/
 *.mp4
 docs/
 data/
+.idea/
+venv/
