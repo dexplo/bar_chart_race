@@ -1,30 +1,38 @@
 # Bar Chart Race
+
 Make animated bar and line chart races in Python with matplotlib or plotly.
 
 Original Repo (without icons) : [https://github.com/dexplo/bar_chart_race](https://github.com/dexplo/bar_chart_race)
 
-Andres Berejnoi's Repo (with icons) : [https://github.com/andresberejnoi/bar_chart_race](https://github.com/andresberejnoi/bar_chart_race)
+Andres Berejnoi's Repo (with
+icons) : [https://github.com/andresberejnoi/bar_chart_race](https://github.com/andresberejnoi/bar_chart_race)
 
 ---
 
-## Popular Programming Languages Bar Chart Race
-![img](programming_languages.gif)
+## Top Computer Science Schools 2000 - 2020
+
+![img](demo.gif)
 
 ---
 
 ## Installation
 
-Install using `pip`:
+First Create a New Virtual Environment & Activate It:
+
+```
+pip install virtualenv
+virtualenv venv
+.\venv\Scripts\activate
+```
+
+Install `bar_chart_race` using `pip`:
 
 ```
 pip install git+https://github.com/programiz/bar_chart_race.git@master
 ```
 
-You can also clone this repository and modify it as per your needs:
-
-```
-git clone https://github.com/programiz/bar_chart_race.git
-```
+You also need to install
+FFmpeg: [https://github.com/BtbN/FFmpeg-Builds/releases/](https://github.com/BtbN/FFmpeg-Builds/releases/)
 
 ---
 
@@ -33,40 +41,64 @@ git clone https://github.com/programiz/bar_chart_race.git
 Create a file and use the `bar_chart_race` library as shown below:
 
 ```python
-import pandas as pd
 import bar_chart_race as bcr
+import pandas as pd
 
-df = pd.read_csv("data/language-popularity.csv", index_col='Date')
+df = pd.read_csv("data.csv", index_col="Date")
+
 # replace empty values with 0
 df.fillna(0.0, inplace=True)
 
-# plotting the graph
+# using the bar_chart_race package
 bcr.bar_chart_race(
-    # Must be a 'wide' DataFrame where each row represents a single period of time.
+    # must be a DataFrame where each row represents a single period of time.
     df=df,
 
     # name of the video file
-    filename='video.mp4',
+    filename="video.mp4",
 
-    # orientation of the bar
-    orientation='h',
+    # specify location of image folder
+    img_label_folder="bar_image_labels",
+
+    # change the Figure properties
+    fig_kwargs={
+        'figsize': (26, 15),
+        'dpi': 120,
+        'facecolor': '#F8FAFF'
+    },
+
+    # orientation of the bar: h or v
+    orientation="h",
 
     # sort the bar for each period
-    sort='desc',
+    sort="desc",
 
-    # number of bars to display on the video
+    # number of bars to display in each frame
     n_bars=10,
 
     # to fix the maximum value of the axis
-    fixed_max=False,
+    # fixed_max=True,
 
     # smoothness of the animation
     steps_per_period=45,
 
     # time period in ms for each row
-    period_length=1500,  
+    period_length=1500,
 
-    # to adjust the postion and style of the custom label
+    # custom set of colors
+    colors=[
+        '#6ECBCE', '#FF2243', '#FFC33D', '#CE9673', '#FFA0FF', '#6501E5', '#F79522', '#699AF8', '#34718E', '#00DBCD',
+        '#00A3FF', '#F8A737', '#56BD5B', '#D40CE5', '#6936F9', '#FF317B', '#0000F3', '#FFA0A0', '#31FF83', '#0556F3'
+    ],
+
+    # title and its styles
+    title={'label': 'Programming Language Popularity 1990 - 2020',
+           'size': 52,
+           'weight': 'bold',
+           'pad': 40
+           },
+
+    # adjust the position and style of the period label
     period_label={'x': .95, 'y': .15,
                   'ha': 'right',
                   'va': 'center',
@@ -74,44 +106,21 @@ bcr.bar_chart_race(
                   'weight': 'semibold'
                   },
 
-    # set the color of the bars; pass a dictionary of hex values
-    colors='brand_colors',
-
-    # title and its styles
-    title={'label': 'Programming Language Popularity 1990 - 2020',
-           'size': 52,
-           'weight': 'bold',
-           # 'loc': 'right',
-           'pad': 40},
-           
-    # adjust the width of each bar
-    bar_size=.95,
-    
     # style the bar label text
     bar_label_font={'size': 27},
 
-    # stlye the y-axis texts (name of each bar)
-    tick_label_font={'size': 27},  
+    # style the labels in x and y axis
+    tick_label_font={'size': 27},
 
-    # adjust the sytle of bar
-    # alpha for opacity of bar
+    # adjust the style of bar
+    # alpha is opacity of bar
     # ls - width of edge
-    # ec - edgecolor
     bar_kwargs={'alpha': .99, 'lw': 0},
 
-    # adjust the properties of video
-    # figsize - resolution
-    # facecolor - background color
-    # dpi - dots per inch
-    fig_kwargs={'figsize': (26.67, 15), 'dpi': 144, 'facecolor': '#F8FAFF'},
-
     # adjust the bar label format
-    bar_texttemplate='{x:,.0f}',
-    
-    # adjust tick format
-    tick_template='{x:,.0f}',
+    bar_texttemplate='{x:.2f}',
 
-    # provide the name of folder that contains all the images
-    img_label_folder='bar_image_labels',
+    # adjust the period label format
+    period_template='{x:.0f}',
 )
 ```
