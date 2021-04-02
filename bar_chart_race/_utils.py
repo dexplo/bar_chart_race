@@ -4,7 +4,7 @@ import pandas as pd
 from matplotlib import image as mimage
 
 
-def load_dataset(name='covid19'):
+def load_dataset(name='covid19', threshold=0):
     '''
     Return a pandas DataFrame suitable for immediate use in `bar_chart_race`.
     Must be connected to the internet
@@ -18,6 +18,8 @@ def load_dataset(name='covid19'):
         * 'covid19_tutorial'
         * 'urban_pop'
         * 'baseball'
+    threshold : int, default 0
+        Lowest value that will be shown on the bar_chart_race
 
     Returns
     -------
@@ -31,9 +33,18 @@ def load_dataset(name='covid19'):
                   'baseball': None}
     index_col = index_dict[name]
     parse_dates = [index_col] if index_col else None
-    return pd.read_csv(url, index_col=index_col, parse_dates=parse_dates)
+    df = pd.read_csv(url, index_col=index_col, parse_dates=parse_dates)
+    new_df = filter_threshold(df, threshold)
 
-def prepare_wide_data(df, orientation='h', sort='desc', n_bars=None, interpolate_period=False, 
+    return new_df
+    # return pd.read_csv(url, index_col=index_col, parse_dates=parse_dates)
+
+
+def filter_threshold(df, thresh):
+    return df.loc[(df.hr > thresh)]
+
+
+def prepare_wide_data(df, orientation='h', sort='desc', n_bars=None, interpolate_period=False,
                       steps_per_period=10, compute_ranks=True):
     '''
     Prepares 'wide' data for bar chart animation. 
@@ -109,21 +120,22 @@ def prepare_wide_data(df, orientation='h', sort='desc', n_bars=None, interpolate
             df_values.iloc[:, 0] = df_values.iloc[:, 0].interpolate()
     else:
         df_values.iloc[:, 0] = df_values.iloc[:, 0].fillna(method='ffill')
-    
+
     df_values = df_values.set_index(df_values.columns[0])
     if compute_ranks:
         df_ranks = df_values.rank(axis=1, method='first', ascending=False).clip(upper=n_bars + 1)
         if (sort == 'desc' and orientation == 'h') or (sort == 'asc' and orientation == 'v'):
             df_ranks = n_bars + 1 - df_ranks
         df_ranks = df_ranks.interpolate()
-    
+
     df_values = df_values.interpolate()
     if compute_ranks:
         return df_values, df_ranks
     return df_values
 
-def prepare_long_data(df, index, columns, values, aggfunc='sum', orientation='h', 
-                      sort='desc', n_bars=None, interpolate_period=False, 
+
+def prepare_long_data(df, index, columns, values, aggfunc='sum', orientation='h',
+                      sort='desc', n_bars=None, interpolate_period=False,
                       steps_per_period=10, compute_ranks=True):
     '''
     Prepares 'long' data for bar chart animation. 
@@ -201,7 +213,7 @@ def prepare_long_data(df, index, columns, values, aggfunc='sum', orientation='h'
     df_values, df_ranks = bcr.prepare_long_data(df)
     bcr.bar_chart_race(df_values, steps_per_period=1, period_length=50)
     '''
-    df_wide = df.pivot_table(index=index, columns=columns, values=values, 
+    df_wide = df.pivot_table(index=index, columns=columns, values=values,
                              aggfunc=aggfunc).fillna(method='ffill')
     return prepare_wide_data(df_wide, orientation, sort, n_bars, interpolate_period,
                              steps_per_period, compute_ranks)
