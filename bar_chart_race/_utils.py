@@ -37,7 +37,6 @@ def load_dataset(name='covid19', threshold=0):
     new_df = filter_threshold(df, threshold)
 
     return new_df
-    # return pd.read_csv(url, index_col=index_col, parse_dates=parse_dates)
 
 
 def filter_threshold(df, thresh):
