@@ -106,4 +106,6 @@ class TestSimpleBC:
 
     def test_bar_kwargs(self):
         bar_chart_race(df, n_bars=6, bar_kwargs={'alpha': .2, 'ec': 'black', 'lw': 3})
-        
+
+    def test_threshold(self):
+        bar_chart_race(df)
