@@ -15,3 +15,8 @@ def test_threshold():
 
     filtered_df = utils.filter_threshold(df, 50)
     assert filtered_df.iloc[0]['hr'] > 50
+
+
+def test_custom_data():
+    path = r"C:\Users\rcame\PycharmProjects\bar_chart_race_\data\weather_data.csv"
+    utils.load_custom_data(path, 'timestamp', None)
