@@ -9,7 +9,7 @@ Install from pypi or conda-forge
 
 In order to save animations as mp4/m4v/mov/etc... files, you must [install ffmpeg][0], which allows for conversion to many different formats of video and audio. For macOS users, installation may be [easier using Homebrew][2].
 
-After installation, ensure that `ffmpeg` has been added to your path by going to your command line and entering `ffmepg -version`.
+After installation, ensure that `ffmpeg` has been added to your path by going to your command line and entering `ffmpeg -version`.
 
 ## Install ImageMagick for animated gifs
 
