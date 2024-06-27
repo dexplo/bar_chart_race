@@ -4,6 +4,7 @@
 * Images within the bars
 * Names within bars (as opposed to just tick labels)
 * Tools to see colormaps
+* Put x-axis on top
 
 ## Request a feature
 
