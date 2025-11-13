@@ -59,18 +59,7 @@ class _BarChartRace(CommonChart):
         self.fig = self.get_fig(fig)
 
     def validate_params(self):
-        if isinstance(self.filename, str):
-            if '.' not in self.filename:
-                raise ValueError('`filename` must have an extension')
-        elif self.filename is not None:
-            raise TypeError('`filename` must be None or a string')
-            
-        if self.sort not in ('asc', 'desc'):
-            raise ValueError('`sort` must be "asc" or "desc"')
-
-        if self.orientation not in ('h', 'v'):
-            raise ValueError('`orientation` must be "h" or "v"')
-
+        self.validate_common_params()
         if self.bar_textposition not in ('outside', 'inside', None):
             raise ValueError('`bar_textposition` must be one of "outside", "inside" or None')
 
@@ -145,71 +134,32 @@ class _BarChartRace(CommonChart):
         return font
 
     def prepare_data(self, df):
-        if self.fixed_order is True:
-            last_values = df.iloc[-1].sort_values(ascending=False)
-            cols = last_values.iloc[:self.n_bars].index
-            df = df[cols]
-        elif isinstance(self.fixed_order, list):
-            cols = self.fixed_order
-            df = df[cols]
-            self.n_bars = min(len(cols), self.n_bars)
-            
+        df = self.prepare_fixed_order_data(df)
+        cols = df.columns if self.fixed_order else None
+
         compute_ranks = self.fixed_order is False
         dfs = prepare_wide_data(df, self.orientation, self.sort, self.n_bars,
                                 self.interpolate_period, self.steps_per_period, compute_ranks)
+
         if isinstance(dfs, tuple):
             df_values, df_ranks = dfs
         else:
             df_values = dfs
 
         if self.fixed_order:
-            n = df_values.shape[1] + 1
-            m = df_values.shape[0]
-            rank_row = np.arange(1, n)
-            if (self.sort == 'desc' and self.orientation == 'h') or \
-                (self.sort == 'asc' and self.orientation == 'v'):
-                rank_row = rank_row[::-1]
-            
-            ranks_arr = np.repeat(rank_row.reshape(1, -1), m, axis=0)
-            df_ranks = pd.DataFrame(data=ranks_arr, columns=cols)
+            df_ranks = self.create_fixed_order_ranks(df_values, cols)
 
         return df_values, df_ranks
-        
-    def get_col_filt(self):
-        col_filt = pd.Series([True] * self.df_values.shape[1])
-        if self.n_bars < self.df_ranks.shape[1]:
-            orient_sort = self.orientation, self.sort
-            if orient_sort in [('h', 'asc'), ('v', 'desc')]:
-                # 1 is high
-                col_filt = (self.df_ranks < self.n_bars + .99).any()
-            else:
-                # 1 is low
-                col_filt = (self.df_ranks > 0).any()
 
-            if self.filter_column_colors and not col_filt.all():
-                self.df_values = self.df_values.loc[:, col_filt]
-                self.df_ranks = self.df_ranks.loc[:, col_filt]
-        return col_filt
-        
     def get_bar_colors(self, colors):
         if colors is None:
-            colors = 'dark12'
-            if self.df_values.shape[1] > 10:
-                colors = 'dark24'
+            colors = self.get_default_colormap()
 
         if isinstance(colors, str):
-            from ._colormaps import colormaps
-            
-            try:
-                bar_colors = colormaps[colors.lower()]
-            except KeyError:
-                raise KeyError(f'Colormap {colors} does not exist. Here are the '
-                               f'possible colormaps: {colormaps.keys()}')
+            bar_colors = self.load_colormap(colors)
         elif isinstance(colors, Colormap):
             bar_colors = colors(range(colors.N)).tolist()
-        elif isinstance(colors, list):
-            bar_colors = colors
-        elif isinstance(colors, tuple):
+        elif isinstance(colors, (list, tuple)):
             bar_colors = list(colors)
         elif hasattr(colors, 'tolist'):
             bar_colors = colors.tolist()
@@ -217,22 +167,10 @@ class _BarChartRace(CommonChart):
             raise TypeError('`colors` must be a string name of a colormap, a matplotlib colormap '
                             'instance, list, or tuple of colors')
 
-        # bar_colors is now a list
+        # Expand colors to match columns
         n = len(bar_colors)
-        orig_bar_colors = bar_colors
-        if self.df_values.shape[1] > n:
-            bar_colors = bar_colors * (self.df_values.shape[1] // n + 1)
-        bar_colors = np.array(bar_colors[:self.df_values.shape[1]])
-
-        if not self.filter_column_colors:
-            if not self.col_filt.all():
-                col_idx = np.where(self.col_filt)[0] % n
-                col_idx_ct = np.bincount(col_idx, minlength=n)
-                num_cols = max(self.col_filt.sum(), n)
-                exp_ct = np.bincount(np.arange(num_cols) % n, minlength=n)
-                if (col_idx_ct > exp_ct).any():
-                    warnings.warn("Some of your columns never make an appearance in the animation. "
-                                    "To reduce color repetition, set `filter_column_colors` to `True`")
+        bar_colors = self.expand_colors_to_match_columns(bar_colors)
+        self.warn_if_color_repetition(self.col_filt, n)
         return bar_colors
 
     def get_max_plotted_value(self):
