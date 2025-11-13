@@ -84,16 +84,18 @@ class _BarChartRace(CommonChart):
         else:
             bar_kwargs['width'] = self.bar_size
         if 'alpha' not in bar_kwargs:
-            bar_kwargs['alpha'] = .8
+            bar_kwargs['alpha'] = .9
         if 'ec' not in bar_kwargs:
             bar_kwargs['ec'] = 'white'
+        if 'lw' not in bar_kwargs:
+            bar_kwargs['lw'] = 1.5
         return bar_kwargs
 
     def get_period_label(self, period_label):
         if period_label is False:
             return False
 
-        default_period_label = {'size': 12}
+        default_period_label = {'size': 16, 'weight': 'bold', 'alpha': 0.7}
         if self.orientation == 'h':
             default_period_label['x'] = .95
             default_period_label['y'] = .15 if self.sort == 'desc' else .85
@@ -115,7 +117,7 @@ class _BarChartRace(CommonChart):
         return period_label
 
     def get_font(self, font, ticks=False):
-        default_font_dict = {'size': 7}
+        default_font_dict = {'size': 9, 'weight': 'normal'}
         if ticks:
             default_font_dict['ha'] = 'right'
         else:
@@ -242,13 +244,14 @@ class _BarChartRace(CommonChart):
 
     def prepare_axes(self, ax):
         value_axis = ax.xaxis if self.orientation == 'h' else ax.yaxis
-        value_axis.grid(True, color='white')
+        value_axis.grid(True, color='white', linewidth=1.5, alpha=0.8)
         if self.tick_template:
             value_axis.set_major_formatter(self.tick_template)
-        ax.tick_params(labelsize=self.tick_label_font['size'], length=0, pad=2)
+        ax.tick_params(labelsize=self.tick_label_font['size'], length=0, pad=4,
+                      colors='#555555')
         ax.minorticks_off()
         ax.set_axisbelow(True)
-        ax.set_facecolor('.9')
+        ax.set_facecolor('#f5f5f5')
         ax.set_title(**self.title)
         # min_val = 1 if self.scale == 'log' else 0
 
@@ -718,7 +721,7 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
             return f'{new_val:,.0f}'
 
     bar_label_font : number, str, or dict, default None
-        Font size of numeric bar labels. When None, defaults to 7.
+        Font size of numeric bar labels. When None, defaults to 9.
         Use a dictionary to supply several font properties.
         Example:
         {
@@ -728,7 +731,7 @@ def bar_chart_race(df, filename=None, orientation='h', sort='desc', n_bars=None,
         }
 
     tick_label_font : number or dict, default None
-        Font size of tick labels. When None, defaults to 7.
+        Font size of tick labels. When None, defaults to 9.
         Use a dictionary to supply several font properties.
 
     tick_template : str or function, default '{x:,.0f}'

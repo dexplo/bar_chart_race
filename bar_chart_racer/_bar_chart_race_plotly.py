@@ -77,10 +77,10 @@ class _BarChartRace:
 
     def get_bar_kwargs(self, bar_kwargs):
         if bar_kwargs is None:
-            return {'opacity': .8}
+            return {'opacity': .9}
         elif isinstance(bar_kwargs, dict):
             if 'opacity' not in bar_kwargs:
-                bar_kwargs['opacity'] = .8
+                bar_kwargs['opacity'] = .9
             return bar_kwargs
         raise TypeError('`bar_kwargs` must be None or a dictionary mapping `go.Bar` parameters '
                         'to values.')
@@ -137,7 +137,7 @@ class _BarChartRace:
 
     def get_font(self, font):
         if font is None:
-            font = {'size': 12}
+            font = {'size': 13}
         elif isinstance(font, (int, float)):
             font = {'size': font}
         elif not isinstance(font, dict):
